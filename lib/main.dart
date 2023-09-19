@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'investment_page.dart'; // Import the InvestmentPage
 
 void main() {
   runApp(const MyApp());
@@ -68,6 +69,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _goToInvestmentPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            InvestmentPage(), // Navigate to the InvestmentPage
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -111,6 +121,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: _goToInvestmentPage, // Call the navigation function
+              child: Text('Go to Investment Page'),
             ),
           ],
         ),
