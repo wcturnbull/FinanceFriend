@@ -1,2 +1,9 @@
-2023/09/18-19:05:23.718 1bd8 Creating DB C:\Users\pspit\AppData\Local\Temp\flutter_tools.54fe1dc\flutter_tools_chrome_device.5eaaed4b\Default\Session Storage since it was missing.
-2023/09/18-19:05:23.742 1bd8 Reusing MANIFEST C:\Users\pspit\AppData\Local\Temp\flutter_tools.54fe1dc\flutter_tools_chrome_device.5eaaed4b\Default\Session Storage/MANIFEST-000001
+<<<<<<< Updated upstream
+2023/09/19-17:35:51.175 72fc Reusing MANIFEST C:\Users\hwell\AppData\Local\Temp\flutter_tools.8f12df7e\flutter_tools_chrome_device.9f08d025\Default\Session Storage/MANIFEST-000001
+2023/09/19-17:35:51.176 72fc Recovering log #3
+2023/09/19-17:35:51.178 72fc Reusing old log C:\Users\hwell\AppData\Local\Temp\flutter_tools.8f12df7e\flutter_tools_chrome_device.9f08d025\Default\Session Storage/000003.log 
+=======
+2023/09/19-17:29:14.755 470c Reusing MANIFEST C:\Users\hwell\AppData\Local\Temp\flutter_tools.254c7c08\flutter_tools_chrome_device.e7bb72cc\Default\Session Storage/MANIFEST-000001
+2023/09/19-17:29:14.756 470c Recovering log #3
+2023/09/19-17:29:14.759 470c Reusing old log C:\Users\hwell\AppData\Local\Temp\flutter_tools.254c7c08\flutter_tools_chrome_device.e7bb72cc\Default\Session Storage/000003.log 
+>>>>>>> Stashed changes

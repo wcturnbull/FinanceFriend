@@ -1,4 +1,3 @@
-import 'package:financefriend/tracking.dart';
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
 
@@ -42,14 +41,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _navigateToTrackingPage() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => TrackingPage(), // Navigate to the InvestmentPage
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,11 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _goToInvestmentPage, // Call the navigation function
               child: Text('Go to Investment Page'),
             ),
-            ElevatedButton(
-              onPressed:
-                  _navigateToTrackingPage, // Call the navigation function
-              child: Text('Go to TrackingPage'),
-            ),
+            SizedBox(height: 16), // Add some spacing
           ],
         ),
       ),

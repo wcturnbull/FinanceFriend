@@ -1,2 +1,9 @@
-2023/09/18-19:05:23.751 1328 Creating DB C:\Users\pspit\AppData\Local\Temp\flutter_tools.54fe1dc\flutter_tools_chrome_device.5eaaed4b\Default\shared_proto_db since it was missing.
-2023/09/18-19:05:23.766 1328 Reusing MANIFEST C:\Users\pspit\AppData\Local\Temp\flutter_tools.54fe1dc\flutter_tools_chrome_device.5eaaed4b\Default\shared_proto_db/MANIFEST-000001
+<<<<<<< Updated upstream
+2023/09/19-17:35:51.186 72b8 Reusing MANIFEST C:\Users\hwell\AppData\Local\Temp\flutter_tools.8f12df7e\flutter_tools_chrome_device.9f08d025\Default\shared_proto_db/MANIFEST-000001
+2023/09/19-17:35:51.187 72b8 Recovering log #3
+2023/09/19-17:35:51.188 72b8 Reusing old log C:\Users\hwell\AppData\Local\Temp\flutter_tools.8f12df7e\flutter_tools_chrome_device.9f08d025\Default\shared_proto_db/000003.log 
+=======
+2023/09/19-17:29:14.771 5cdc Reusing MANIFEST C:\Users\hwell\AppData\Local\Temp\flutter_tools.254c7c08\flutter_tools_chrome_device.e7bb72cc\Default\shared_proto_db/MANIFEST-000001
+2023/09/19-17:29:14.771 5cdc Recovering log #3
+2023/09/19-17:29:14.772 5cdc Reusing old log C:\Users\hwell\AppData\Local\Temp\flutter_tools.254c7c08\flutter_tools_chrome_device.e7bb72cc\Default\shared_proto_db/000003.log 
+>>>>>>> Stashed changes
