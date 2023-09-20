@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
+import 'tracking.dart'; // Import the TrackingPage
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,12 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _navigateToTrackingPage(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => TrackingPage(title: widget.title),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,6 +64,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text('Go to Investment Page'),
             ),
             SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                _navigateToTrackingPage(context);
+              },
+              child: Text('Tracking Page'),
+            ),
           ],
         ),
       ),
