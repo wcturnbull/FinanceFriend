@@ -1,6 +1,7 @@
+import 'package:financefriend/graph_page.dart';
 import 'package:flutter/material.dart';
-
-import 'tracking.dart';
+import 'investment_page.dart'; // Import the InvestmentPage
+import 'tracking.dart'; // Import the TrackingPage
 
 void main() {
   runApp(const MyApp());
@@ -13,42 +14,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'FinanceFriend',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: Color(
+                int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Finance Friend'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -57,29 +36,64 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  void _goToInvestmentPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            InvestmentPage(), // Navigate to the InvestmentPage
+      ),
+    );
+  }
+
   void _navigateToTrackingPage(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => TrackingPage(title: widget.title),
-      ));
+    ));
+  }
+
+  void _navigateToGraphsPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GraphPage(), // Navigate to the InvestmentPage
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Color(
+            int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000),
         title: Text(widget.title),
+        titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 35,
+            fontWeight: FontWeight.bold,
+            fontFamily: "Daddy Day"),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton(
-                onPressed: () {
-                  _navigateToTrackingPage(context);
-                },
-                child: Text('Tracking Page'),
-              ),
+              onPressed: _goToInvestmentPage, // Call the navigation function
+              child: Text('Go to Investment Page'),
+            ),
+            SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                _navigateToTrackingPage(context);
+              },
+              child: Text('Tracking Page'),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                _navigateToGraphsPage();
+              },
+              child: Text('Go to graphs page'),
+            ),
           ],
         ),
       ),
