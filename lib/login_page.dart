@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ff_appbar.dart';
 
 class Login extends StatelessWidget {
   const Login({super.key});
@@ -6,11 +7,7 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Image.asset('assets/images/FFLogo.png', fit: BoxFit.cover),
-        centerTitle: true,
-      ),
+      appBar: const FFAppBar(),
     );
   }
 }
