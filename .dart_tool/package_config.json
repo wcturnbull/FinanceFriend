@@ -50,6 +50,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "flutter_form_builder",
+      "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_form_builder-9.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-2.0.3",
       "packageUri": "lib/",
@@ -60,6 +66,12 @@
       "rootUri": "file:///C:/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.18.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "lints",
@@ -152,7 +164,7 @@
       "languageVersion": "3.1"
     }
   ],
-  "generated": "2023-09-19T21:34:33.899334Z",
+  "generated": "2023-09-24T17:32:40.691748Z",
   "generator": "pub",
   "generatorVersion": "3.1.1"
 }
