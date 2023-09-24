@@ -14,7 +14,20 @@ class _InvestmentPageState extends State<InvestmentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Investment Page'),
+        title: Text(
+          'Home Page',
+          style: TextStyle(color: Colors.black, fontSize: 15),
+        ),
+        backgroundColor: Colors.green,
+        flexibleSpace: Center(
+          child: Text(
+            'Investment Page',
+            style: TextStyle(
+              color: Colors.white, // Text color
+              fontSize: 24.0,
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -91,7 +104,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
               if (investments.isNotEmpty)
                 DataTable(
                   columns: [
-                    DataColumn(label: Text('Option')),
+                    DataColumn(label: Text('Stock Name')),
                     DataColumn(label: Text('Price')),
                     DataColumn(label: Text('Amount')),
                   ],
