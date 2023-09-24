@@ -104,6 +104,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "pie_chart",
+      "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/pie_chart-5.3.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///C:/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
@@ -164,7 +170,7 @@
       "languageVersion": "3.1"
     }
   ],
-  "generated": "2023-09-24T17:32:40.691748Z",
+  "generated": "2023-09-24T17:56:03.519156Z",
   "generator": "pub",
   "generatorVersion": "3.1.1"
 }
