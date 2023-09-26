@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:intl/intl.dart'; // Import for date formatting
 
 class InvestmentPage extends StatefulWidget {
   @override
@@ -81,11 +82,18 @@ class _InvestmentPageState extends State<InvestmentPage> {
                                 onPressed: () {
                                   if (_fbKey.currentState!.saveAndValidate()) {
                                     final formData = _fbKey.currentState!.value;
+
+                                    // Get the current date
+                                    final currentDate = DateFormat('yyyy-MM-dd')
+                                        .format(DateTime.now());
+
                                     setState(() {
                                       investments.add({
-                                        'Option': formData['investmentOption'],
-                                        'Price': formData['price'],
+                                        'Stock Name':
+                                            formData['investmentOption'],
+                                        'Date Purchased': currentDate,
                                         'Amount': formData['amount'],
+                                        'Price': formData['price'],
                                       });
                                     });
                                     Navigator.of(context).pop();
@@ -127,14 +135,17 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   child: DataTable(
                     columns: [
                       DataColumn(label: Text('Stock Name')),
-                      DataColumn(label: Text('Price')),
+                      DataColumn(label: Text('Date Purchased')), // New column
                       DataColumn(label: Text('Amount')),
+                      DataColumn(label: Text('Price')),
                     ],
                     rows: investments.map((investment) {
                       return DataRow(cells: [
-                        DataCell(Text(investment['Option'])),
-                        DataCell(Text(investment['Price'])),
+                        DataCell(Text(investment['Stock Name'])),
+                        DataCell(
+                            Text(investment['Date Purchased'])), // Date column
                         DataCell(Text(investment['Amount'])),
+                        DataCell(Text(investment['Price'])),
                       ]);
                     }).toList(),
                   ),
