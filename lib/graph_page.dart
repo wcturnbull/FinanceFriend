@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 
-class GraphPage extends StatelessWidget {
+class GraphPage extends StatefulWidget {
+  @override
+  _GraphPageState createState() => _GraphPageState();
+}
+
+class _GraphPageState extends State<GraphPage> {
   Map<String, double> dataMap1 = {
     "Tuition and Fees": 40,
     "Housing and Utilities": 25,
@@ -27,7 +32,7 @@ class GraphPage extends StatelessWidget {
     Color(int.parse("#A0E75A".substring(1, 7), radix: 16) + 0xFF0000000),
   ];
 
-  GraphPage({super.key});
+  // GraphPage({super.key});
 
   @override
   Widget build(BuildContext context) {
