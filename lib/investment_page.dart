@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
+import 'package:intl/intl.dart';
 
 class InvestmentPage extends StatefulWidget {
   @override
@@ -11,8 +11,45 @@ class _InvestmentPageState extends State<InvestmentPage> {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
   List<Map<String, dynamic>> investments = [];
 
+  List<DataRow> investmentsTableRows = [];
+
+  DataTable investmentsDataTable = DataTable(
+    columns: [
+      DataColumn(label: Text('Stock Name')),
+      DataColumn(label: Text('Date Purchased')),
+      DataColumn(label: Text('Amount')),
+      DataColumn(label: Text('Price')),
+    ],
+    rows: [],
+  );
+
   @override
   Widget build(BuildContext context) {
+    double total = investments.fold(0.0, (sum, investment) {
+      return sum + double.parse(investment['Price']);
+    });
+
+    String totalFormatted = total.toStringAsFixed(2);
+
+    DataRow totalRow = DataRow(cells: [
+      DataCell(Text('Total', style: TextStyle(fontWeight: FontWeight.bold))),
+      DataCell(Text('')),
+      DataCell(Text('')),
+      DataCell(
+          Text(totalFormatted, style: TextStyle(fontWeight: FontWeight.bold))),
+    ]);
+
+    investmentsTableRows = investments.map((investment) {
+      return DataRow(cells: [
+        DataCell(Text(investment['Stock Name'])),
+        DataCell(Text(investment['Date Purchased'])),
+        DataCell(Text(investment['Amount'])),
+        DataCell(Text(investment['Price'])),
+      ]);
+    }).toList();
+
+    investmentsTableRows.add(totalRow);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -24,7 +61,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
           child: Text(
             'Investment Page',
             style: TextStyle(
-              color: Colors.white, // Text color
+              color: Colors.white,
               fontSize: 24.0,
             ),
           ),
@@ -40,7 +77,6 @@ class _InvestmentPageState extends State<InvestmentPage> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Code for "Add Investments" button
                       showDialog(
                         context: context,
                         builder: (context) {
@@ -83,7 +119,6 @@ class _InvestmentPageState extends State<InvestmentPage> {
                                   if (_fbKey.currentState!.saveAndValidate()) {
                                     final formData = _fbKey.currentState!.value;
 
-                                    // Get the current date
                                     final currentDate = DateFormat('yyyy-MM-dd')
                                         .format(DateTime.now());
 
@@ -135,19 +170,11 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   child: DataTable(
                     columns: [
                       DataColumn(label: Text('Stock Name')),
-                      DataColumn(label: Text('Date Purchased')), // New column
+                      DataColumn(label: Text('Date Purchased')),
                       DataColumn(label: Text('Amount')),
                       DataColumn(label: Text('Price')),
                     ],
-                    rows: investments.map((investment) {
-                      return DataRow(cells: [
-                        DataCell(Text(investment['Stock Name'])),
-                        DataCell(
-                            Text(investment['Date Purchased'])), // Date column
-                        DataCell(Text(investment['Amount'])),
-                        DataCell(Text(investment['Price'])),
-                      ]);
-                    }).toList(),
+                    rows: investmentsTableRows,
                   ),
                 ),
             ],
