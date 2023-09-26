@@ -30,7 +30,7 @@ class CreateAccount extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 20.0),
+                  const SizedBox(height: 0.0),
                   const SizedBox(
                     width: 300,
                     child: TextField(
@@ -79,18 +79,6 @@ class CreateAccount extends StatelessWidget {
                           color: Colors.white,
                           fontSize: 24,
                         )),
-                  ),
-                  const SizedBox(height: 16.0),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, "/");
-                    },
-                    child: const Text(
-                        "New here? Click here to create an account!",
-                        style: TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.white)),
                   ),
                   const SizedBox(height: 10.0),
                 ],

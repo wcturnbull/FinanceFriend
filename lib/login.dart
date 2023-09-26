@@ -23,7 +23,6 @@ class Login extends StatelessWidget {
             ),
             Container(
               width: 400, // Adjust the width as needed
-              height: 300,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(10.0),
@@ -31,7 +30,7 @@ class Login extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 20.0),
+                  const SizedBox(height: 40.0),
                   const SizedBox(
                     width: 300,
                     child: TextField(
@@ -80,7 +79,8 @@ class Login extends StatelessWidget {
                             color: Colors.white,
                             decoration: TextDecoration.underline,
                             decorationColor: Colors.white)),
-                  )
+                  ),
+                  const SizedBox(height: 16.0),
                 ],
               ),
             ),
