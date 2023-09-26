@@ -34,87 +34,110 @@ class _InvestmentPageState extends State<InvestmentPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text('Add Investment'),
-                        content: FormBuilder(
-                          key: _fbKey,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          child: Column(
-                            children: [
-                              FormBuilderDropdown(
-                                name: 'investmentOption',
-                                items: List.generate(
-                                  10,
-                                  (index) => DropdownMenuItem(
-                                    value: (index + 1).toString(),
-                                    child: Text((index + 1).toString()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Code for "Add Investments" button
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('Add Investment'),
+                            content: FormBuilder(
+                              key: _fbKey,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              child: Column(
+                                children: [
+                                  FormBuilderDropdown(
+                                    name: 'investmentOption',
+                                    items: List.generate(
+                                      10,
+                                      (index) => DropdownMenuItem(
+                                        value: (index + 1).toString(),
+                                        child: Text((index + 1).toString()),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  FormBuilderTextField(
+                                    name: 'price',
+                                    decoration:
+                                        InputDecoration(labelText: 'Price'),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  FormBuilderTextField(
+                                    name: 'amount',
+                                    decoration:
+                                        InputDecoration(labelText: 'Amount'),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ],
                               ),
-                              FormBuilderTextField(
-                                name: 'price',
-                                decoration: InputDecoration(labelText: 'Price'),
-                                keyboardType: TextInputType.number,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  if (_fbKey.currentState!.saveAndValidate()) {
+                                    final formData = _fbKey.currentState!.value;
+                                    setState(() {
+                                      investments.add({
+                                        'Option': formData['investmentOption'],
+                                        'Price': formData['price'],
+                                        'Amount': formData['amount'],
+                                      });
+                                    });
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                                child: Text('Save'),
                               ),
-                              FormBuilderTextField(
-                                name: 'amount',
-                                decoration:
-                                    InputDecoration(labelText: 'Amount'),
-                                keyboardType: TextInputType.number,
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('Cancel'),
                               ),
                             ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              if (_fbKey.currentState!.saveAndValidate()) {
-                                final formData = _fbKey.currentState!.value;
-                                setState(() {
-                                  investments.add({
-                                    'Option': formData['investmentOption'],
-                                    'Price': formData['price'],
-                                    'Amount': formData['amount'],
-                                  });
-                                });
-                                Navigator.of(context).pop();
-                              }
-                            },
-                            child: Text('Save'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text('Cancel'),
-                          ),
-                        ],
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                child: Text('Add Investments'),
+                    child: Text('Add Investments'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Code for "Button 2"
+                    },
+                    child: Text('More Information'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Code for "Button 3"
+                    },
+                    child: Text('Generate Graph'),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
               if (investments.isNotEmpty)
-                DataTable(
-                  columns: [
-                    DataColumn(label: Text('Stock Name')),
-                    DataColumn(label: Text('Price')),
-                    DataColumn(label: Text('Amount')),
-                  ],
-                  rows: investments.map((investment) {
-                    return DataRow(cells: [
-                      DataCell(Text(investment['Option'])),
-                      DataCell(Text(investment['Price'])),
-                      DataCell(Text(investment['Amount'])),
-                    ]);
-                  }).toList(),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: DataTable(
+                    columns: [
+                      DataColumn(label: Text('Stock Name')),
+                      DataColumn(label: Text('Price')),
+                      DataColumn(label: Text('Amount')),
+                    ],
+                    rows: investments.map((investment) {
+                      return DataRow(cells: [
+                        DataCell(Text(investment['Option'])),
+                        DataCell(Text(investment['Price'])),
+                        DataCell(Text(investment['Amount'])),
+                      ]);
+                    }).toList(),
+                  ),
                 ),
             ],
           ),
