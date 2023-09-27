@@ -207,7 +207,7 @@ class _TrackingPageState extends State<TrackingPage> {
                   )
                 );
               },
-              child: const Text('Open Popup'),
+              child: const Text('Add Bill'),
             )
           ],)
       ),
