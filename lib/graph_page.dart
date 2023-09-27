@@ -64,7 +64,7 @@ class _GraphPageState extends State<GraphPage> {
             builder: (BuildContext context) {
               return ElevatedButton(
                 onPressed: () async {
-                  final resp = await openPopup();
+                  final resp = await openAddToBudget();
                   if (resp == null || resp.isEmpty) return;
                   print(resp);
                   setState(() {
@@ -78,7 +78,7 @@ class _GraphPageState extends State<GraphPage> {
               );
             },
           ),
-          SizedBox(height: 24),
+          SizedBox(height: 35),
           PieChart(
             key: UniqueKey(), // Add a unique key to the PieChart widget
             dataMap: budgetMap,
@@ -120,12 +120,22 @@ class _GraphPageState extends State<GraphPage> {
             baseChartColor: Colors.white,
             colorList: colorList,
           ),
+          SizedBox(height: 35),
+          Builder(
+            builder: (BuildContext context) {
+              return ElevatedButton(
+                onPressed: openBudgetTable,
+                child: Text("View Current Budget"),
+              );
+            },
+          ),
+          SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Future<String?> openPopup() => showDialog<String>(
+  Future<String?> openAddToBudget() => showDialog<String>(
         context: scaffoldKey.currentContext!,
         builder: (context) {
           return AlertDialog(
@@ -175,6 +185,15 @@ class _GraphPageState extends State<GraphPage> {
         },
       );
 
+  Future<void> openBudgetTable() async {
+    await showDialog(
+      context: scaffoldKey.currentContext!,
+      builder: (context) {
+        return BudgetTable(budgetMap: budgetMap);
+      },
+    );
+  }
+
   void submit() {
     actualCategory = selectedCategory;
     if (selectedCategory != "Select Category") {
@@ -191,5 +210,67 @@ class _GraphPageState extends State<GraphPage> {
         (double previousValue, double currentValue) {
       return previousValue + currentValue;
     });
+  }
+}
+
+class BudgetTable extends StatelessWidget {
+  final Map<String, double> budgetMap;
+
+  BudgetTable({required this.budgetMap});
+
+  @override
+  Widget build(BuildContext context) {
+    double totalAmount = 0;
+
+    // Calculate the total amount
+    budgetMap.values.forEach((amount) {
+      totalAmount += amount;
+    });
+
+    return AlertDialog(
+      title: Text(
+        "Current Budget",
+        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      ),
+      content: SizedBox(
+        width: 500,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            ListView.builder(
+              itemCount: budgetMap.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                final category = budgetMap.keys.toList()[index];
+                final amount = budgetMap[category];
+                return ListTile(
+                  title: Text(category, style: TextStyle(fontSize: 18.5)),
+                  subtitle: Text(
+                    "\$$amount",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                );
+              },
+            ),
+            // Display the total amount at the bottom
+            SizedBox(height: 2),
+            Center(
+                child: Text(
+              "Total: \$${totalAmount.toStringAsFixed(2)}",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            )),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the dialog
+          },
+          child: Text("Close"),
+        ),
+      ],
+    );
   }
 }
