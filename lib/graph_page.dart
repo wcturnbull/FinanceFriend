@@ -203,7 +203,8 @@ class _GraphPageState extends State<GraphPage> {
     }
     if (actualCategory != "Select Category") {
       setState(() {
-        budgetMap[actualCategory] = double.parse(controller.text);
+        budgetMap[actualCategory] =
+            (budgetMap[actualCategory]! + double.parse(controller.text))!;
       });
       selectedCategory = "Select Category";
     }
