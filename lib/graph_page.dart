@@ -41,22 +41,37 @@ class _GraphPageState extends State<GraphPage> {
       Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000);
 
   final colorList = <Color>[
+    Color(int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#15510a".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#1c6c0e".substring(1, 7), radix: 16) + 0xFF0000000),
     Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#33921C".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#439D27".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#54A931".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#66B53B".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#79C046".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#8CDB50".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#A0E75A".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#4f9f41".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#7bb770".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#a7cfa0".substring(1, 7), radix: 16) + 0xFF0000000),
+    Color(int.parse("#d3e7cf".substring(1, 7), radix: 16) + 0xFF0000000),
   ];
+
+  List<String> dropdownItems = [
+    "Select Category",
+    "Housing",
+    "Utilities",
+    "Food",
+    "Transportation",
+    "Entertainment",
+    "Investments",
+    "Debt Payments",
+    "Other",
+  ];
+
+  TextEditingController customCategoryController = TextEditingController();
+  bool isOtherSelected = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: const Text('Graph Page'),
+        title: const Text('Budget Allocation'),
       ),
       body: Column(
         children: <Widget>[
@@ -68,9 +83,13 @@ class _GraphPageState extends State<GraphPage> {
                   if (resp == null || resp.isEmpty) return;
                   print(resp);
                   setState(() {
+                    if (!dropdownItems.contains(actualCategory)) {
+                      // Add the custom category to the dropdown items
+                      dropdownItems.insert(
+                          dropdownItems.length - 1, actualCategory);
+                    }
                     budgetMap.addAll({actualCategory: double.parse(resp)});
-                    values_added =
-                        true; // Set values_added to true when anything is added
+                    values_added = true;
                   });
                   print(budgetMap);
                 },
@@ -79,46 +98,11 @@ class _GraphPageState extends State<GraphPage> {
             },
           ),
           SizedBox(height: 35),
-          PieChart(
-            key: UniqueKey(), // Add a unique key to the PieChart widget
-            dataMap: budgetMap,
-            animationDuration: const Duration(milliseconds: 800),
-            chartLegendSpacing: 80,
-            chartRadius: 300,
-            initialAngleInDegree: 0,
-            chartType: ChartType.ring,
-            ringStrokeWidth: 35,
-            centerText: "\$" + getTotalBudget(budgetMap).toString(),
-            centerTextStyle: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 40,
-              background: Paint()
-                ..strokeWidth = 25.0
-                ..color = Colors.white
-                ..style = PaintingStyle.stroke
-                ..strokeJoin = StrokeJoin.round,
-            ),
-            chartValuesOptions: ChartValuesOptions(
-              showChartValueBackground: false,
-              showChartValues:
-                  values_added, // Show values when anything is added
-              showChartValuesInPercentage: true,
-              decimalPlaces: 0,
-            ),
-            legendOptions: values_added
-                ? LegendOptions(
-                    showLegends: true,
-                    legendPosition: LegendPosition.right,
-                    legendTextStyle: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  )
-                : LegendOptions(
-                    showLegends: false), // Hide legends when nothing is added
-            baseChartColor: Colors.white,
+          BudgetPieChart(
+            budgetMap: budgetMap,
+            valuesAdded: values_added,
             colorList: colorList,
+            color: color,
           ),
           SizedBox(height: 35),
           Builder(
@@ -138,49 +122,66 @@ class _GraphPageState extends State<GraphPage> {
   Future<String?> openAddToBudget() => showDialog<String>(
         context: scaffoldKey.currentContext!,
         builder: (context) {
-          return AlertDialog(
-            title: const Text("Enter Expense:"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: selectedCategory,
-                  items: [
-                    "Select Category",
-                    "Housing",
-                    "Utilities",
-                    "Food",
-                    "Transportation",
-                    "Entertainment",
-                    "Investments",
-                    "Debt Payments"
-                  ].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedCategory = newValue!;
-                      isFormValid =
-                          newValue != "Select Category"; // Update form validity
-                    });
-                  },
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text("Enter Expense:"),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      items: dropdownItems.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCategory = newValue!;
+                          isFormValid =
+                              newValue != "Select Category" && !isOtherSelected;
+                          // Check if "Other" is selected
+                          isOtherSelected = newValue == "Other";
+                        });
+                      },
+                    ),
+                    // Show a text field if "Other" is selected
+                    if (isOtherSelected)
+                      TextField(
+                        controller: customCategoryController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter a custom category',
+                        ),
+                      ),
+                    SizedBox(height: 10), // Add some spacing
+                    TextField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your expense amount (i.e. \$25)',
+                      ),
+                      controller: controller,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10), // Add some spacing
-                TextField(
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your expense amount (i.e. \$25)',
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      submit();
+                      // Update values_added when a custom category is added
+                      // if (isOtherSelected) {
+                      setState(() {
+                        values_added = true;
+                      });
+                      // }
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                    child: const Text("Submit"),
                   ),
-                  controller: controller,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: submit, child: const Text("Submit"))
-            ],
+                ],
+              );
+            },
           );
         },
       );
@@ -196,20 +197,26 @@ class _GraphPageState extends State<GraphPage> {
 
   void submit() {
     actualCategory = selectedCategory;
-    if (selectedCategory != "Select Category") {
-      budgetMap.addAll({selectedCategory: double.parse(controller.text)});
-      values_added = true; // Set values_added to true when anything is added
-      Navigator.of(context).pop(controller.text);
+    if (isOtherSelected) {
+      // Use the custom category name if "Other" is selected
+      actualCategory = customCategoryController.text;
+    }
+    if (actualCategory != "Select Category") {
+      setState(() {
+        budgetMap[actualCategory] = double.parse(controller.text);
+      });
       selectedCategory = "Select Category";
     }
     controller.clear();
+    customCategoryController.clear(); // Clear the custom category input
   }
 
   double getTotalBudget(Map<String, double> budgetMap) {
-    return budgetMap.values.fold(0,
-        (double previousValue, double currentValue) {
+    double total = budgetMap.values.fold(0, (previousValue, currentValue) {
       return previousValue + currentValue;
     });
+
+    return double.parse(total.toStringAsFixed(2));
   }
 }
 
@@ -272,5 +279,72 @@ class BudgetTable extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class BudgetPieChart extends StatelessWidget {
+  final Map<String, double> budgetMap;
+  final bool valuesAdded;
+  final List<Color> colorList;
+  final Color color;
+
+  BudgetPieChart({
+    required this.budgetMap,
+    required this.valuesAdded,
+    required this.colorList,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PieChart(
+      key: UniqueKey(),
+      dataMap: budgetMap,
+      animationDuration: const Duration(milliseconds: 800),
+      chartLegendSpacing: 80,
+      chartRadius: 300,
+      initialAngleInDegree: 0,
+      chartType: ChartType.ring,
+      ringStrokeWidth: 35,
+      centerText: "\$" + getTotalBudget(budgetMap).toString(),
+      centerTextStyle: TextStyle(
+        color: color,
+        fontWeight: FontWeight.bold,
+        fontSize: 40,
+        background: Paint()
+          ..strokeWidth = 25.0
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeJoin = StrokeJoin.round,
+      ),
+      chartValuesOptions: ChartValuesOptions(
+        showChartValueBackground: false,
+        showChartValues: valuesAdded,
+        showChartValuesInPercentage: true,
+        decimalPlaces: 0,
+      ),
+      legendOptions: valuesAdded
+          ? LegendOptions(
+              showLegends: true,
+              legendPosition: LegendPosition.right,
+              legendTextStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            )
+          : LegendOptions(
+              showLegends: false,
+            ),
+      baseChartColor: Colors.white,
+      colorList: colorList,
+    );
+  }
+
+  double getTotalBudget(Map<String, double> budgetMap) {
+    double total = budgetMap.values.fold(0, (previousValue, currentValue) {
+      return previousValue + currentValue;
+    });
+
+    return double.parse(total.toStringAsFixed(2));
   }
 }
