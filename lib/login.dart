@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
 import 'ff_appbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'app_state.dart';
 
 class Login extends StatelessWidget {
-  const Login({super.key});
+  final ApplicationState appState;
+
+  Login({required this.appState, super.key});
+
+  final TextEditingController emailControl = TextEditingController();
+  final TextEditingController passwordControl = TextEditingController();
+
+  Future<void> _handleLogin(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailControl.text.trim(),
+        password: passwordControl.text.trim(),
+      );
+      appState.init(); // Initialize the app state to trigger userChanges()
+      Navigator.pushNamed(context, '/create_account');
+    } catch (e) {
+      // Handle authentication errors (e.g., invalid credentials)
+      print('Authentication error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Authentication failed. Please check your credentials.'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,22 +57,24 @@ class Login extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40.0),
-                  const SizedBox(
+                  SizedBox(
                     width: 300,
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: emailControl,
+                      decoration: const InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
-                        labelText: 'Username',
+                        labelText: 'Email',
                       ),
                     ),
                   ),
                   const SizedBox(height: 16.0),
-                  const SizedBox(
+                  SizedBox(
                     width: 300,
                     child: TextField(
+                      controller: passwordControl,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                         labelText: 'Password',
@@ -56,7 +84,7 @@ class Login extends StatelessWidget {
                   const SizedBox(height: 16.0),
                   ElevatedButton(
                     onPressed: () {
-                      // Perform login logic here
+                      _handleLogin(context);
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor:
