@@ -30,7 +30,7 @@ class CreateAccount extends StatelessWidget {
       );
 
       // Registration successful, you can now navigate to another page or handle the next steps.
-      Navigator.pushNamed(context, '/login');
+      Navigator.pushNamed(context, '/home');
     } catch (e) {
       // Handle registration errors (e.g., email is already in use)
       print('Registration error: $e');

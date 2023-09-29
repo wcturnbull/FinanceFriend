@@ -18,7 +18,7 @@ class Login extends StatelessWidget {
         password: passwordControl.text.trim(),
       );
       appState.init(); // Initialize the app state to trigger userChanges()
-      Navigator.pushNamed(context, '/create_account');
+      Navigator.pushNamed(context, '/home');
     } catch (e) {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
