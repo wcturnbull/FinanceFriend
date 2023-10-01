@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
 import 'tracking.dart'; // Import the TrackingPage
+import 'package:firebase_database/firebase_database.dart';
+
+final databaseReference = FirebaseDatabase.instance.ref();
 
 void main() {
   runApp(const MyApp());
+}
+
+Future<void> deleteUser(String userId) async {
+  try {
+    DatabaseReference userRef = databaseReference.child('users').child(userId);
+    await userRef.remove();
+  } catch (error) {
+    print("Error deleting user: $error");
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -131,7 +143,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                                         ElevatedButton(
                                                           child: const Text('Delete Account'),
                                                           onPressed: () {
-                                                            //perform account deletion
+                                                            //get userId somehow
+                                                            String userId = '';
+                                                            deleteUser(userId);
                                                             //log user out (return to login page?)
                                                             Navigator.of(context).pop();
                                                           },
