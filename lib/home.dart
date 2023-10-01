@@ -25,6 +25,13 @@ class HomePage extends StatelessWidget {
               },
               child: Text('Tracking Page'),
             ),
+            SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/dashboard');
+              },
+              child: Text('Open Dashboard'),
+            ),
           ],
         ),
       ),

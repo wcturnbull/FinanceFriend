@@ -1,4 +1,5 @@
 import 'package:financefriend/create_account.dart';
+import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
@@ -36,11 +37,14 @@ Future<void> main() async {
         home: startWidget,
         initialRoute: '/login',
         routes: {
-          '/login': (context) => Login(appState: appState,),
+          '/login': (context) => Login(
+                appState: appState,
+              ),
           '/create_account': (context) => CreateAccount(appState: appState),
           '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
-          '/home':(context) => const HomePage(),
+          '/dashboard': (context) => GraphPage(),
+          '/home': (context) => const HomePage(),
         }),
   );
 }
