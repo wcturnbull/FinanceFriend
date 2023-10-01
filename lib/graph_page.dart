@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:intl/intl.dart';
 
 class GraphPage extends StatefulWidget {
   @override
@@ -13,7 +14,7 @@ class _GraphPageState extends State<GraphPage> {
   bool values_added = false;
 
   String selectedCategory = "Select Category";
-  bool isFormValid = false; // Initialize with a default category
+  bool isFormValid = false;
 
   Map<String, double> budgetMap = {
     "Housing": 0,
@@ -71,10 +72,12 @@ class _GraphPageState extends State<GraphPage> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: const Text('Budget Allocation'),
+        title: const Text('Budget Allocation',
+            style: TextStyle(fontFamily: "Daddy Day")),
       ),
       body: Column(
         children: <Widget>[
+          //Image.asset('lib/wes_assets/Finance Friend Logo 2.png'),
           Builder(
             builder: (BuildContext context) {
               return ElevatedButton(
@@ -93,27 +96,29 @@ class _GraphPageState extends State<GraphPage> {
                   });
                   print(budgetMap);
                 },
-                child: Text("Add Spending Category"),
+                child: const Text("Add Spending Category",
+                    style: TextStyle(fontFamily: "Daddy Day")),
               );
             },
           ),
-          SizedBox(height: 35),
+          const SizedBox(height: 35),
           BudgetPieChart(
             budgetMap: budgetMap,
             valuesAdded: values_added,
             colorList: colorList,
             color: color,
           ),
-          SizedBox(height: 35),
+          const SizedBox(height: 35),
           Builder(
             builder: (BuildContext context) {
               return ElevatedButton(
                 onPressed: openBudgetTable,
-                child: Text("View Current Budget"),
+                child: const Text("View Current Budget",
+                    style: TextStyle(fontFamily: "Daddy Day")),
               );
             },
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -125,7 +130,8 @@ class _GraphPageState extends State<GraphPage> {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: const Text("Enter Expense:"),
+                title: const Text("Enter Expense:",
+                    style: TextStyle(fontFamily: "Daddy Day")),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -151,11 +157,11 @@ class _GraphPageState extends State<GraphPage> {
                     if (isOtherSelected)
                       TextField(
                         controller: customCategoryController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Enter a custom category',
                         ),
                       ),
-                    SizedBox(height: 10), // Add some spacing
+                    const SizedBox(height: 10), // Add some spacing
                     TextField(
                       autofocus: true,
                       decoration: const InputDecoration(
@@ -177,7 +183,8 @@ class _GraphPageState extends State<GraphPage> {
                       // }
                       Navigator.of(context).pop(); // Close the dialog
                     },
-                    child: const Text("Submit"),
+                    child: const Text("Submit",
+                        style: TextStyle(fontFamily: "Daddy Day")),
                   ),
                 ],
               );
@@ -236,9 +243,9 @@ class BudgetTable extends StatelessWidget {
     });
 
     return AlertDialog(
-      title: Text(
+      title: const Text(
         "Current Budget",
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: 22, fontFamily: "Daddy Day"),
       ),
       content: SizedBox(
         width: 500,
@@ -252,20 +259,23 @@ class BudgetTable extends StatelessWidget {
                 final category = budgetMap.keys.toList()[index];
                 final amount = budgetMap[category];
                 return ListTile(
-                  title: Text(category, style: TextStyle(fontSize: 18.5)),
+                  title: Text(category,
+                      style: const TextStyle(
+                          fontSize: 18.5, fontFamily: "Daddy Day")),
                   subtitle: Text(
                     "\$$amount",
-                    style: TextStyle(fontSize: 16),
+                    style:
+                        const TextStyle(fontSize: 16, fontFamily: "Daddy Day"),
                   ),
                 );
               },
             ),
             // Display the total amount at the bottom
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Center(
                 child: Text(
               "Total: \$${totalAmount.toStringAsFixed(2)}",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontFamily: "Daddy Day"),
               textAlign: TextAlign.center,
             )),
           ],
@@ -276,7 +286,7 @@ class BudgetTable extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
           },
-          child: Text("Close"),
+          child: const Text("Close", style: TextStyle(fontFamily: "Daddy Day")),
         ),
       ],
     );
@@ -298,6 +308,17 @@ class BudgetPieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final totalBudget = getTotalBudget(budgetMap);
+    final formattedTotalBudget = NumberFormat.currency(
+      symbol: '\$', // Use "$" as the currency symbol
+      decimalDigits: 0, // No decimal places
+    ).format(totalBudget);
+
+    final filteredLegendItems = budgetMap.entries
+        .where((entry) => entry.value > 0)
+        .map((entry) => entry.key)
+        .toList();
+
     return PieChart(
       key: UniqueKey(),
       dataMap: budgetMap,
@@ -307,33 +328,26 @@ class BudgetPieChart extends StatelessWidget {
       initialAngleInDegree: 0,
       chartType: ChartType.ring,
       ringStrokeWidth: 35,
-      centerText: "\$" + getTotalBudget(budgetMap).toString(),
+      centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-        color: color,
-        fontWeight: FontWeight.bold,
-        fontSize: 40,
-        background: Paint()
-          ..strokeWidth = 25.0
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeJoin = StrokeJoin.round,
-      ),
+          color: Color(
+              int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
+          fontSize: 40,
+          fontFamily: "Daddy Day"),
       chartValuesOptions: ChartValuesOptions(
-        showChartValueBackground: false,
         showChartValues: valuesAdded,
         showChartValuesInPercentage: true,
+        showChartValueBackground: false,
         decimalPlaces: 0,
+        chartValueStyle: TextStyle(fontFamily: "Daddy Day", fontSize: 20),
       ),
       legendOptions: valuesAdded
-          ? LegendOptions(
+          ? const LegendOptions(
               showLegends: true,
               legendPosition: LegendPosition.right,
-              legendTextStyle: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            )
-          : LegendOptions(
+              legendTextStyle: TextStyle(fontSize: 14, fontFamily: "Daddy Day"),
+              legendShape: BoxShape.rectangle)
+          : const LegendOptions(
               showLegends: false,
             ),
       baseChartColor: Colors.white,
