@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'main.dart';
+
+final databaseReference = FirebaseDatabase.instance.ref();
+
+void writeBill(String title, String note, String duedate) {
+  databaseReference.child('bills').set({
+    'user': '',//put user here
+    'title': title,
+    'note': note,
+    'duedate': duedate,
+  });
+}
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({super.key, required this.title});
@@ -33,8 +45,9 @@ class _TrackingPageState extends State<TrackingPage> {
     );
   }
 
-  Future fetchTracking() async {
-    //database call
+  Future fetchBills() async {
+    DataSnapshot snapshot = await databaseReference.child('bills').once() as DataSnapshot;
+    return snapshot;
   }
 
   @override
@@ -56,7 +69,7 @@ class _TrackingPageState extends State<TrackingPage> {
             children: [
               Text('Bills'),
               FutureBuilder(
-                future: fetchTracking(),
+                future: fetchBills(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     results = snapshot.data;
@@ -196,7 +209,7 @@ class _TrackingPageState extends State<TrackingPage> {
                                           String billTitle = billTitleController.text;
                                           String billData = billDataController.text;
                                           String billDate = billDateController.text;
-                                          //send the data to database, refresh page if necessary
+                                          writeBill(billTitle, billData, billDate);
                                           Navigator.of(context).pop();
                                         },
                                       ),
