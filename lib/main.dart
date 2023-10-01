@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.green,
         title: Text(widget.title),
         actions: <Widget>[
           IconButton(
@@ -84,12 +84,81 @@ class _MyHomePageState extends State<MyHomePage> {
                                 children: <Widget>[
                                   Padding(
                                     padding: const EdgeInsets.all(8),
-                                    child: Text('Stuff goes here to customize dashboard/delete or access account info', style: TextStyle(fontSize: 20))
+                                    child: Text('Username/Name and other basic account info', style: TextStyle(fontSize: 20))
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text('Customization menu (allow user to change ordering of previews)', style: TextStyle(fontSize: 20))
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: ElevatedButton(
-                                      child: const Text('Exit'),
+                                      child: const Text('Delete Account'),
+                                      onPressed: () async {
+                                        await showDialog<void>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            content: Stack(
+                                              children: <Widget>[
+                                              Positioned(
+                                                right: -40,
+                                                top: -40,
+                                                child: InkResponse(
+                                                  onTap: () {
+                                                  Navigator.of(context).pop();
+                                                  },
+                                                  child: const CircleAvatar(
+                                                    backgroundColor: Colors.red,
+                                                    child: Icon(Icons.close),
+                                                  ),
+                                                ),
+                                              ),
+                                              Form(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: <Widget>[
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8),
+                                                      child: Text('Are you sure that you want to delete your account?', style: TextStyle(fontSize: 20))
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8),
+                                                      child: Text('This action is permanent and cannot be reversed.', style: TextStyle(fontSize: 20))
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8),
+                                                      child: Row(children: [
+                                                        ElevatedButton(
+                                                          child: const Text('Delete Account'),
+                                                          onPressed: () {
+                                                            //perform account deletion
+                                                            //log user out (return to login page?)
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                        ),
+                                                        ElevatedButton(
+                                                          child: const Text('Cancel'),
+                                                          onPressed: () {
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                        ),
+                                                      ],
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      )
+                                                    ),
+                                                  ]
+                                                )
+                                              )
+                                            ]),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: ElevatedButton(
+                                      child: const Text('Close'),
                                       onPressed: () {
                                         Navigator.of(context).pop();
                                       },
