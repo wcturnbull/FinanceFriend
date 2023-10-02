@@ -1,6 +1,9 @@
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 class GraphPage extends StatefulWidget {
   @override
@@ -15,16 +18,20 @@ class _GraphPageState extends State<GraphPage> {
 
   String selectedCategory = "Select Category";
   bool isFormValid = false;
+  bool budgetCreated = false;
 
-  Map<String, double> budgetMap = {
-    "Housing": 0,
-    "Utilities": 0,
-    "Food": 0,
-    "Transportation": 0,
-    "Entertainment": 0,
-    "Investments": 0,
-    "Debt Payments": 0
-  };
+  // Map<String, double> budgetMap = {
+  //   "Housing": 0,
+  //   "Utilities": 0,
+  //   "Food": 0,
+  //   "Transportation": 0,
+  //   "Entertainment": 0,
+  //   "Investments": 0,
+  //   "Debt Payments": 0
+  // };
+
+  Map<String, double> budgetMap = {};
+  double budgetAmount = 0;
 
   @override
   void initState() {
@@ -61,65 +68,108 @@ class _GraphPageState extends State<GraphPage> {
     "Entertainment",
     "Investments",
     "Debt Payments",
-    "Other",
+    "Custom",
   ];
+
+  var options = ["Option 1", "Option 2", "Option 3"];
 
   TextEditingController customCategoryController = TextEditingController();
   bool isOtherSelected = false;
+  bool afterBudgetAmt = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        title: const Text('Budget Allocation',
-            style: TextStyle(fontFamily: "Daddy Day")),
-      ),
-      body: Column(
-        children: <Widget>[
-          //Image.asset('lib/wes_assets/Finance Friend Logo 2.png'),
-          Builder(
-            builder: (BuildContext context) {
-              return ElevatedButton(
-                onPressed: () async {
-                  final resp = await openAddToBudget();
-                  if (resp == null || resp.isEmpty) return;
-                  print(resp);
-                  setState(() {
-                    if (!dropdownItems.contains(actualCategory)) {
-                      // Add the custom category to the dropdown items
-                      dropdownItems.insert(
-                          dropdownItems.length - 1, actualCategory);
-                    }
-                    budgetMap.addAll({actualCategory: double.parse(resp)});
-                    values_added = true;
-                  });
-                  print(budgetMap);
-                },
-                child: const Text("Add Spending Category",
-                    style: TextStyle(fontFamily: "Daddy Day")),
-              );
-            },
+      appBar: const FFAppBar(),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Visibility(
+                visible: !budgetCreated,
+                child: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return BudgetCreationPopup(
+                          onBudgetCreated: (Map<String, double> budgetMap) {
+                            // Set budgetMap and update visibility
+                            setState(() {
+                              this.budgetMap = budgetMap;
+                              budgetCreated = true;
+                            });
+                          },
+                        );
+                      },
+                    );
+                  },
+                  child: Text("Create Budget"),
+                ),
+              ),
+              // Visibility(
+              //     visible: afterBudgetAmt,
+              //     // SHOULD BUILD UP THE BUDGETCREATIONPOPUP
+              //     child: SizedBox()),
+              Visibility(
+                visible:
+                    budgetCreated, // Show the chart only when budgetMap is not empty
+                child: Column(
+                  children: <Widget>[
+                    Builder(
+                      builder: (BuildContext context) {
+                        return ElevatedButton(
+                          onPressed: () async {
+                            final resp = await openAddToBudget();
+                            if (resp == null || resp.isEmpty) return;
+                            print(resp);
+                            setState(() {
+                              if (!dropdownItems.contains(actualCategory)) {
+                                // Add the custom category to the dropdown items
+                                dropdownItems.insert(
+                                    dropdownItems.length - 1, actualCategory);
+                              }
+                              budgetMap
+                                  .addAll({actualCategory: double.parse(resp)});
+                              values_added = true;
+                            });
+                            print(budgetMap);
+                          },
+                          child: const Text("Add Spending Category",
+                              style: TextStyle()),
+                        );
+                      },
+                    ),
+                    Visibility(
+                      visible: budgetMap.isNotEmpty,
+                      child: Column(children: <Widget>[
+                        const SizedBox(height: 35),
+                        BudgetPieChart(
+                          budgetMap: budgetMap,
+                          valuesAdded: budgetMap.isNotEmpty,
+                          colorList: colorList,
+                          color: color,
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 35),
+                    Builder(
+                      builder: (BuildContext context) {
+                        return ElevatedButton(
+                          onPressed: openBudgetTable,
+                          child: const Text("View Current Budget",
+                              style: TextStyle()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 35),
-          BudgetPieChart(
-            budgetMap: budgetMap,
-            valuesAdded: values_added,
-            colorList: colorList,
-            color: color,
-          ),
-          const SizedBox(height: 35),
-          Builder(
-            builder: (BuildContext context) {
-              return ElevatedButton(
-                onPressed: openBudgetTable,
-                child: const Text("View Current Budget",
-                    style: TextStyle(fontFamily: "Daddy Day")),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
@@ -130,8 +180,7 @@ class _GraphPageState extends State<GraphPage> {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: const Text("Enter Expense:",
-                    style: TextStyle(fontFamily: "Daddy Day")),
+                title: const Text("Enter Expense:", style: TextStyle()),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -140,7 +189,10 @@ class _GraphPageState extends State<GraphPage> {
                       items: dropdownItems.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Text(value),
+                          child: Text(
+                            value,
+                            style: TextStyle(),
+                          ),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
@@ -148,8 +200,8 @@ class _GraphPageState extends State<GraphPage> {
                           selectedCategory = newValue!;
                           isFormValid =
                               newValue != "Select Category" && !isOtherSelected;
-                          // Check if "Other" is selected
-                          isOtherSelected = newValue == "Other";
+                          // Check if "Custom" is selected
+                          isOtherSelected = newValue == "Custom";
                         });
                       },
                     ),
@@ -165,8 +217,8 @@ class _GraphPageState extends State<GraphPage> {
                     TextField(
                       autofocus: true,
                       decoration: const InputDecoration(
-                        hintText: 'Enter your expense amount (i.e. \$25)',
-                      ),
+                          hintText: 'Enter your expense amount (i.e. \$25)',
+                          hintStyle: TextStyle()),
                       controller: controller,
                     ),
                   ],
@@ -175,16 +227,12 @@ class _GraphPageState extends State<GraphPage> {
                   TextButton(
                     onPressed: () {
                       submit();
-                      // Update values_added when a custom category is added
-                      // if (isOtherSelected) {
                       setState(() {
                         values_added = true;
                       });
-                      // }
                       Navigator.of(context).pop(); // Close the dialog
                     },
-                    child: const Text("Submit",
-                        style: TextStyle(fontFamily: "Daddy Day")),
+                    child: const Text("Submit", style: TextStyle()),
                   ),
                 ],
               );
@@ -197,7 +245,36 @@ class _GraphPageState extends State<GraphPage> {
     await showDialog(
       context: scaffoldKey.currentContext!,
       builder: (context) {
-        return BudgetTable(budgetMap: budgetMap);
+        return Visibility(
+            visible: budgetMap.isNotEmpty,
+            child: BudgetTable(
+              budgetMap: budgetMap,
+              onBudgetUpdate: (updatedBudgetMap) {
+                setState(() {
+                  budgetMap = updatedBudgetMap;
+                });
+              },
+            ));
+      },
+    );
+  }
+
+  double curr_val = 0;
+
+  void createBudgetPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return BudgetCreationPopup(
+          onBudgetCreated: (Map<String, double> budgetMap) {
+            // Set budgetMap and update visibility
+            setState(() {
+              this.budgetMap = budgetMap;
+              budgetCreated = true;
+              print(budgetMap);
+            });
+          },
+        );
       },
     );
   }
@@ -210,13 +287,21 @@ class _GraphPageState extends State<GraphPage> {
     }
     if (actualCategory != "Select Category") {
       setState(() {
-        budgetMap[actualCategory] =
-            (budgetMap[actualCategory]! + double.parse(controller.text))!;
+        if (budgetMap.containsKey(actualCategory)) {
+          budgetMap[actualCategory] =
+              (budgetMap[actualCategory]! + double.parse(controller.text))!;
+        } else {
+          budgetMap[actualCategory.toString()] = double.parse(controller.text);
+          if (!dropdownItems.contains(actualCategory)) {
+            dropdownItems.insert(dropdownItems.length - 1, actualCategory);
+          }
+        }
       });
       selectedCategory = "Select Category";
     }
     controller.clear();
-    customCategoryController.clear(); // Clear the custom category input
+    customCategoryController.clear();
+    isOtherSelected = false;
   }
 
   double getTotalBudget(Map<String, double> budgetMap) {
@@ -228,65 +313,200 @@ class _GraphPageState extends State<GraphPage> {
   }
 }
 
-class BudgetTable extends StatelessWidget {
+class BudgetTable extends StatefulWidget {
   final Map<String, double> budgetMap;
+  final Function(Map<String, double>) onBudgetUpdate;
 
-  BudgetTable({required this.budgetMap});
+  BudgetTable({required this.budgetMap, required this.onBudgetUpdate});
+
+  @override
+  _BudgetTableState createState() => _BudgetTableState();
+}
+
+class _BudgetTableState extends State<BudgetTable> {
+  TextEditingController editController = TextEditingController();
+  String editingCategory = "";
+
+  @override
+  void dispose() {
+    editController.dispose();
+    super.dispose();
+  }
+
+  void editCategoryValue(String category) {
+    setState(() {
+      editingCategory = category;
+      editController.text = widget.budgetMap[category]!.toStringAsFixed(2);
+    });
+
+    String editedCategory =
+        category; // Initialize with the current category name
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Category"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: category, // Set initial category name
+                onChanged: (value) {
+                  setState(() {
+                    editedCategory = value; // Update edited category name
+                  });
+                },
+                decoration: InputDecoration(labelText: "Category Name"),
+              ),
+              TextFormField(
+                controller: editController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: "New Value"),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter a value.";
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  widget.budgetMap.remove(category);
+                  widget.onBudgetUpdate(widget.budgetMap);
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  "Delete Category",
+                  style: TextStyle(color: Colors.red),
+                )),
+            ElevatedButton(
+              onPressed: () {
+                if (editController.text.isNotEmpty) {
+                  double newValue = double.tryParse(editController.text) ?? 0;
+                  widget.budgetMap.remove(category); // Remove the old category
+                  widget.budgetMap[editedCategory] =
+                      newValue; // Add the new category
+                  widget.onBudgetUpdate(widget.budgetMap);
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void removeCategory(String category) {
+    widget.budgetMap.remove(category);
+  }
 
   @override
   Widget build(BuildContext context) {
     double totalAmount = 0;
 
-    // Calculate the total amount
-    budgetMap.values.forEach((amount) {
-      totalAmount += amount;
-    });
+    double getTotalBudget(Map<String, double> budgetMap) {
+      double total = budgetMap.values.fold(0, (previousValue, currentValue) {
+        return previousValue + currentValue;
+      });
+      return double.parse(total.toStringAsFixed(2));
+    }
+
+    final totalBudget = getTotalBudget(widget.budgetMap);
+    final formattedTotalBudget = NumberFormat.currency(
+      symbol: '\$', // Use "$" as the currency symbol
+      decimalDigits: 2, // Display two decimal places
+    ).format(totalBudget);
+
+    final budgetItems = widget.budgetMap.entries.map((entry) {
+      final category = entry.key;
+      final amount = entry.value;
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Text(
+                  category,
+                  style: const TextStyle(
+                    fontSize: 18.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '\$$amount',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () {
+                    editCategoryValue(category);
+                  },
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
+      );
+    }).toList();
 
     return AlertDialog(
       title: const Text(
         "Current Budget",
-        style: TextStyle(fontSize: 22, fontFamily: "Daddy Day"),
+        style: TextStyle(
+          fontSize: 22,
+        ),
       ),
       content: SizedBox(
         width: 500,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            ListView.builder(
-              itemCount: budgetMap.length,
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                final category = budgetMap.keys.toList()[index];
-                final amount = budgetMap[category];
-                return ListTile(
-                  title: Text(category,
-                      style: const TextStyle(
-                          fontSize: 18.5, fontFamily: "Daddy Day")),
-                  subtitle: Text(
-                    "\$$amount",
-                    style:
-                        const TextStyle(fontSize: 16, fontFamily: "Daddy Day"),
-                  ),
-                );
-              },
-            ),
-            // Display the total amount at the bottom
-            const SizedBox(height: 2),
-            Center(
-                child: Text(
-              "Total: \$${totalAmount.toStringAsFixed(2)}",
-              style: const TextStyle(fontSize: 20, fontFamily: "Daddy Day"),
-              textAlign: TextAlign.center,
-            )),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: budgetItems,
+              ),
+              const SizedBox(height: 2),
+            ],
+          ),
         ),
       ),
       actions: [
+        Center(
+          child: Text(
+            "Total: $formattedTotalBudget",
+            style: const TextStyle(fontSize: 20, fontFamily: "Trebuchet"),
+            textAlign: TextAlign.center,
+          ),
+        ),
         TextButton(
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
           },
-          child: const Text("Close", style: TextStyle(fontFamily: "Daddy Day")),
+          child: const Text("Close", style: TextStyle()),
         ),
       ],
     );
@@ -330,23 +550,27 @@ class BudgetPieChart extends StatelessWidget {
       ringStrokeWidth: 35,
       centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-          color: Color(
-              int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
-          fontSize: 40,
-          fontFamily: "Daddy Day"),
+        color: Color(
+            int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
+        fontSize: 40,
+      ),
       chartValuesOptions: ChartValuesOptions(
         showChartValues: valuesAdded,
         showChartValuesInPercentage: true,
         showChartValueBackground: false,
         decimalPlaces: 0,
-        chartValueStyle: TextStyle(fontFamily: "Daddy Day", fontSize: 20),
+        chartValueStyle: TextStyle(fontSize: 20),
       ),
+      // legendLabels: ,
+      //legendLabels: budgetMap.entries.where((element) => ),
       legendOptions: valuesAdded
           ? const LegendOptions(
               showLegends: true,
               legendPosition: LegendPosition.right,
-              legendTextStyle: TextStyle(fontSize: 14, fontFamily: "Daddy Day"),
-              legendShape: BoxShape.rectangle)
+              legendTextStyle: TextStyle(
+                fontSize: 14,
+              ),
+              legendShape: BoxShape.circle)
           : const LegendOptions(
               showLegends: false,
             ),
@@ -361,5 +585,237 @@ class BudgetPieChart extends StatelessWidget {
     });
 
     return double.parse(total.toStringAsFixed(2));
+  }
+}
+
+class BudgetAmountDialog extends StatefulWidget {
+  final Function(double) budgetAmount;
+
+  BudgetAmountDialog({required this.budgetAmount});
+
+  @override
+  _BudgetAmountDialogState createState() => _BudgetAmountDialogState();
+}
+
+class _BudgetAmountDialogState extends State<BudgetAmountDialog> {
+  TextEditingController amountController = TextEditingController();
+  double budgetAmount = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Enter Budgeting Amount"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: amountController,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            onChanged: (value) {
+              setState(() {
+                budgetAmount = double.tryParse(value) ?? 0.0;
+              });
+            },
+            decoration: InputDecoration(labelText: "Budgeting Amount"),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the dialog
+          },
+          child: Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the dialog
+
+            if (budgetAmount > 0) {
+              // widget.onBudgetCreated({"Custom": budgetAmount});
+              widget.budgetAmount(budgetAmount);
+              // Optionally, you can set values_added to true here
+              // setState(() {
+              //   values_added = true;
+              // });
+            }
+          },
+          child: Text("Continue"),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    super.dispose();
+  }
+}
+
+class BudgetCreationPopup extends StatefulWidget {
+  final void Function(Map<String, double>) onBudgetCreated;
+
+  BudgetCreationPopup({required this.onBudgetCreated});
+
+  @override
+  _BudgetCreationPopupState createState() => _BudgetCreationPopupState();
+}
+
+class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
+  List<BudgetItem> budgetItems = [
+    BudgetItem(categoryName: "", percentage: 0.0)
+  ]; // Initialize with one item
+
+  Map<String, double> budgetMap = {}; // Initialize the budgetMap
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Create Budget"),
+      content: SizedBox(
+        width: 600,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Expanded(
+              child: ListView.builder(
+                itemCount: budgetItems.length,
+                itemBuilder: (context, index) {
+                  return BudgetItemInput(
+                    item: budgetItems[index],
+                    onDelete: () {
+                      setState(() {
+                        budgetItems.removeAt(index);
+                      });
+                    },
+                    onUpdate: () {
+                      setState(() {});
+                    },
+                  );
+                },
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Add a new empty BudgetItem
+                setState(() {
+                  budgetItems
+                      .add(BudgetItem(categoryName: "", percentage: 0.0));
+                });
+              },
+              child: Text("Add Budget Item"),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                double totalPercentage = 0;
+                for (var item in budgetItems) {
+                  totalPercentage += item.percentage;
+                }
+
+                //if (totalPercentage == 100) {
+                // Close the popup and send the created budget back
+                Navigator.of(context).pop();
+
+                // Process the budgetItems list here
+                // You can access category names and percentages from budgetItems
+
+                // Update the budgetMap with the category and slider value
+                for (var item in budgetItems) {
+                  budgetMap[item.categoryName] =
+                      item.percentage.roundToDouble();
+                }
+
+                print(budgetMap);
+                widget.onBudgetCreated(budgetMap);
+                // } else {
+                //   // Show an error message or handle the case where percentages don't add up to 100
+                // }
+              },
+              child: Text("Make Budget"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BudgetItem {
+  String categoryName = "";
+  double percentage = 0.0;
+
+  BudgetItem({required this.categoryName, required this.percentage});
+}
+
+class BudgetItemInput extends StatefulWidget {
+  final BudgetItem item;
+  final Function() onDelete;
+  final Function() onUpdate;
+
+  BudgetItemInput({
+    required this.item,
+    required this.onDelete,
+    required this.onUpdate,
+  });
+
+  @override
+  _BudgetItemInputState createState() => _BudgetItemInputState();
+}
+
+class _BudgetItemInputState extends State<BudgetItemInput> {
+  String category = "";
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    widget.item.categoryName = value;
+                    category = value;
+                    widget
+                        .onUpdate(); // Call onUpdate when the category name changes
+                  });
+                },
+                decoration: InputDecoration(labelText: "Category Name"),
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: Column(
+                children: [
+                  Text(
+                    "${widget.item.percentage.toStringAsFixed(2)}%", // Display the percentage value
+                    style: TextStyle(
+                        fontSize: 12), // Adjust the font size as needed
+                  ),
+                  Slider(
+                    value: widget.item.percentage,
+                    onChanged: (value) {
+                      setState(() {
+                        widget.item.percentage = value;
+                        widget.onUpdate();
+                      });
+                    },
+                    min: 0,
+                    max: 100,
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: widget.onDelete,
+              icon: Icon(Icons.delete),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
