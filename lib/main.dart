@@ -9,23 +9,28 @@ import 'firebase_options.dart';
 import 'app_state.dart'; // new
 
 Future<void> main() async {
-  final appState = ApplicationState();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  Widget startWidget;
-  if (appState.loggedIn) {
-    startWidget = const HomePage();
-  } else {
-    startWidget = Login(appState: appState);
-  }
+  runApp(const MyApp());
+}
 
-  WidgetsFlutterBinding.ensureInitialized();
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  runApp(
-    MaterialApp(
+  @override
+  Widget build(BuildContext context) {
+    final appState = ApplicationState();
+
+    String startRoute = '/login';
+    if (appState.loggedIn) {
+      startRoute = '/home';
+    }
+
+    WidgetsFlutterBinding.ensureInitialized();
+
+    return MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromRGBO(102, 203, 19, 1),
@@ -33,14 +38,16 @@ Future<void> main() async {
               secondary: const Color.fromRGBO(16, 178, 76, 1)),
           useMaterial3: true,
         ),
-        home: startWidget,
-        initialRoute: '/login',
+        initialRoute: startRoute,
         routes: {
-          '/login': (context) => Login(appState: appState,),
+          '/login': (context) => Login(
+                appState: appState,
+              ),
           '/create_account': (context) => CreateAccount(appState: appState),
-          '/investments': (context) => InvestmentPage(),
+          '/investments': (context) => const InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
-          '/home':(context) => const HomePage(),
-        }),
-  );
+          '/home': (context) => const HomePage(),
+          // '/profile': (context) => const ProfilePage(),
+        });
+  }
 }

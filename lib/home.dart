@@ -7,7 +7,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: const FFAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -16,15 +16,22 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.pushNamed(context, '/investments');
               }, // Call the navigation function
-              child: Text('Go to Investment Page'),
+              child: const Text('Go to Investment Page'),
             ),
-            SizedBox(height: 16), // Add some spacing
+            const SizedBox(height: 16), // Add some spacing
             ElevatedButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/tracking');
               },
-              child: Text('Tracking Page'),
+              child: const Text('Tracking Page'),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/profile');
+              },
+              child: const Text("Profile"),
+            )
           ],
         ),
       ),

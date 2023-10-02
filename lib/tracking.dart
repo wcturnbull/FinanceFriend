@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:html' as html;
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({super.key});
@@ -14,9 +13,9 @@ class _TrackingPageState extends State<TrackingPage> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Tracking'),
+          title: const Text('Tracking'),
         ),
-        body: Center(
+        body: const Center(
           child: Text(
             'This is the tracking page',
             style: TextStyle(fontSize: 24.0),
