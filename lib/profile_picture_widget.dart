@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,7 +8,10 @@ import 'package:file_picker/file_picker.dart';
 class ProfilePictureUpload extends StatefulWidget {
   String profileUrl;
 
-  ProfilePictureUpload({super.key, required this.profileUrl});
+  ProfilePictureUpload({
+    super.key,
+    required this.profileUrl,
+  });
 
   @override
   _ProfilePictureUploadState createState() => _ProfilePictureUploadState();
@@ -15,6 +19,14 @@ class ProfilePictureUpload extends StatefulWidget {
 
 class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
   NetworkImage? _imageFile;
+  final currentUser = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    final String? url = currentUser!.photoURL;
+    _imageFile = NetworkImage(url!);
+  }
 
   Future<void> _getImage() async {
     final pickedFile = await FilePicker.platform.pickFiles();
@@ -27,9 +39,14 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
           .ref('profile_pictures/$fileName')
           .putData(fileBytes!);
 
-      widget.profileUrl = await FirebaseStorage.instance
+      await currentUser?.updatePhotoURL(await FirebaseStorage.instance
           .ref('profile_pictures/$fileName')
-          .getDownloadURL();
+          .getDownloadURL());
+
+      print(currentUser?.photoURL);
+      print(widget.profileUrl);
+      widget.profileUrl = currentUser!.photoURL!;
+      print(widget.profileUrl);
 
       setState(() {
         _imageFile = NetworkImage(widget.profileUrl);

@@ -1,3 +1,4 @@
+import 'package:financefriend/ff_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -8,7 +9,7 @@ final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
     app: firebaseApp,
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
-final reference = database.ref();
+final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
 class Profile extends StatefulWidget {
@@ -24,8 +25,9 @@ class _ProfileState extends State<Profile> {
     final url = currentUser?.photoURL as String;
 
     return Scaffold(
-        body: Center(
-            child: Column(
+      appBar: const FFAppBar(),
+      body: Center(
+          child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -42,19 +44,19 @@ class _ProfileState extends State<Profile> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ProfilePictureUpload(profileUrl: url),
-                  Text(
-                    '${currentUser!.displayName}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 48,
-                      color: Colors.white
-                    )
-                  )
+                  Text('${currentUser!.displayName}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 48,
+                          color: Colors.white))
                 ],
               ),
               const SizedBox(height: 16.0),
-
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: EditableTextWidget(),
+              ),
             ],
           ),
         ),
@@ -64,10 +66,7 @@ class _ProfileState extends State<Profile> {
 }
 
 class EditableTextWidget extends StatefulWidget {
-  final String initialText;
-  final Function(String) onSave;
-
-  EditableTextWidget({required this.initialText, required this.onSave});
+  EditableTextWidget({super.key});
 
   @override
   _EditableTextWidgetState createState() => _EditableTextWidgetState();
@@ -75,11 +74,25 @@ class EditableTextWidget extends StatefulWidget {
 
 class _EditableTextWidgetState extends State<EditableTextWidget> {
   late TextEditingController _textEditingController;
+  String currentText = '';
 
   @override
   void initState() {
     super.initState();
-    _textEditingController = TextEditingController(text: widget.initialText);
+    _textEditingController = TextEditingController();
+
+    reference
+        .child('users/${currentUser?.uid}/bio')
+        .onValue
+        .listen((DatabaseEvent event) {
+      final data = event.snapshot.value;
+      if (data != null) {
+        setState(() {
+          currentText = data.toString();
+          _textEditingController.text = currentText;
+        });
+      }
+    });
   }
 
   @override
@@ -94,17 +107,17 @@ class _EditableTextWidgetState extends State<EditableTextWidget> {
       children: [
         TextField(
           controller: _textEditingController,
-          decoration: InputDecoration(
-            labelText: widget.initialText,
-          ),
+          decoration: const InputDecoration(),
         ),
-        SizedBox(height: 20.0),
+        const SizedBox(height: 20.0),
         ElevatedButton(
           onPressed: () {
             final editedText = _textEditingController.text;
-            widget.onSave(editedText);
+
+            // Update the text in the database
+            reference.child('users/${currentUser?.uid}/bio').set(editedText);
           },
-          child: Text('Save'),
+          child: const Text('Save'),
         ),
       ],
     );
