@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'main.dart';
 
-final databaseReference = FirebaseDatabase.instance.ref();
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
 
 void writeBill(String title, String note, String duedate) {
-  databaseReference.child('bills').set({
-    'user': '',//put user here
+  reference.child('bills').set({
+    'uid': '1',//put user id here
     'title': title,
     'note': note,
     'duedate': duedate,
@@ -46,8 +51,16 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   Future fetchBills() async {
-    DataSnapshot snapshot = await databaseReference.child('bills').once() as DataSnapshot;
-    return snapshot;
+    String currentUid = '1'; //set to user id
+    DatabaseReference billsRef = reference.child('bills');
+    
+    try {
+      DataSnapshot dataSnapshot = await billsRef.get();
+      //get only current user bills
+      return dataSnapshot.value;
+    } catch (error) {
+      print("Error fetching data: $error");
+    }
   }
 
   @override
@@ -58,7 +71,7 @@ class _TrackingPageState extends State<TrackingPage> {
           backgroundColor: Colors.green,
           leading: 
             IconButton(
-              icon: Image.asset('ff_logo.png'),
+              icon: Image.asset('images/ff_logo.png'),
               onPressed: () => _navigateToHomePage(context),
             ),
           title: Text('Bill Tracking Page'),
@@ -203,16 +216,34 @@ class _TrackingPageState extends State<TrackingPage> {
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: ElevatedButton(
-                                        child: const Text('Submit'),
-                                        onPressed: () {
-                                          String billTitle = billTitleController.text;
-                                          String billData = billDataController.text;
-                                          String billDate = billDateController.text;
-                                          writeBill(billTitle, billData, billDate);
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
+                                      child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          ElevatedButton(
+                                            child: const Text('Submit'),
+                                            onPressed: () {
+                                              String billTitle = billTitleController.text;
+                                              String billData = billDataController.text;
+                                              String billDate = billDateController.text;
+                                              if (billTitle.isEmpty || billDate.isEmpty || billDate.isEmpty) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Failed to add bill. Please ensure that all fields are filled in.'),
+                                                  ),
+                                                );
+                                              } else {
+                                                writeBill(billTitle, billData, billDate);
+                                                Navigator.of(context).pop();
+                                                //update page
+                                              }
+                                            },
+                                          ),
+                                          ElevatedButton(
+                                            child: const Text('Cancel'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],)
                                     )
                                   ],
                                 ),
