@@ -80,4 +80,5 @@ class DefaultFirebaseOptions {
     iosClientId: '874599959250-0uja5hmtspn9hc14tnftp869hd3kddeb.apps.googleusercontent.com',
     iosBundleId: 'com.example.financefriend.RunnerTests',
   );
+
 }
