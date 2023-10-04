@@ -1,9 +1,45 @@
+import 'dart:io';
+
 import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final DatabaseReference reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
+
+Map<String, double> getBudgetMapFromDB() {
+  Map<String, double> budgetData = {};
+  reference
+      .child('users/${currentUser?.uid}/budgetMap')
+      .onValue
+      .listen((event) {
+    final dynamic snapshotValue = event.snapshot.value;
+    if (snapshotValue != null && snapshotValue is String) {
+      budgetData = Map<String, double>.from(
+        jsonDecode(snapshotValue),
+      );
+
+      print("Budget Data from database:");
+      print(budgetData);
+      print("data printed");
+      // Now you have the JSON data from the database as a Map<String, dynamic>
+    } else {
+      print("No budget data found in the database.");
+    }
+  });
+  return budgetData;
+}
+
+void putBudgetMapInDB() {}
 
 class GraphPage extends StatefulWidget {
   @override
@@ -13,6 +49,7 @@ class GraphPage extends StatefulWidget {
 class _GraphPageState extends State<GraphPage> {
   late TextEditingController controller;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
   String actualCategory = "";
   bool values_added = false;
 
@@ -32,6 +69,7 @@ class _GraphPageState extends State<GraphPage> {
 
   Map<String, double> budgetMap = {};
   double budgetAmount = 0;
+  String budgetName = "";
 
   @override
   void initState() {
@@ -94,10 +132,29 @@ class _GraphPageState extends State<GraphPage> {
                       context: context,
                       builder: (context) {
                         return BudgetCreationPopup(
-                          onBudgetCreated: (Map<String, double> budgetMap) {
+                          onBudgetCreated: (Map<String, double> budgetMap,
+                              String budgetName) {
+                            // Pass budgetName to onBudgetCreated
                             // Set budgetMap and update visibility
                             setState(() {
+                              // async {
                               this.budgetMap = budgetMap;
+                              this.budgetName =
+                                  budgetName; // Store the budget name
+                              // print(JsonEncoder().convert(budgetMap));
+                              // reference
+                              //     .child('users/${currentUser?.uid}')
+                              //     .child("budgetMap")
+                              //     .push();
+                              // await reference
+                              //     .child('users/${currentUser?.uid}/budgetMap')
+                              //     .set(JsonEncoder().convert(budgetMap));
+                              // print("Getting budgetMap from database");
+
+                              // budgetMap = getBudgetMapFromDB();
+                              // print("after getter");
+                              // print(budgetMap);
+                              print(budgetName);
                               budgetCreated = true;
                             });
                           },
@@ -105,7 +162,7 @@ class _GraphPageState extends State<GraphPage> {
                       },
                     );
                   },
-                  child: Text("Create Budget"),
+                  child: Text("Create New Budget"),
                 ),
               ),
               // Visibility(
@@ -117,6 +174,14 @@ class _GraphPageState extends State<GraphPage> {
                     budgetCreated, // Show the chart only when budgetMap is not empty
                 child: Column(
                   children: <Widget>[
+                    Text(
+                      "Budget: $budgetName",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 35),
                     Builder(
                       builder: (BuildContext context) {
                         return ElevatedButton(
@@ -266,7 +331,7 @@ class _GraphPageState extends State<GraphPage> {
       context: context,
       builder: (context) {
         return BudgetCreationPopup(
-          onBudgetCreated: (Map<String, double> budgetMap) {
+          onBudgetCreated: (Map<String, double> budgetMap, String budgetName) {
             // Set budgetMap and update visibility
             setState(() {
               this.budgetMap = budgetMap;
@@ -654,7 +719,7 @@ class _BudgetAmountDialogState extends State<BudgetAmountDialog> {
 }
 
 class BudgetCreationPopup extends StatefulWidget {
-  final void Function(Map<String, double>) onBudgetCreated;
+  final void Function(Map<String, double>, String) onBudgetCreated;
 
   BudgetCreationPopup({required this.onBudgetCreated});
 
@@ -669,6 +734,17 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
 
   Map<String, double> budgetMap = {}; // Initialize the budgetMap
 
+  TextEditingController budgetAmountController = TextEditingController();
+  TextEditingController budgetNameController = TextEditingController();
+  String budgetNameError = '';
+  String budgetAmountError = '';
+  @override
+  void dispose() {
+    budgetAmountController
+        .dispose(); // Dispose of the controller when not needed
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -678,21 +754,41 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            TextField(
+              controller: budgetNameController,
+              keyboardType: TextInputType.name,
+              decoration: InputDecoration(
+                labelText: "Enter Budget Name",
+                errorText: budgetNameError, // Display error message
+              ),
+            ),
+            Divider(),
+            TextField(
+              controller: budgetAmountController,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: "Enter Budget Amount",
+                errorText: budgetAmountError, // Display error message
+              ),
+            ),
+            Divider(),
             Expanded(
               child: ListView.builder(
                 itemCount: budgetItems.length,
                 itemBuilder: (context, index) {
                   return BudgetItemInput(
-                    item: budgetItems[index],
-                    onDelete: () {
-                      setState(() {
-                        budgetItems.removeAt(index);
-                      });
-                    },
-                    onUpdate: () {
-                      setState(() {});
-                    },
-                  );
+                      item: budgetItems[index],
+                      onDelete: () {
+                        setState(() {
+                          budgetItems.removeAt(index);
+                        });
+                      },
+                      onUpdate: () {
+                        setState(() {});
+                      },
+                      budgetAmount:
+                          double.tryParse(budgetAmountController.text) ?? 0.0,
+                      categoryError: getCategoryError(budgetItems[index]));
                 },
               ),
             ),
@@ -709,29 +805,33 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                double totalPercentage = 0;
-                for (var item in budgetItems) {
-                  totalPercentage += item.percentage;
+                if (validateInputs()) {
+                  double totalPercentage = 0;
+                  for (var item in budgetItems) {
+                    totalPercentage += item.percentage;
+                  }
+
+                  // Close the popup and send the created budget back
+                  Navigator.of(context).pop();
+
+                  // Get the budget amount from the text field
+                  double budgetAmount =
+                      double.tryParse(budgetAmountController.text) ?? 0.0;
+                  print("Budget Amount: \$${budgetAmount.toStringAsFixed(2)}");
+
+                  // Process the budgetItems list here
+                  // You can access category names and percentages from budgetItems
+
+                  // Update the budgetMap with the category and slider value
+                  for (var item in budgetItems) {
+                    budgetMap[item.categoryName] = double.parse(
+                        (item.percentage / 100 * budgetAmount)
+                            .toStringAsFixed(2));
+                  }
+
+                  print(budgetMap);
+                  widget.onBudgetCreated(budgetMap, budgetNameController.text);
                 }
-
-                //if (totalPercentage == 100) {
-                // Close the popup and send the created budget back
-                Navigator.of(context).pop();
-
-                // Process the budgetItems list here
-                // You can access category names and percentages from budgetItems
-
-                // Update the budgetMap with the category and slider value
-                for (var item in budgetItems) {
-                  budgetMap[item.categoryName] =
-                      item.percentage.roundToDouble();
-                }
-
-                print(budgetMap);
-                widget.onBudgetCreated(budgetMap);
-                // } else {
-                //   // Show an error message or handle the case where percentages don't add up to 100
-                // }
               },
               child: Text("Make Budget"),
             ),
@@ -739,6 +839,46 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
         ),
       ),
     );
+  }
+
+  String getCategoryError(BudgetItem item) {
+    if (item.categoryName.isEmpty) {
+      return 'Category Name is required';
+    }
+    return ''; // No error
+  }
+
+  bool validateInputs() {
+    bool isValid = true;
+    budgetNameError = '';
+    budgetAmountError = '';
+
+    String categoryError = '';
+
+    if (budgetNameController.text.isEmpty) {
+      budgetNameError = 'Budget Name is required';
+      isValid = false;
+    }
+
+    if (budgetAmountController.text.isEmpty) {
+      budgetAmountError = 'Budget Amount is required';
+      isValid = false;
+    } else {
+      double? budgetAmount = double.tryParse(budgetAmountController.text);
+      if (budgetAmount == null || budgetAmount <= 0) {
+        budgetAmountError = 'Invalid Budget Amount';
+        isValid = false;
+      }
+    }
+
+    if (budgetItems.any((item) => item.categoryName.isEmpty)) {
+      categoryError =
+          'Category Name is required'; // Check if any category name is empty
+      isValid = false;
+    }
+
+    setState(() {}); // Update the UI with error messages
+    return isValid;
   }
 }
 
@@ -753,11 +893,15 @@ class BudgetItemInput extends StatefulWidget {
   final BudgetItem item;
   final Function() onDelete;
   final Function() onUpdate;
+  final double budgetAmount;
+  final String categoryError;
 
   BudgetItemInput({
     required this.item,
     required this.onDelete,
     required this.onUpdate,
+    required this.budgetAmount,
+    required this.categoryError,
   });
 
   @override
@@ -791,9 +935,10 @@ class _BudgetItemInputState extends State<BudgetItemInput> {
               child: Column(
                 children: [
                   Text(
-                    "${widget.item.percentage.toStringAsFixed(2)}%", // Display the percentage value
+                    "\$${(widget.item.percentage / 100 * widget.budgetAmount).toStringAsFixed(2)}", // Display the calculated percentage
                     style: TextStyle(
-                        fontSize: 12), // Adjust the font size as needed
+                      fontSize: 12,
+                    ),
                   ),
                   Slider(
                     value: widget.item.percentage,
@@ -814,6 +959,11 @@ class _BudgetItemInputState extends State<BudgetItemInput> {
               icon: Icon(Icons.delete),
             ),
           ],
+        ),
+        // Display the category error message
+        Text(
+          widget.categoryError,
+          style: TextStyle(color: Colors.red),
         ),
       ],
     );
