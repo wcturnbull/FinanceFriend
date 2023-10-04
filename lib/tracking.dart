@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 
 final firebaseApp = Firebase.app();
@@ -8,10 +9,11 @@ final database = FirebaseDatabase.instanceFor(
     app: firebaseApp,
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
 
 void writeBill(String title, String note, String duedate) {
-  reference.child('bills').set({
-    'uid': '1',//put user id here
+  DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
+  newBill.set({
     'title': title,
     'note': note,
     'duedate': duedate,
@@ -51,16 +53,15 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   Future fetchBills() async {
-    String currentUid = '1'; //set to user id
-    DatabaseReference billsRef = reference.child('bills');
-    
+    DatabaseReference billsRef;
     try {
-      DataSnapshot dataSnapshot = await billsRef.get();
-      //get only current user bills
-      return dataSnapshot.value;
+      billsRef = reference.child('users/${currentUser?.uid}/bills');
     } catch (error) {
-      print("Error fetching data: $error");
+      billsRef = reference.child('users/${currentUser?.uid}').child('bills').push();
     }
+    
+    print(billsRef.path);
+    print(billsRef.get());
   }
 
   @override
