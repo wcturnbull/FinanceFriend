@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart';
+import 'home.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -35,7 +35,7 @@ class _TrackingPageState extends State<TrackingPage> {
 
   void _navigateToHomePage(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => MyHomePage(title: widget.title),
+      builder: (context) => HomePage(),
     ));
   }
 
@@ -50,7 +50,7 @@ class _TrackingPageState extends State<TrackingPage> {
     );
   }
 
-  Future fetchBills() async {
+  Future _fetchBills() async {
     DatabaseReference billsRef;
     try {
       billsRef = reference.child('users/${currentUser?.uid}/bills');
@@ -70,7 +70,7 @@ class _TrackingPageState extends State<TrackingPage> {
           backgroundColor: Colors.green,
           leading: 
             IconButton(
-              icon: Image.asset('images/ff_logo.png'),
+              icon: Image.asset('images/FFLogo.png'),
               onPressed: () => _navigateToHomePage(context),
             ),
           title: Text('Bill Tracking Page'),
@@ -81,7 +81,7 @@ class _TrackingPageState extends State<TrackingPage> {
             children: [
               Text('Bills'),
               FutureBuilder(
-                future: fetchBills(),
+                future: _fetchBills(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     results = snapshot.data;
@@ -111,12 +111,12 @@ class _TrackingPageState extends State<TrackingPage> {
                         ),
                       );
                     } else {
-                      return Row(
-                        children: const <Widget>[
+                      return const Row(
+                        children: <Widget>[
                           SizedBox(
-                            child: CircularProgressIndicator(),
                             width: 30,
                             height: 30,
+                            child: CircularProgressIndicator(),
                           ),
                           Padding(
                             padding: EdgeInsets.all(40),
@@ -126,12 +126,12 @@ class _TrackingPageState extends State<TrackingPage> {
                       );
                     }
                   } else {
-                    return Row(
-                      children: const <Widget>[
+                    return const Row(
+                      children: <Widget>[
                         SizedBox(
-                          child: CircularProgressIndicator(),
                           width: 30,
                           height: 30,
+                          child: CircularProgressIndicator(),
                         ),
                         Padding(
                           padding: EdgeInsets.all(40),
@@ -177,7 +177,7 @@ class _TrackingPageState extends State<TrackingPage> {
                                         Text('Bill Title: ', style: TextStyle(fontSize: 14)),
                                         Expanded(
                                           child: TextFormField(
-                                            decoration: InputDecoration(
+                                            decoration: const InputDecoration(
                                               hintText: 'Enter a title to identify the bill',
                                             ),
                                             controller: billTitleController,
