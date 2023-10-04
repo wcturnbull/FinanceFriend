@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "874599959250",
+    "project_id": "financefriend-41da9",
+    "storage_bucket": "financefriend-41da9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874599959250:android:b3c0815e0964e664da3b0b",
+        "android_client_info": {
+          "package_name": "com.example.financefriend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "874599959250-1va83g8ee7a5h2osighuh3vf6bs8vdkf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsHm6t7kFs6fr3ymTZSe0Mf_ypCss1jLg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874599959250-1va83g8ee7a5h2osighuh3vf6bs8vdkf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "874599959250-0uja5hmtspn9hc14tnftp869hd3kddeb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.financefriend.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
