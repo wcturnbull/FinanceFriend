@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -10,15 +11,6 @@ final database = FirebaseDatabase.instanceFor(
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
-
-void writeBill(String title, String note, String duedate) {
-  DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
-  newBill.set({
-    'title': title,
-    'note': note,
-    'duedate': duedate,
-  });
-}
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({super.key});
@@ -33,6 +25,49 @@ class _TrackingPageState extends State<TrackingPage> {
   final TextEditingController billDataController = TextEditingController();
   final TextEditingController billDateController = TextEditingController();
 
+  void _writeBill(String title, String note, String duedate) {
+    try {
+      DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
+      newBill.set({
+        'title': title,
+        'note': note,
+        'duedate': duedate,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bill added successfully! Refresh to update page.'),
+        ),
+      );
+    } catch (error) {
+      print(error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to add bill.'),
+        ),
+      );
+    }
+
+  }
+
+  void _deleteBill(String id) {
+    try {
+      DatabaseReference billsRef = reference.child('users/${currentUser?.uid}/bills');
+      billsRef.child(id).remove();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bill deleted succesfully! Refresh to update page.'),
+        ),
+      );
+    } catch (error) {
+      print(error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete bill.'),
+        ),
+      );
+    }
+  }
+
   void _navigateToHomePage(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => HomePage(),
@@ -46,20 +81,27 @@ class _TrackingPageState extends State<TrackingPage> {
         DataCell(Text(data['title'])),
         DataCell(Text(data['note'])),
         DataCell(Text(data['duedate'])),
+        DataCell(IconButton(icon: Image.asset('images/DeleteButton.png'), onPressed: () => _deleteBill(data['id']),)),
       ],
     );
   }
 
   Future _fetchBills() async {
-    DatabaseReference billsRef;
-    try {
-      billsRef = reference.child('users/${currentUser?.uid}/bills');
-    } catch (error) {
-      billsRef = reference.child('users/${currentUser?.uid}').child('bills').push();
-    }
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     
-    print(billsRef.path);
-    print(billsRef.get());
+    DataSnapshot user = await userRef.get();
+    if(!user.hasChild('bills')) {
+      return [{'title': '', 'note': '', 'duedate': ''}];
+    }
+
+    DataSnapshot bills = await userRef.child('bills').get();
+    Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
+    results = [];
+    billsMap.forEach((key, value) {
+      results.add({'id': key.toString(), 'title': value['title'].toString(), 'note': value['note'].toString(), 'duedate': value['duedate'].toString()});
+    });
+
+    return results;
   }
 
   @override
@@ -79,37 +121,56 @@ class _TrackingPageState extends State<TrackingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Bills'),
-              FutureBuilder(
-                future: _fetchBills(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    results = snapshot.data;
-                    if (snapshot.data.length != 0) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
+              Text('Bills', style: TextStyle(fontSize: 32)),
+              RefreshIndicator(onRefresh: () async {
+                return await _fetchBills();
+              },
+                child: FutureBuilder(
+                  future: _fetchBills(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      results = snapshot.data;
+                      if (snapshot.data.length != 0) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
                           ),
-                          columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Due Date')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
+                          child: DataTable(
+                            headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.green,
                             ),
+                            columnSpacing: 30,
+                            columns: [
+                              DataColumn(label: Text('Title')),
+                              DataColumn(label: Text('Note')),
+                              DataColumn(label: Text('Due Date')),
+                              DataColumn(label: Text('Delete')),
+                            ],
+                            rows: List.generate(
+                              results.length,
+                              (index) => _getDataRow(
+                                index,
+                                results[index],
+                              ),
+                            ),
+                            showBottomBorder: true,
                           ),
-                          showBottomBorder: true,
-                        ),
-                      );
+                        );
+                      } else {
+                        return const Row(
+                          children: <Widget>[
+                            SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: CircularProgressIndicator(),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(40),
+                              child: Text('No Data Found...'),
+                            ),
+                          ],
+                        );
+                      }
                     } else {
                       return const Row(
                         children: <Widget>[
@@ -125,22 +186,8 @@ class _TrackingPageState extends State<TrackingPage> {
                         ],
                       );
                     }
-                  } else {
-                    return const Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Text('No Data Found...'),
-                        ),
-                      ],
-                    );
-                  }
-                },
+                  },
+                ),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -230,7 +277,7 @@ class _TrackingPageState extends State<TrackingPage> {
                                                   ),
                                                 );
                                               } else {
-                                                writeBill(billTitle, billData, billDate);
+                                                _writeBill(billTitle, billData, billDate);
                                                 Navigator.of(context).pop();
                                                 //update page
                                               }
