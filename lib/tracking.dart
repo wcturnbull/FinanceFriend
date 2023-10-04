@@ -21,9 +21,7 @@ void writeBill(String title, String note, String duedate) {
 }
 
 class TrackingPage extends StatefulWidget {
-  const TrackingPage({super.key, required this.title});
-
-  final String title;
+  const TrackingPage({super.key});
 
   @override
   State<TrackingPage> createState() => _TrackingPageState();
