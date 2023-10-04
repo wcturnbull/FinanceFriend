@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'home.dart';
 
 final firebaseApp = Firebase.app();
@@ -12,7 +13,8 @@ final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
 void writeBill(String title, String note, String duedate) {
-  DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
+  DatabaseReference newBill =
+      reference.child('users/${currentUser?.uid}/bills').push();
   newBill.set({
     'title': title,
     'note': note,
@@ -55,9 +57,10 @@ class _TrackingPageState extends State<TrackingPage> {
     try {
       billsRef = reference.child('users/${currentUser?.uid}/bills');
     } catch (error) {
-      billsRef = reference.child('users/${currentUser?.uid}').child('bills').push();
+      billsRef =
+          reference.child('users/${currentUser?.uid}').child('bills').push();
     }
-    
+
     print(billsRef.path);
     print(billsRef.get());
   }
@@ -68,63 +71,53 @@ class _TrackingPageState extends State<TrackingPage> {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.green,
-          leading: 
-            IconButton(
-              icon: Image.asset('images/FFLogo.png'),
-              onPressed: () => _navigateToHomePage(context),
-            ),
+          leading: IconButton(
+            icon: Image.asset('images/FFLogo.png'),
+            onPressed: () => _navigateToHomePage(context),
+          ),
           title: Text('Bill Tracking Page'),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Bills'),
-              FutureBuilder(
-                future: _fetchBills(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    results = snapshot.data;
-                    if (snapshot.data.length != 0) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Calendar"),
+            Container(
+                child: TableCalendar(
+                    focusedDay: DateTime.now(),
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2025))),
+            Text('Bills'),
+            FutureBuilder(
+              future: _fetchBills(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  results = snapshot.data;
+                  if (snapshot.data.length != 0) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.green,
                         ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
-                          ),
-                          columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Due Date')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
-                            ),
-                          ),
-                          showBottomBorder: true,
-                        ),
-                      );
-                    } else {
-                      return const Row(
-                        children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
-                          ),
+                        columnSpacing: 30,
+                        columns: [
+                          DataColumn(label: Text('Title')),
+                          DataColumn(label: Text('Note')),
+                          DataColumn(label: Text('Due Date')),
                         ],
-                      );
-                    }
+                        rows: List.generate(
+                          results.length,
+                          (index) => _getDataRow(
+                            index,
+                            results[index],
+                          ),
+                        ),
+                        showBottomBorder: true,
+                      ),
+                    );
                   } else {
                     return const Row(
                       children: <Widget>[
@@ -140,97 +133,131 @@ class _TrackingPageState extends State<TrackingPage> {
                       ],
                     );
                   }
-                },
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  await showDialog<void>(
+                } else {
+                  return const Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text('No Data Found...'),
+                      ),
+                    ],
+                  );
+                }
+              },
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await showDialog<void>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      content: Stack(
-                        children: <Widget>[
-                              Positioned(
-                                right: -40,
-                                top: -40,
-                                child: InkResponse(
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const CircleAvatar(
-                                    backgroundColor: Colors.red,
-                                    child: Icon(Icons.close),
-                                  ),
+                            content: Stack(
+                          children: <Widget>[
+                            Positioned(
+                              right: -40,
+                              top: -40,
+                              child: InkResponse(
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const CircleAvatar(
+                                  backgroundColor: Colors.red,
+                                  child: Icon(Icons.close),
                                 ),
                               ),
-                              Form(
-                                key: _formKey,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Padding(
+                            ),
+                            Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: Text('Please input bill data that you would like us to keep track of.', style: TextStyle(fontSize: 20))
-                                    ),
-                                    Padding(
+                                      child: Text(
+                                          'Please input bill data that you would like us to keep track of.',
+                                          style: TextStyle(fontSize: 20))),
+                                  Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: Row(children: [
-                                        Text('Bill Title: ', style: TextStyle(fontSize: 14)),
-                                        Expanded(
-                                          child: TextFormField(
-                                            decoration: const InputDecoration(
-                                              hintText: 'Enter a title to identify the bill',
+                                      child: Row(
+                                        children: [
+                                          Text('Bill Title: ',
+                                              style: TextStyle(fontSize: 14)),
+                                          Expanded(
+                                            child: TextFormField(
+                                              decoration: const InputDecoration(
+                                                hintText:
+                                                    'Enter a title to identify the bill',
+                                              ),
+                                              controller: billTitleController,
                                             ),
-                                            controller: billTitleController,
                                           ),
-                                        ),
-                                      ],)
-                                    ),
-                                    Padding(
+                                        ],
+                                      )),
+                                  Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: Row(children: [
-                                        Text('Bill Data: ', style: TextStyle(fontSize: 14)),
-                                        Expanded(
-                                          child: TextFormField(
-                                            decoration: InputDecoration(
-                                              hintText: "Enter some data that you'd like to remember about the bill",
+                                      child: Row(
+                                        children: [
+                                          Text('Bill Data: ',
+                                              style: TextStyle(fontSize: 14)),
+                                          Expanded(
+                                            child: TextFormField(
+                                              decoration: InputDecoration(
+                                                hintText:
+                                                    "Enter some data that you'd like to remember about the bill",
+                                              ),
+                                              controller: billDataController,
                                             ),
-                                            controller: billDataController,
                                           ),
-                                        ),
-                                      ],)
-                                    ),
-                                    Padding(
+                                        ],
+                                      )),
+                                  Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: Row(children: [
-                                        Text('Bill Due Date: ', style: TextStyle(fontSize: 14)),
-                                        Expanded(
-                                          child: TextFormField(
-                                            decoration: InputDecoration(
-                                              hintText: 'Use MM/DD/YYYY',
+                                      child: Row(
+                                        children: [
+                                          Text('Bill Due Date: ',
+                                              style: TextStyle(fontSize: 14)),
+                                          Expanded(
+                                            child: TextFormField(
+                                              decoration: InputDecoration(
+                                                hintText: 'Use MM/DD/YYYY',
+                                              ),
+                                              controller: billDateController,
                                             ),
-                                            controller: billDateController,
                                           ),
-                                        ),
-                                      ],)
-                                    ),
-                                    Padding(
+                                        ],
+                                      )),
+                                  Padding(
                                       padding: const EdgeInsets.all(8),
-                                      child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           ElevatedButton(
                                             child: const Text('Submit'),
                                             onPressed: () {
-                                              String billTitle = billTitleController.text;
-                                              String billData = billDataController.text;
-                                              String billDate = billDateController.text;
-                                              if (billTitle.isEmpty || billDate.isEmpty || billDate.isEmpty) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
+                                              String billTitle =
+                                                  billTitleController.text;
+                                              String billData =
+                                                  billDataController.text;
+                                              String billDate =
+                                                  billDateController.text;
+                                              if (billTitle.isEmpty ||
+                                                  billDate.isEmpty ||
+                                                  billDate.isEmpty) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
                                                   const SnackBar(
-                                                    content: Text('Failed to add bill. Please ensure that all fields are filled in.'),
+                                                    content: Text(
+                                                        'Failed to add bill. Please ensure that all fields are filled in.'),
                                                   ),
                                                 );
                                               } else {
-                                                writeBill(billTitle, billData, billDate);
+                                                writeBill(billTitle, billData,
+                                                    billDate);
                                                 Navigator.of(context).pop();
                                                 //update page
                                               }
@@ -242,20 +269,18 @@ class _TrackingPageState extends State<TrackingPage> {
                                               Navigator.of(context).pop();
                                             },
                                           ),
-                                        ],)
-                                    )
-                                  ],
-                                ),
+                                        ],
+                                      ))
+                                ],
                               ),
-                            ],
-                      )
-                    )
-                  );
-                },
-                child: const Text('Add Bill'),
-              )
-            ],)
-        ),
+                            ),
+                          ],
+                        )));
+              },
+              child: const Text('Add Bill'),
+            )
+          ],
+        )),
       ),
     );
   }
