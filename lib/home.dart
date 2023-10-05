@@ -18,6 +18,25 @@ class HomePage extends StatelessWidget {
     return 'Your investments can be found here!';
   }
 
+  Future<String> _getBudgetsPreview() async {
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot user = await userRef.get();
+
+    if(!user.hasChild('budgetMap')) {
+      return 'Add some budgets to your budgeting page!';
+    }
+
+    DataSnapshot budgets = await userRef.child('budgetMap').get();
+    Map<String, dynamic> budgetsMap = budgets.value as Map<String, dynamic>;
+    String name = '', amount = '';
+    budgetsMap.forEach((key, value) {
+      name = key.toString();
+      amount = value.toString();
+    });
+
+    return '\$' + amount + ' is allocated for ' + name;
+  }
+
   Future<String> _getTrackingPreview() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
@@ -34,7 +53,7 @@ class HomePage extends StatelessWidget {
       duedate = value['duedate'].toString();
     });
 
-    return title + ' ' + duedate;
+    return title + ' is due on ' + duedate;
   }
 
   Future<String> _getProfilePreview() async {
@@ -61,7 +80,11 @@ class HomePage extends StatelessWidget {
   }
 
   void _setLandingPage(String path) async {
-    reference.child('users/${currentUser?.uid}').child('landing_page').set(path);
+    try {
+      reference.child('users/${currentUser?.uid}').child('landing_page').set(path);
+    } catch (error) {
+      print("Error setting landing page: $error");
+    }
   }
 
   @override
@@ -109,7 +132,7 @@ class HomePage extends StatelessWidget {
                                   Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: ElevatedButton(
-                                      child: const Text('Change Your Default Page'),
+                                      child: const Text('Set Custom Homepage'),
                                       onPressed: () async {
                                         await showDialog<void>(
                                           context: context,
@@ -306,6 +329,21 @@ class HomePage extends StatelessWidget {
                   Navigator.pushNamed(context, '/investments');
                 },
                 child: const Text('Go to Investment Page'),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 16), //spacing
+            Row(children: <Widget>[
+              FutureBuilder(future: _getBudgetsPreview(), builder: ((context, snapshot) {
+                String text = snapshot.data ?? '';
+                return Text(text);
+              })),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/budgets');
+                },
+                child: const Text('Go to Budgets Page'),
               ),
             ],
             mainAxisAlignment: MainAxisAlignment.center,
