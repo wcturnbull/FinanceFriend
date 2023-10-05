@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
           '/create_account': (context) => CreateAccount(appState: appState),
           '/investments': (context) => const InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
-          '/home': (context) => const HomePage(),
+          '/home': (context) => HomePage(),
           '/profile': (context) => const Profile(),
         });
   }

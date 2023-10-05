@@ -113,7 +113,9 @@ class _TrackingPageState extends State<TrackingPage> {
           leading: 
             IconButton(
               icon: Image.asset('images/FFLogo.png'),
-              onPressed: () => _navigateToHomePage(context),
+              onPressed: () => {
+                Navigator.pushNamed(context, '/home')
+              },
             ),
           title: Text('Bill Tracking Page'),
         ),
