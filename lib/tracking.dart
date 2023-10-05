@@ -3,13 +3,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/date_symbol_data_http_request.dart';
+import 'package:intl/intl.dart';
 import 'home.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+  app: firebaseApp,
+  databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/",
+);
 final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -25,9 +27,11 @@ class _TrackingPageState extends State<TrackingPage> {
   final TextEditingController billTitleController = TextEditingController();
   final TextEditingController billDataController = TextEditingController();
   final TextEditingController billDateController = TextEditingController();
-  //calendar info
+
+  // Calendar info
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  Map<DateTime, List<String>> _events = {};
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     if (!isSameDay(_selectedDay, selectedDay)) {
@@ -36,12 +40,10 @@ class _TrackingPageState extends State<TrackingPage> {
         _focusedDay = focusedDay;
       });
       if (_selectedDay != null) {
-        // Open the "Add Bill" dialog when a day is double-clicked.
-        _openAddBillDialog();
+        _openNotificationsDialog();
       }
     }
   }
-  //end calendar info
 
   void _writeBill(String title, String note, String duedate) {
     try {
@@ -65,6 +67,10 @@ class _TrackingPageState extends State<TrackingPage> {
         ),
       );
     }
+  }
+
+  List<dynamic> _getEventsForDay(DateTime day) {
+    return _events[day] ?? [];
   }
 
   void _deleteBill(String id) {
@@ -133,6 +139,22 @@ class _TrackingPageState extends State<TrackingPage> {
     return results;
   }
 
+  void _addBillToCalendar(String dueDate, String title) {
+    final DateTime parsedDueDate = DateTime.parse(dueDate);
+    if (_events.containsKey(parsedDueDate)) {
+      _events[parsedDueDate]!.add(title);
+    } else {
+      _events[parsedDueDate] = [title];
+    }
+  }
+
+  void _removeBillFromCalendar(String dueDate) {
+    final DateTime parsedDueDate = DateTime.parse(dueDate);
+    if (_events.containsKey(parsedDueDate)) {
+      _events.remove(parsedDueDate);
+    }
+  }
+
   void _openAddBillDialog() async {
     await showDialog<void>(
       context: context,
@@ -158,92 +180,98 @@ class _TrackingPageState extends State<TrackingPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                          'Please input bill data that you would like us to keep track of.',
-                          style: TextStyle(fontSize: 20))),
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      'Please input bill data that you would like us to keep track of.',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Text('Bill Title: ', style: TextStyle(fontSize: 14)),
-                          Expanded(
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                hintText: 'Enter a title to identify the bill',
-                              ),
-                              controller: billTitleController,
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        Text('Bill Title: ', style: TextStyle(fontSize: 14)),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              hintText: 'Enter a title to identify the bill',
                             ),
+                            controller: billTitleController,
                           ),
-                        ],
-                      )),
+                        ),
+                      ],
+                    ),
+                  ),
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Text('Bill Data: ', style: TextStyle(fontSize: 14)),
-                          Expanded(
-                            child: TextFormField(
-                              decoration: InputDecoration(
-                                hintText:
-                                    "Enter some data that you'd like to remember about the bill",
-                              ),
-                              controller: billDataController,
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        Text('Bill Data: ', style: TextStyle(fontSize: 14)),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              hintText:
+                                  "Enter some data that you'd like to remember about the bill",
                             ),
+                            controller: billDataController,
                           ),
-                        ],
-                      )),
+                        ),
+                      ],
+                    ),
+                  ),
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Text('Bill Due Date: ',
-                              style: TextStyle(fontSize: 14)),
-                          Expanded(
-                            child: TextFormField(
-                              decoration: InputDecoration(
-                                hintText: 'Use MM/DD/YYYY',
-                              ),
-                              controller: billDateController,
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        Text('Bill Due Date: ', style: TextStyle(fontSize: 14)),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              hintText: 'Use MM/DD/YYYY',
                             ),
+                            controller: billDateController,
                           ),
-                        ],
-                      )),
+                        ),
+                      ],
+                    ),
+                  ),
                   Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            child: const Text('Submit'),
-                            onPressed: () {
-                              String billTitle = billTitleController.text;
-                              String billData = billDataController.text;
-                              String billDate = billDateController.text;
-                              if (billTitle.isEmpty ||
-                                  billDate.isEmpty ||
-                                  billDate.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Failed to add bill. Please ensure that all fields are filled in.'),
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          child: const Text('Submit'),
+                          onPressed: () {
+                            String billTitle = billTitleController.text;
+                            String billData = billDataController.text;
+                            String billDate = billDateController.text;
+                            if (billTitle.isEmpty ||
+                                billData.isEmpty ||
+                                billDate.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Failed to add bill. Please ensure that all fields are filled in.',
                                   ),
-                                );
-                              } else {
-                                _writeBill(billTitle, billData, billDate);
-                                Navigator.of(context).pop();
-                                //update page
-                              }
-                            },
-                          ),
-                          ElevatedButton(
-                            child: const Text('Cancel'),
-                            onPressed: () {
+                                ),
+                              );
+                            } else {
+                              _writeBill(billTitle, billData, billDate);
                               Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      ))
+                              // Update page
+                            }
+                          },
+                        ),
+                        ElevatedButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  )
                 ],
               ),
             ),
@@ -251,6 +279,101 @@ class _TrackingPageState extends State<TrackingPage> {
         ),
       ),
     );
+  }
+
+  void _openNotificationsDialog() async {
+    if (_selectedDay == null) return;
+
+    final selectedDayFormatted = DateFormat('MM/dd/yyyy').format(_selectedDay!);
+
+    final matchingBill = results.firstWhere(
+      (bill) => bill['duedate'] == selectedDayFormatted,
+    );
+
+    if (matchingBill != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Stack(
+            children: <Widget>[
+              Positioned(
+                right: -40,
+                top: -40,
+                child: InkResponse(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const CircleAvatar(
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.close),
+                  ),
+                ),
+              ),
+              Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        'Bill Information',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        children: [
+                          Text('Title: ', style: TextStyle(fontSize: 14)),
+                          Text(matchingBill['title']!,
+                              style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        children: [
+                          Text('Note: ', style: TextStyle(fontSize: 14)),
+                          Text(matchingBill['note']!,
+                              style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        children: [
+                          Text('Due Date: ', style: TextStyle(fontSize: 14)),
+                          Text(matchingBill['duedate']!,
+                              style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            child: const Text('Add New Bill'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              _openAddBillDialog();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -269,7 +392,7 @@ class _TrackingPageState extends State<TrackingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              //Calendar Start
+              // Calendar Start
               Container(
                 child: TableCalendar(
                   headerStyle: HeaderStyle(
@@ -281,10 +404,11 @@ class _TrackingPageState extends State<TrackingPage> {
                   onDaySelected: _onDaySelected,
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2025),
+                  eventLoader: _getEventsForDay,
                 ),
               ),
 
-              //Calendar End
+              // Calendar End
               Text('Bills', style: TextStyle(fontSize: 32)),
               RefreshIndicator(
                 onRefresh: () async {
