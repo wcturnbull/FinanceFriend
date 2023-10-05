@@ -2,7 +2,6 @@ import 'package:financefriend/ff_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'profile_picture_widget.dart';
 
@@ -56,12 +55,112 @@ class _ProfileState extends State<Profile> {
                   const Field(label: 'Bio'),
                   const Field(label: 'Email'),
                   const Field(label: 'Password'),
-                  const SizedBox(height: 16.0)
+                  const GoalsList(),
+                  const SizedBox(height: 16.0),
                 ],
               ),
             ),
           ],
         )));
+  }
+}
+
+class GoalsList extends StatefulWidget {
+  const GoalsList({super.key});
+
+  @override
+  State<GoalsList> createState() => _GoalsListState();
+}
+
+class _GoalsListState extends State<GoalsList> {
+  final TextEditingController controller = TextEditingController();
+  List<String> goalChips = [];
+
+  @override
+  void initState() {
+    super.initState();
+    initializeGoalChips();
+  }
+
+  void initializeGoalChips() async {
+    print('initializing goalChips: ${goalChips.toString()}');
+    final userGoalsReference =
+        reference.child('users/${currentUser?.uid}/goals');
+    try {
+      final DataSnapshot goalsSnapshot = await userGoalsReference.get();
+
+      if (goalsSnapshot.exists) {
+        List<dynamic>? goalsList = goalsSnapshot.value as List?;
+        for (final goal in goalsList!) {
+          if (goal is String) {
+            setState(() {
+              goalChips.add(goal);
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print('Error initializing goalChips: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16.0),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Wrap(
+            children: goalChips
+                .map(
+                  (goal) => Chip(
+                    label: Text(goal),
+                    onDeleted: () {
+                      setState(() {
+                        goalChips.remove(goal);
+                      });
+                    },
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: 'Add a Spending Goal',
+              filled: true,
+              fillColor: Colors.white,
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  final typedGoal = controller.text.trim();
+                  if (typedGoal.isNotEmpty && !goalChips.contains(typedGoal)) {
+                    setState(() {
+                      goalChips.add(typedGoal);
+                      controller.clear();
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: ElevatedButton(
+              onPressed: () {
+                reference
+                    .child('users/${currentUser?.uid}/goals')
+                    .set(goalChips);
+              },
+              child: const Text('Save Goals')),
+        )
+      ],
+    );
   }
 }
 
@@ -126,16 +225,18 @@ class _FieldState extends State<Field> {
                   onPressed: () async {
                     switch (widget.label) {
                       case 'Email':
-                        try {
-                          currentUser?.verifyBeforeUpdateEmail(controller.text);
+                        currentUser
+                            ?.verifyBeforeUpdateEmail(controller.text)
+                            .then((result) {
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Check your Email to Verify')));
-                          Navigator.pushNamed(context, '/login');
-                        } on FirebaseAuthException {
+                        }).catchError((error) {
+                          print(error.toString());
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Update Failed')));
-                        }
+                        });
+                        Navigator.pushNamed(context, '/login');
                         break;
                       case 'Password':
                         try {
@@ -144,7 +245,7 @@ class _FieldState extends State<Field> {
                               const SnackBar(
                                   content: Text('Password Updated')));
                           Navigator.pushNamed(context, '/login');
-                        } on FirebaseAuthException {
+                        } on Error {
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Update Failed')));
                         }

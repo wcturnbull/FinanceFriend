@@ -173,12 +173,12 @@ class GoalsList extends StatefulWidget {
 }
 
 class _GoalsListState extends State<GoalsList> {
-  final TextEditingController autoCompleteController = TextEditingController();
+  final TextEditingController controller = TextEditingController();
 
   void addGoalChip(String goal) {
     setState(() {
       widget.goalChips.add(goal);
-      autoCompleteController.clear();
+      controller.clear();
     });
   }
 
@@ -209,7 +209,7 @@ class _GoalsListState extends State<GoalsList> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
-            controller: autoCompleteController,
+            controller: controller,
             decoration: InputDecoration(
               labelText: 'Add a Spending Goal',
               filled: true,
@@ -217,7 +217,7 @@ class _GoalsListState extends State<GoalsList> {
               suffixIcon: IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
-                  final typedGoal = autoCompleteController.text.trim();
+                  final typedGoal = controller.text.trim();
                   if (typedGoal.isNotEmpty &&
                       !widget.goalChips.contains(typedGoal)) {
                     addGoalChip(typedGoal);

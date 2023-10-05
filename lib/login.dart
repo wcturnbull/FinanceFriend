@@ -1,3 +1,4 @@
+import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
 import 'ff_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,7 +25,8 @@ class Login extends StatelessWidget {
       print('Authentication error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Authentication failed. Please check your credentials.'),
+          content:
+              Text('Authentication failed. Please check your credentials.'),
         ),
       );
     }
