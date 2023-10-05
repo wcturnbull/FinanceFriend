@@ -50,6 +50,7 @@ class MyApp extends StatelessWidget {
           '/tracking': (context) => const TrackingPage(),
           '/home': (context) => const HomePage(),
           '/dashboard': (context) => GraphPage(),
+          '/profile': (context) => Profile(),
         });
   }
 }

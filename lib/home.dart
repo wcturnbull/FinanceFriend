@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'ff_appbar.dart';
 
@@ -31,6 +32,21 @@ class HomePage extends StatelessWidget {
                 Navigator.pushNamed(context, '/dashboard');
               },
               child: Text('Open Dashboard'),
+            ),
+            SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/profile');
+              },
+              child: Text('Profile'),
+            ),
+            SizedBox(height: 16), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text('Sign Out'),
             ),
           ],
         ),
