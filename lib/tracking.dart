@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -390,10 +391,13 @@ class _TrackingPageState extends State<TrackingPage> {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.green,
-          leading: IconButton(
-            icon: Image.asset('images/FFLogo.png'),
-            onPressed: () => _navigateToHomePage(context),
-          ),
+          leading: 
+            IconButton(
+              icon: Image.asset('images/FFLogo.png'),
+              onPressed: () => {
+                Navigator.pushNamed(context, '/home')
+              },
+            ),
           title: Text('Bill Tracking Page'),
         ),
         body: Center(

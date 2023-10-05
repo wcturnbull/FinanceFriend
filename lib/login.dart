@@ -1,8 +1,17 @@
 import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
 import 'ff_appbar.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_state.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
 
 class Login extends StatelessWidget {
   final ApplicationState appState;
@@ -12,14 +21,27 @@ class Login extends StatelessWidget {
   final TextEditingController emailControl = TextEditingController();
   final TextEditingController passwordControl = TextEditingController();
 
+  Future<String> _getLandingPage() async {
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot user = await userRef.get();
+
+    if(!user.hasChild('landing_page')) {
+      return '/home';
+    } else {
+      DataSnapshot snapshot = await userRef.child('landing_page').get();
+      String landingPage = snapshot.value as String;
+      return landingPage;
+    }
+  }
+
   Future<void> _handleLogin(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailControl.text.trim(),
         password: passwordControl.text.trim(),
       );
-      appState.init();
-      Navigator.pushNamed(context, '/home');
+      appState.init(); // Initialize the app state to trigger userChanges()
+      Navigator.pushNamed(context, await _getLandingPage());
     } catch (e) {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
