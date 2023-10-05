@@ -44,6 +44,7 @@ dependencies:
   firebase_ui_auth: ^1.8.0
   go_router: ^11.1.2
   firebase_database: ^10.2.7
+  data_table_2: ^2.5.8
   
 
 dev_dependencies:

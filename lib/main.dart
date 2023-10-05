@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking.dart';
 import 'package:financefriend/create_account.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
@@ -45,6 +46,7 @@ Future<void> main() async {
           '/tracking': (context) => const TrackingPage(),
           '/home': (context) => const HomePage(),
           '/dashboard': (context) => GraphPage(),
+          '/budget': (context) => BudgetTracking(),
         }),
   );
 }
