@@ -1,6 +1,7 @@
 import 'package:financefriend/create_account.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
+import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
 import 'tracking.dart'; // Import the TrackingPage
@@ -10,23 +11,28 @@ import 'firebase_options.dart';
 import 'app_state.dart'; // new
 
 Future<void> main() async {
-  final appState = ApplicationState();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  Widget startWidget;
-  if (appState.loggedIn) {
-    startWidget = const HomePage();
-  } else {
-    startWidget = Login(appState: appState);
-  }
+  runApp(const MyApp());
+}
 
-  WidgetsFlutterBinding.ensureInitialized();
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  runApp(
-    MaterialApp(
+  @override
+  Widget build(BuildContext context) {
+    final appState = ApplicationState();
+
+    String startRoute = '/login';
+    if (appState.loggedIn) {
+      startRoute = '/home';
+    }
+
+    WidgetsFlutterBinding.ensureInitialized();
+
+    return MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromRGBO(102, 203, 19, 1),
@@ -34,8 +40,7 @@ Future<void> main() async {
               secondary: const Color.fromRGBO(16, 178, 76, 1)),
           useMaterial3: true,
         ),
-        home: startWidget,
-        initialRoute: '/login',
+        initialRoute: startRoute,
         routes: {
           '/login': (context) => Login(
                 appState: appState,
@@ -45,6 +50,6 @@ Future<void> main() async {
           '/tracking': (context) => const TrackingPage(),
           '/home': (context) => const HomePage(),
           '/dashboard': (context) => GraphPage(),
-        }),
-  );
+        });
+  }
 }

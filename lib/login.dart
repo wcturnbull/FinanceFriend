@@ -1,3 +1,4 @@
+import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
 import 'ff_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,14 +18,15 @@ class Login extends StatelessWidget {
         email: emailControl.text.trim(),
         password: passwordControl.text.trim(),
       );
-      appState.init(); // Initialize the app state to trigger userChanges()
+      appState.init();
       Navigator.pushNamed(context, '/home');
     } catch (e) {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Authentication failed. Please check your credentials.'),
+          content:
+              Text('Authentication failed. Please check your credentials.'),
         ),
       );
     }
