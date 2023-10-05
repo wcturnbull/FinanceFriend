@@ -1,4 +1,5 @@
 import 'package:financefriend/create_account.dart';
+import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
 import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
@@ -45,10 +46,11 @@ class MyApp extends StatelessWidget {
                 appState: appState,
               ),
           '/create_account': (context) => CreateAccount(appState: appState),
-          '/investments': (context) => const InvestmentPage(),
+          '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
           '/home': (context) => HomePage(),
-          '/profile': (context) => const Profile(),
+          '/dashboard': (context) => GraphPage(),
+          '/profile': (context) => Profile(),
         });
   }
 }

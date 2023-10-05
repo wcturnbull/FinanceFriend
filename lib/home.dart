@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -365,6 +366,18 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16), //spacing
             Row(children: <Widget>[
+              Text(''),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/dashboard');
+                },
+                child: const Text('Go to Graph Dashboard Page'),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 16), //spacing
+            Row(children: <Widget>[
               FutureBuilder(future: _getProfilePreview(), builder: ((context, snapshot) {
                 String text = snapshot.data ?? '';
                 return Text(text);
@@ -377,6 +390,14 @@ class HomePage extends StatelessWidget {
               )
             ],
             mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 16), //spacing
+            ElevatedButton(
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text('Sign Out'),
             ),
           ],
         ),
