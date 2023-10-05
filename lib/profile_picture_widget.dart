@@ -24,8 +24,7 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
   @override
   void initState() {
     super.initState();
-    final String? url = currentUser!.photoURL;
-    _imageFile = NetworkImage(url!);
+    _imageFile = NetworkImage(widget.profileUrl);
   }
 
   Future<void> _getImage() async {
@@ -39,14 +38,13 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
           .ref('profile_pictures/$fileName')
           .putData(fileBytes!);
 
-      await currentUser?.updatePhotoURL(await FirebaseStorage.instance
+      final url = await FirebaseStorage.instance
           .ref('profile_pictures/$fileName')
-          .getDownloadURL());
+          .getDownloadURL();
 
-      print(currentUser?.photoURL);
-      print(widget.profileUrl);
-      widget.profileUrl = currentUser!.photoURL!;
-      print(widget.profileUrl);
+      await currentUser?.updatePhotoURL(url);
+
+      widget.profileUrl = url;
 
       setState(() {
         _imageFile = NetworkImage(widget.profileUrl);

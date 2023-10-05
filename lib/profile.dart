@@ -2,6 +2,7 @@ import 'package:financefriend/ff_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'profile_picture_widget.dart';
 
@@ -25,101 +26,142 @@ class _ProfileState extends State<Profile> {
     final url = currentUser?.photoURL as String;
 
     return Scaffold(
-      appBar: const FFAppBar(),
-      body: Center(
-          child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 600,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
+        appBar: const FFAppBar(),
+        body: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 600,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Column(
                 children: [
-                  ProfilePictureUpload(profileUrl: url),
-                  Text('${currentUser!.displayName}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 48,
-                          color: Colors.white))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ProfilePictureUpload(profileUrl: url),
+                      Text('${currentUser!.displayName}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 48,
+                              color: Colors.white))
+                    ],
+                  ),
+                  const Field(label: 'Bio'),
+                  const Field(label: 'Email'),
+                  const Field(label: 'Password'),
+                  const SizedBox(height: 16.0)
                 ],
               ),
-              const SizedBox(height: 16.0),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: EditableTextWidget(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    )));
+            ),
+          ],
+        )));
   }
 }
 
-class EditableTextWidget extends StatefulWidget {
-  EditableTextWidget({super.key});
+class Field extends StatefulWidget {
+  const Field({super.key, required this.label});
+
+  final String label;
 
   @override
-  _EditableTextWidgetState createState() => _EditableTextWidgetState();
+  State<Field> createState() => _FieldState();
 }
 
-class _EditableTextWidgetState extends State<EditableTextWidget> {
-  late TextEditingController _textEditingController;
+class _FieldState extends State<Field> {
+  late TextEditingController controller;
   String currentText = '';
 
   @override
   void initState() {
     super.initState();
-    _textEditingController = TextEditingController();
+    controller = TextEditingController();
 
-    reference
-        .child('users/${currentUser?.uid}/bio')
-        .onValue
-        .listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-      if (data != null) {
-        setState(() {
-          currentText = data.toString();
-          _textEditingController.text = currentText;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _textEditingController.dispose();
-    super.dispose();
+    if (widget.label == 'Bio') {
+      reference
+          .child('users/${currentUser?.uid}/bio')
+          .onValue
+          .listen((DatabaseEvent event) {
+        final data = event.snapshot.value;
+        if (data != null) {
+          setState(() {
+            currentText = data.toString();
+            controller.text = currentText;
+          });
+        }
+      });
+    } else if (widget.label == 'Email') {
+      setState(() {
+        currentText = currentUser!.email!;
+        controller.text = currentText;
+      });
+    } else {
+      setState(() {
+        controller.text = currentText;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: _textEditingController,
-          decoration: const InputDecoration(),
+    return Column(children: [
+      const SizedBox(height: 10.0),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SizedBox(
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                labelText: 'Enter new ${widget.label}',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.update),
+                  onPressed: () async {
+                    switch (widget.label) {
+                      case 'Email':
+                        try {
+                          currentUser?.verifyBeforeUpdateEmail(controller.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Check your Email to Verify')));
+                          Navigator.pushNamed(context, '/login');
+                        } on FirebaseAuthException {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Update Failed')));
+                        }
+                        break;
+                      case 'Password':
+                        try {
+                          currentUser?.updatePassword(controller.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Password Updated')));
+                          Navigator.pushNamed(context, '/login');
+                        } on FirebaseAuthException {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Update Failed')));
+                        }
+                        break;
+                      case 'Bio':
+                        reference
+                            .child('users/${currentUser?.uid}/bio')
+                            .set(controller.text);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Bio Updated')));
+                        break;
+                    }
+                  },
+                )),
+          ),
         ),
-        const SizedBox(height: 20.0),
-        ElevatedButton(
-          onPressed: () {
-            final editedText = _textEditingController.text;
-
-            // Update the text in the database
-            reference.child('users/${currentUser?.uid}/bio').set(editedText);
-          },
-          child: const Text('Save'),
-        ),
-      ],
-    );
+      ),
+    ]);
   }
 }
