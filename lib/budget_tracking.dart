@@ -8,8 +8,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
-import 'package:data_table_2/data_table_2.dart';
 import 'dart:math';
+import 'package:data_table_2/data_table_2.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -130,6 +130,14 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             mainAxisAlignment:
                 MainAxisAlignment.center, // Center the content horizontally
             children: <Widget>[
+              Column(
+                children: [
+                  BudgetUsageTable(
+                    budgetMap: budgetMap,
+                    expensesList: expenseList,
+                  )
+                ],
+              ),
               Visibility(
                 visible: budgetMap.isNotEmpty,
                 child: Column(
@@ -202,22 +210,17 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                     budgetMap: budgetMap,
                     dropdownItems: dropdownItems,
                     expensesList: expenseList,
+                    onExpensesListChanged: (updatedExpensesList) {
+                      setState(() {
+                        expenseList =
+                            updatedExpensesList; // Update the expensesList
+                      });
+                    },
                   ),
                 ],
               ),
               const SizedBox(width: 20),
               // Right side text
-              Column(
-                children: [
-                  Text(
-                    "RIGHT SIDE",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -705,11 +708,13 @@ class MiddleSection extends StatefulWidget {
   final Map<String, double> budgetMap;
   final List<String> dropdownItems;
   final List<Expense> expensesList;
+  final Function(List<Expense>) onExpensesListChanged; // Add this callback
 
   MiddleSection({
     required this.budgetMap,
     required this.dropdownItems,
     required this.expensesList,
+    required this.onExpensesListChanged, // Initialize the callback
   });
 
   @override
@@ -761,6 +766,10 @@ class _MiddleSectionState extends State<MiddleSection> {
     itemController.clear();
     priceController.clear();
 
+    // Create a filtered list of dropdown items without "Custom"
+    final filteredDropdownItems =
+        widget.dropdownItems.where((item) => item != "Custom").toList();
+
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -780,7 +789,7 @@ class _MiddleSectionState extends State<MiddleSection> {
               ),
               DropdownButtonFormField<String>(
                 value: selectedCategory,
-                items: widget.dropdownItems.map((String value) {
+                items: filteredDropdownItems.map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -844,6 +853,8 @@ class _MiddleSectionState extends State<MiddleSection> {
       itemController.clear();
       priceController.clear();
       selectedCategory = "Select Category";
+
+      widget.onExpensesListChanged(widget.expensesList);
 
       setState(() {});
     }
@@ -942,6 +953,8 @@ class _MiddleSectionState extends State<MiddleSection> {
         );
       },
     );
+
+    widget.onExpensesListChanged(widget.expensesList);
   }
 
   // Function to handle deleting an expense
@@ -955,6 +968,7 @@ class _MiddleSectionState extends State<MiddleSection> {
       print(
           "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
     }
+    widget.onExpensesListChanged(widget.expensesList);
 
     setState(() {});
   }
@@ -970,4 +984,164 @@ class Expense {
     required this.price,
     required this.category,
   });
+}
+
+class BudgetUsageTable extends StatefulWidget {
+  final Map<String, double> budgetMap;
+  final List<Expense> expensesList;
+
+  BudgetUsageTable({
+    required this.budgetMap,
+    required this.expensesList,
+  });
+
+  @override
+  _BudgetUsageTableState createState() => _BudgetUsageTableState();
+}
+
+enum DisplayMode {
+  Table,
+  PieCharts,
+}
+
+class _BudgetUsageTableState extends State<BudgetUsageTable> {
+  DisplayMode displayMode = DisplayMode.Table; // Initialize the display mode
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          "Budget Usage",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 10),
+        // Add a toggle button to switch between display modes
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  displayMode = DisplayMode.Table;
+                });
+              },
+              child: Text("Table"),
+            ),
+            SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  displayMode = DisplayMode.PieCharts;
+                });
+              },
+              child: Text("Pie Charts"),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        // Render content based on the selected display mode
+        displayMode == DisplayMode.Table ? buildTable() : buildPieCharts(),
+      ],
+    );
+  }
+
+  Widget buildTable() {
+    final Map<String, double> categoryUsageMap = calculateCategoryUsage();
+
+    return DataTable(
+      columns: [
+        DataColumn(label: Text("Category")),
+        DataColumn(label: Text("Percentage")),
+      ],
+      rows: categoryUsageMap.entries.map((entry) {
+        return DataRow(cells: [
+          DataCell(Text(entry.key)),
+          DataCell(Text("${entry.value.toStringAsFixed(2)}%")),
+        ]);
+      }).toList(),
+    );
+  }
+
+  Widget buildPieCharts() {
+    final Map<String, double> categoryUsageMap = calculateCategoryUsage();
+
+    final List<Widget> pieCharts = [];
+
+    categoryUsageMap.forEach((category, usage) {
+      print(category);
+      print("Usage: " + usage.toString());
+      if (usage > 0) {
+        final Map<String, double> dataMap = {
+          "Spent": usage,
+          "Available": 100 - usage
+        };
+        pieCharts.add(
+          Column(
+            children: [
+              Text(
+                category,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              PieChart(
+                dataMap: dataMap,
+                animationDuration: Duration(milliseconds: 800),
+                chartLegendSpacing: 80,
+                chartRadius: 100,
+                initialAngleInDegree: 0,
+                chartType: ChartType.ring,
+                ringStrokeWidth: 35,
+                centerText: "${usage.toStringAsFixed(2)}%",
+                chartValuesOptions: ChartValuesOptions(
+                  showChartValues: false,
+                  showChartValuesInPercentage: true,
+                  showChartValueBackground: false,
+                  decimalPlaces: 0,
+                  chartValueStyle: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
+    if (pieCharts.isEmpty) {
+      return Text("No data to display");
+    }
+
+    return Column(
+      children: pieCharts,
+    );
+  }
+
+  Map<String, double> calculateCategoryUsage() {
+    final Map<String, double> categoryUsageMap = {};
+
+    // Calculate the total budget amount
+    double totalBudget =
+        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
+
+    // Calculate the total expenses amount
+    double totalExpenses =
+        widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
+
+    // Calculate the percentage of each category used
+    widget.budgetMap.forEach((category, budgetAmount) {
+      double expensesAmount = widget.expensesList
+          .where((expense) => expense.category == category)
+          .fold(0, (prev, expense) => prev + expense.price);
+      double categoryPercentage = (expensesAmount / budgetAmount) * 100;
+      categoryUsageMap[category] = categoryPercentage;
+    });
+
+    return categoryUsageMap;
+  }
 }
