@@ -286,11 +286,13 @@ class _TrackingPageState extends State<TrackingPage> {
 
     final selectedDayFormatted = DateFormat('MM/dd/yyyy').format(_selectedDay!);
 
-    final matchingBill = results.firstWhere(
-      (bill) => bill['duedate'] == selectedDayFormatted,
-    );
+    final matchingBills = results
+        .where(
+          (bill) => bill['duedate'] == selectedDayFormatted,
+        )
+        .toList();
 
-    if (matchingBill != null) {
+    if (matchingBills.isNotEmpty) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -321,36 +323,42 @@ class _TrackingPageState extends State<TrackingPage> {
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
+                    for (var bill in matchingBills)
+                      Column(
                         children: [
-                          Text('Title: ', style: TextStyle(fontSize: 14)),
-                          Text(matchingBill['title']!,
-                              style: TextStyle(fontSize: 14)),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text('Title: ', style: TextStyle(fontSize: 14)),
+                                Text(bill['title']!,
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text('Note: ', style: TextStyle(fontSize: 14)),
+                                Text(bill['note']!,
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text('Due Date: ',
+                                    style: TextStyle(fontSize: 14)),
+                                Text(bill['duedate']!,
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Text('Note: ', style: TextStyle(fontSize: 14)),
-                          Text(matchingBill['note']!,
-                              style: TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Text('Due Date: ', style: TextStyle(fontSize: 14)),
-                          Text(matchingBill['duedate']!,
-                              style: TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: Row(
