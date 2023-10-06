@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking.dart';
 import 'package:financefriend/create_account.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
           '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
           '/home': (context) => HomePage(),
-          '/dashboard': (context) => GraphPage(),
+          '/dashboard': (context) => BudgetTracking(),
           '/profile': (context) => Profile(),
         });
   }
