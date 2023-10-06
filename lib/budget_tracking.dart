@@ -114,7 +114,15 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      appBar: const FFAppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: Image.asset('images/FFLogo.png'),
+          onPressed: () => {Navigator.pushNamed(context, '/home')},
+        ),
+        title: Text('FinanceFriend Dashboard',
+            style: TextStyle(color: Colors.white)),
+      ),
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Center(
@@ -862,7 +870,7 @@ class _MiddleSectionState extends State<MiddleSection> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 20,
-      color: const Color.fromRGBO(102, 203, 19, 1),
+      color: Colors.green,
       margin: EdgeInsets.all(30),
       child: Column(
         children: [
@@ -1238,7 +1246,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 20,
-      color: const Color.fromRGBO(102, 203, 19, 1),
+      color: Colors.green,
       child: Column(
         children: [
           SizedBox(
@@ -1370,7 +1378,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
             colorList: [
               Color(
                   int.parse("#871224".substring(1, 7), radix: 16) + 0xFF000000),
-              const Color.fromRGBO(102, 203, 19, 1),
+              Colors.green,
             ],
             // centerText:
             //     "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
@@ -1417,7 +1425,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
                 colorList: [
                   Color(int.parse("#871224".substring(1, 7), radix: 16) +
                       0xFF000000),
-                  const Color.fromRGBO(102, 203, 19, 1),
+                  Colors.green,
                 ],
                 // centerText:
                 //     "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
@@ -1483,7 +1491,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
             colorList: [
               Color(
                   int.parse("#871224".substring(1, 7), radix: 16) + 0xFF000000),
-              const Color.fromRGBO(102, 203, 19, 1),
+              Colors.green,
             ],
             centerText:
                 "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
@@ -1528,7 +1536,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
                 colorList: [
                   Color(int.parse("#871224".substring(1, 7), radix: 16) +
                       0xFF000000),
-                  const Color.fromRGBO(102, 203, 19, 1),
+                  Colors.green,
                 ],
                 centerText: "${usage.toStringAsFixed(2)}%",
                 chartValuesOptions: ChartValuesOptions(
