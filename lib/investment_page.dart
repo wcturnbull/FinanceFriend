@@ -524,20 +524,12 @@ class _InvestmentPageState extends State<InvestmentPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Home Page',
-          style: TextStyle(color: Colors.black, fontSize: 15),
-        ),
         backgroundColor: Colors.green,
-        flexibleSpace: Center(
-          child: Text(
-            'Investment Page',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24.0,
-            ),
-          ),
+        leading: IconButton(
+          icon: Image.asset('images/FFLogo.png'),
+          onPressed: () => {Navigator.pushNamed(context, '/home')},
         ),
+        title: Text('Investment Page', style: TextStyle(color: Colors.white)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
