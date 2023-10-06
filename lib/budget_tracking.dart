@@ -133,26 +133,48 @@ class _BudgetTrackingState extends State<BudgetTracking> {
               Visibility(
                 visible:
                     budgetMap.isEmpty, // Show the button if budgetMap is empty
-                child: ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return BudgetCreationPopup(
-                          onBudgetCreated: (Map<String, double> budgetMap,
-                              String budgetName) {
-                            setState(() {
-                              this.budgetMap = budgetMap;
-                              this.budgetName = budgetName;
-                              budgetCreated = true;
-                            });
-                          },
-                        );
-                      },
-                    );
-                  },
-                  child: Text("Create New Budget"),
-                ),
+                child: Column(children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        budgetMap = {
+                          "Housing": 250,
+                          "Utilities": 250,
+                          "Food": 150,
+                          "Transportation": 140,
+                          "Entertainment": 120,
+                          "Investments": 50,
+                          "Debt Payments": 40
+                        };
+                        // You can also set other values here if needed.
+                      });
+                    },
+                    child: Text("Set Default Budget"),
+                  ),
+                  SizedBox(
+                    height: 50,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return BudgetCreationPopup(
+                            onBudgetCreated: (Map<String, double> budgetMap,
+                                String budgetName) {
+                              setState(() {
+                                this.budgetMap = budgetMap;
+                                this.budgetName = budgetName;
+                                budgetCreated = true;
+                              });
+                            },
+                          );
+                        },
+                      );
+                    },
+                    child: Text("Create New Budget"),
+                  ),
+                ]),
               ),
               Visibility(
                 visible: budgetMap.isNotEmpty,
