@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    if(!user.hasChild('budgetMap')) {
+    if (!user.hasChild('budgetMap')) {
       return 'Add some budgets to your budgeting page!';
     }
 
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    if(!user.hasChild('bills')) {
+    if (!user.hasChild('bills')) {
       return 'Add some bills to your tracking page!';
     }
 
@@ -61,7 +61,7 @@ class HomePage extends StatelessWidget {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    if(!user.hasChild('name')) {
+    if (!user.hasChild('name')) {
       return 'Your Profile';
     } else {
       DataSnapshot name = await userRef.child('name').get();
@@ -82,7 +82,10 @@ class HomePage extends StatelessWidget {
 
   void _setLandingPage(String path) async {
     try {
-      reference.child('users/${currentUser?.uid}').child('landing_page').set(path);
+      reference
+          .child('users/${currentUser?.uid}')
+          .child('landing_page')
+          .set(path);
     } catch (error) {
       print("Error setting landing page: $error");
     }
@@ -93,229 +96,299 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text('Your Homepage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),),
+        title: const Text(
+          'Your Homepage',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: <Widget>[
           IconButton(
             icon: Image.asset('images/Settings.png'),
             onPressed: () async {
-                await showDialog<void>(
+              await showDialog<void>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    content: Stack(
-                      children: <Widget>[
-                            Positioned(
-                              right: -40,
-                              top: -40,
-                              child: InkResponse(
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const CircleAvatar(
-                                  backgroundColor: Colors.red,
-                                  child: Icon(Icons.close),
-                                ),
+                          content: Stack(
+                        children: <Widget>[
+                          Positioned(
+                            right: -40,
+                            top: -40,
+                            child: InkResponse(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const CircleAvatar(
+                                backgroundColor: Colors.red,
+                                child: Icon(Icons.close),
                               ),
                             ),
-                            Form(
-                              key: _formKey,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  Padding(
+                          ),
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Text('Settings',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 32,
-                                      ))
-                                  ),
-                                  Padding(
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 32,
+                                        ))),
+                                Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: ElevatedButton(
                                       child: const Text('Set Custom Homepage'),
                                       onPressed: () async {
                                         await showDialog<void>(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            content: Stack(
-                                              children: <Widget>[
-                                                    Positioned(
-                                                      right: -40,
-                                                      top: -40,
-                                                      child: InkResponse(
-                                                        onTap: () {
-                                                          Navigator.of(context).pop();
-                                                        },
-                                                        child: const CircleAvatar(
-                                                          backgroundColor: Colors.red,
-                                                          child: Icon(Icons.close),
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                                    content: Stack(
+                                                        children: <Widget>[
+                                                      Positioned(
+                                                        right: -40,
+                                                        top: -40,
+                                                        child: InkResponse(
+                                                          onTap: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                          child:
+                                                              const CircleAvatar(
+                                                            backgroundColor:
+                                                                Colors.red,
+                                                            child: Icon(
+                                                                Icons.close),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    Form(
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: <Widget>[
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: Text('Choose which page you want to see when you login', 
-                                                            textAlign: TextAlign.center,
-                                                            style: const TextStyle(
-                                                              fontWeight: FontWeight.bold,
-                                                              fontSize: 20,
-                                                            )),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Default Homepage'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/home');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                      Form(
+                                                          child: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: <Widget>[
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child: Text(
+                                                                  'Choose which page you want to see when you login',
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                  style:
+                                                                      const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        20,
+                                                                  )),
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Investments Page'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/investments');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Default Homepage'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/home');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Bill Tracking Page'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/tracking');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Investments Page'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/investments');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Budget Page'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/budgets');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Bill Tracking Page'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/tracking');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Profile Page'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/profile');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Budget Page'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/budgets');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
                                                             ),
-                                                          ),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8),
-                                                            child: ElevatedButton(
-                                                              child: const Text('Graph Page'),
-                                                              onPressed: () {
-                                                                _setLandingPage('/dashboard');
-                                                                Navigator.of(context).pop();
-                                                              }
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Profile Page'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/profile');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
                                                             ),
-                                                          ),
-                                                      ])
-                                                    )
-                                            ])
-                                          )
-                                        );
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
+                                                              child:
+                                                                  ElevatedButton(
+                                                                      child: const Text(
+                                                                          'Graph Page'),
+                                                                      onPressed:
+                                                                          () {
+                                                                        _setLandingPage(
+                                                                            '/dashboard');
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                      }),
+                                                            ),
+                                                          ]))
+                                                    ])));
                                       },
-                                    )
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: ElevatedButton(
-                                      child: const Text('Delete Account'),
-                                      onPressed: () async {
-                                        await showDialog<void>(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            content: Stack(
-                                              children: <Widget>[
-                                              Positioned(
-                                                right: -40,
-                                                top: -40,
-                                                child: InkResponse(
-                                                  onTap: () {
+                                    )),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: ElevatedButton(
+                                    child: const Text('Delete Account'),
+                                    onPressed: () async {
+                                      await showDialog<void>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          content: Stack(children: <Widget>[
+                                            Positioned(
+                                              right: -40,
+                                              top: -40,
+                                              child: InkResponse(
+                                                onTap: () {
                                                   Navigator.of(context).pop();
-                                                  },
-                                                  child: const CircleAvatar(
-                                                    backgroundColor: Colors.red,
-                                                    child: Icon(Icons.close),
-                                                  ),
+                                                },
+                                                child: const CircleAvatar(
+                                                  backgroundColor: Colors.red,
+                                                  child: Icon(Icons.close),
                                                 ),
                                               ),
-                                              Form(
+                                            ),
+                                            Form(
                                                 child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: <Widget>[
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8),
-                                                      child: Text('Are you sure that you would like to delete your account?', style: TextStyle(fontSize: 20))
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8),
-                                                      child: Text('This action is permanent and cannot be reversed.', style: TextStyle(fontSize: 20))
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8),
-                                                      child: Row(children: [
-                                                        ElevatedButton(
-                                                          child: const Text('Delete Account'),
-                                                          onPressed: () {
-                                                            _deleteUser();
-                                                            Navigator.of(context).pop();
-                                                            Navigator.pushNamed(context, '/login');
-                                                          },
-                                                        ),
-                                                        ElevatedButton(
-                                                          child: const Text('Cancel'),
-                                                          onPressed: () {
-                                                            Navigator.of(context).pop();
-                                                          },
-                                                        ),
-                                                      ],
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      )
-                                                    ),
-                                                  ]
-                                                )
-                                              )
-                                            ]),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: <Widget>[
+                                                  Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Text(
+                                                          'Are you sure that you would like to delete your account?',
+                                                          style: TextStyle(
+                                                              fontSize: 20))),
+                                                  Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Text(
+                                                          'This action is permanent and cannot be reversed.',
+                                                          style: TextStyle(
+                                                              fontSize: 20))),
+                                                  Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Row(
+                                                        children: [
+                                                          ElevatedButton(
+                                                            child: const Text(
+                                                                'Delete Account'),
+                                                            onPressed: () {
+                                                              _deleteUser();
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              Navigator
+                                                                  .pushNamed(
+                                                                      context,
+                                                                      '/login');
+                                                            },
+                                                          ),
+                                                          ElevatedButton(
+                                                            child: const Text(
+                                                                'Cancel'),
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                            },
+                                                          ),
+                                                        ],
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                      )),
+                                                ]))
+                                          ]),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: ElevatedButton(
-                                      child: const Text('Close'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  )
-                                ],
-                              ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: ElevatedButton(
+                                    child: const Text('Close'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                )
+                              ],
                             ),
-                          ],
-                    )
-                  )
-                );
-              },
+                          ),
+                        ],
+                      )));
+            },
           ),
         ],
       ),
@@ -323,73 +396,78 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Row(children: <Widget>[
-              Text(_getInvestmentsPreview()),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/investments');
-                },
-                child: const Text('Go to Investment Page'),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              children: <Widget>[
+                Text(_getInvestmentsPreview()),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/investments');
+                  },
+                  child: const Text('Go to Investment Page'),
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
-            Row(children: <Widget>[
-              FutureBuilder(future: _getBudgetsPreview(), builder: ((context, snapshot) {
-                String text = snapshot.data ?? '';
-                return Text(text);
-              })),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/budgets');
-                },
-                child: const Text('Go to Budgets Page'),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              children: <Widget>[
+                FutureBuilder(
+                    future: _getBudgetsPreview(),
+                    builder: ((context, snapshot) {
+                      String text = snapshot.data ?? '';
+                      return Text(text);
+                    })),
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
-            Row(children: <Widget> [
-              FutureBuilder(future: _getTrackingPreview(), builder: ((context, snapshot) {
-                String text = snapshot.data ?? '';
-                return Text(text);
-              })),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/tracking');
-                },
-                child: const Text('Go to Bill Tracking Page'),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              children: <Widget>[
+                FutureBuilder(
+                    future: _getTrackingPreview(),
+                    builder: ((context, snapshot) {
+                      String text = snapshot.data ?? '';
+                      return Text(text);
+                    })),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/tracking');
+                  },
+                  child: const Text('Go to Bill Tracking Page'),
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
-            Row(children: <Widget>[
-              Text(''),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/dashboard');
-                },
-                child: const Text('Go to Graph Dashboard Page'),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              children: <Widget>[
+                Text(''),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/dashboard');
+                  },
+                  child: const Text('Go to Graph Dashboard Page'),
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
-            Row(children: <Widget>[
-              FutureBuilder(future: _getProfilePreview(), builder: ((context, snapshot) {
-                String text = snapshot.data ?? '';
-                return Text(text);
-              })),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/profile');
-                },
-                child: const Text("Go to Profile Page"),
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              children: <Widget>[
+                FutureBuilder(
+                    future: _getProfilePreview(),
+                    builder: ((context, snapshot) {
+                      String text = snapshot.data ?? '';
+                      return Text(text);
+                    })),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/profile');
+                  },
+                  child: const Text("Go to Profile Page"),
+                )
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             ElevatedButton(
