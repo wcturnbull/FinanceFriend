@@ -181,7 +181,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                 child: Column(
                   children: <Widget>[
                     Transform.scale(
-                      scale: 1.25,
+                      scale: 1,
                       child: Visibility(
                         visible: budgetMap.isNotEmpty,
                         child: Column(
@@ -243,7 +243,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                 );
                               },
                             ),
-                            const SizedBox(height: 90),
+                            const SizedBox(height: 40),
                           ],
                         ),
                       ),
