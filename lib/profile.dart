@@ -26,42 +26,44 @@ class _ProfileState extends State<Profile> {
 
     return Scaffold(
         appBar: const FFAppBar(),
-        body: Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 600,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(10.0),
-              ),
+        body: SingleChildScrollView(
+          child: Center(
               child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ProfilePictureUpload(profileUrl: url),
-                      Text('${currentUser!.displayName}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 48,
-                              color: Colors.white))
-                    ],
-                  ),
-                  const Field(label: 'Bio'),
-                  const Field(label: 'Email'),
-                  const Field(label: 'Password'),
-                  const GoalsList(),
-                  const SizedBox(height: 16.0),
-                ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 600,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ProfilePictureUpload(profileUrl: url),
+                        Text('${currentUser!.displayName}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 48,
+                                color: Colors.white))
+                      ],
+                    ),
+                    const Field(label: 'Bio'),
+                    const Field(label: 'Email'),
+                    const Field(label: 'Password'),
+                    const GoalsList(),
+                    const SizedBox(height: 16.0),
+                  ],
+                ),
               ),
-            ),
-          ],
-        )));
+            ],
+          )),
+        ));
   }
 }
 

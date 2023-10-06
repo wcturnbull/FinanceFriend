@@ -80,58 +80,60 @@ class CreateAccount extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const FFAppBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'CREATE ACCOUNT',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 48,
-                color: Colors.black,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'CREATE ACCOUNT',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 48,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            Container(
-              width: 400, // Adjust the width as needed
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(10.0),
+              Container(
+                width: 400, // Adjust the width as needed
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 24.0),
+                    Field(label: 'Email', controller: emailController),
+                    Field(label: 'Password', controller: passwordController),
+                    Field(
+                        label: 'Confirm Password',
+                        controller: confirmPasswordController),
+                    Field(label: 'Name', controller: nameController),
+                    Field(label: 'Bio', controller: bioController),
+                    ProfilePictureUpload(profileUrl: profileUrl),
+                    GoalsList(goalChips: goalChips),
+                    const SizedBox(height: 16.0),
+                    ElevatedButton(
+                      onPressed: () {
+                        _handleRegistration(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
+                          fixedSize: const Size(120, 50)),
+                      child: const Text('Join',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                          )),
+                    ),
+                    const SizedBox(height: 24.0),
+                  ],
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 24.0),
-                  Field(label: 'Email', controller: emailController),
-                  Field(label: 'Password', controller: passwordController),
-                  Field(
-                      label: 'Confirm Password',
-                      controller: confirmPasswordController),
-                  Field(label: 'Name', controller: nameController),
-                  Field(label: 'Bio', controller: bioController),
-                  ProfilePictureUpload(profileUrl: profileUrl),
-                  GoalsList(goalChips: goalChips),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      _handleRegistration(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.secondary,
-                        fixedSize: const Size(120, 50)),
-                    child: const Text('Join',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                        )),
-                  ),
-                  const SizedBox(height: 24.0),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
