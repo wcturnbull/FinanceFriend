@@ -33,7 +33,6 @@ Map<String, double> getBudgetMapFromDB() {
       print("Budget Data from database:");
       print(budgetData);
       print("data printed");
-      // Now you have the JSON data from the database as a Map<String, dynamic>
     } else {
       print("No budget data found in the database.");
     }
@@ -59,15 +58,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   bool isFormValid = false;
   bool budgetCreated = false;
 
-  // Map<String, double> budgetMap = {
-  //   "Housing": 250,
-  //   "Utilities": 250,
-  //   "Food": 150,
-  //   "Transportation": 140,
-  //   "Entertainment": 120,
-  //   "Investments": 50,
-  //   "Debt Payments": 40
-  // };
   Map<String, double> budgetMap = {};
 
   List<Expense> expenseList = <Expense>[];
@@ -703,7 +693,9 @@ class BudgetDataTable extends StatefulWidget {
 
 class _BudgetDataTableState extends State<BudgetDataTable> {
   List<DataColumn> columns = [
-    DataColumn(label: Text('Date')),
+    DataColumn(
+      label: Text('Date'),
+    ),
     DataColumn(
       label: Text('Item'),
     ),
@@ -719,16 +711,84 @@ class _BudgetDataTableState extends State<BudgetDataTable> {
     ),
   ];
 
+  bool sortAscending = true;
+  int sortColumnIndex = 0;
+
+  // Sorting function
+  void sortTable(int columnIndex) {
+    setState(() {
+      if (columnIndex == sortColumnIndex) {
+        sortAscending = !sortAscending;
+      } else {
+        sortColumnIndex = columnIndex;
+        sortAscending = true;
+      }
+
+      switch (columnIndex) {
+        case 2:
+          // Sort by price
+          widget.expenseList.sort((a, b) => sortAscending
+              ? a.price.compareTo(b.price)
+              : b.price.compareTo(a.price));
+          break;
+        case 1:
+          // Sort by item name
+          widget.expenseList.sort((a, b) => sortAscending
+              ? a.item.compareTo(b.item)
+              : b.item.compareTo(a.item));
+          break;
+        case 3:
+          // Sort by category
+          widget.expenseList.sort((a, b) => sortAscending
+              ? a.category.compareTo(b.category)
+              : b.category.compareTo(a.category));
+          break;
+        // Handle other columns as needed
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DataTable(
-      columns: columns,
-      sortColumnIndex: null, // Disable sorting
-      rows: widget.expenseList.isEmpty
-          ? [
-              DataRow(cells: [DataCell(Text('No expenses'))])
-            ]
-          : generateExpenseRows(widget.expenseList),
+    return Column(
+      children: [
+        SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                sortTable(1); // Sort by Item
+              },
+              child: Text('Sort by Item'),
+            ),
+            SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () {
+                sortTable(2); // Sort by Price
+              },
+              child: Text('Sort by Price'),
+            ),
+            SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () {
+                sortTable(3); // Sort by Category
+              },
+              child: Text('Sort by Category'),
+            ),
+          ],
+        ),
+        DataTable(
+          sortAscending: sortAscending,
+          sortColumnIndex: sortColumnIndex,
+          columns: columns,
+          rows: widget.expenseList.isEmpty
+              ? [
+                  DataRow(cells: [DataCell(Text('No expenses'))])
+                ]
+              : generateExpenseRows(widget.expenseList),
+        ),
+      ],
     );
   }
 
@@ -820,6 +880,13 @@ class _MiddleSectionState extends State<MiddleSection> {
           SizedBox(
             height: 10,
           ),
+          ElevatedButton(
+              onPressed: () {
+                addDefaultExpenses(context);
+                setState(() {});
+              },
+              child: Text("[TESTING] auto populate transactions")),
+          SizedBox(height: 10),
           Row(
             children: [
               SizedBox(
@@ -845,8 +912,8 @@ class _MiddleSectionState extends State<MiddleSection> {
             child: Visibility(
               visible: widget.expensesList.isNotEmpty,
               child: SizedBox(
-                width: 600,
-                height: 250,
+                width: 700,
+                height: 360,
                 child: SingleChildScrollView(
                   child: BudgetDataTable(
                     expenseList: widget.expensesList,
@@ -861,6 +928,51 @@ class _MiddleSectionState extends State<MiddleSection> {
         ],
       ),
     );
+  }
+
+  void addDefaultExpenses(BuildContext context) {
+    widget.expensesList.add(Expense(
+        item: "McDonalds",
+        price: 10,
+        category: "Food",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Panda Express",
+        price: 12,
+        category: "Food",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "CFA Catering",
+        price: 120,
+        category: "Food",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Water Bill",
+        price: 40,
+        category: "Utilities",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Gas",
+        price: 30,
+        category: "Transportation",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Movie Tickets",
+        price: 25,
+        category: "Entertainment",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Stock Investment",
+        price: 50,
+        category: "Investments",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+    widget.expensesList.add(Expense(
+        item: "Credit Card Payment",
+        price: 35,
+        category: "Debt Payments",
+        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
+
+    widget.onExpensesListChanged(widget.expensesList);
   }
 
   Future<void> _openAddExpenseDialog(BuildContext context) async {
