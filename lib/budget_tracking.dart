@@ -18,29 +18,131 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-Map<String, double> getBudgetMapFromDB() {
-  Map<String, double> budgetData = {};
-  reference
-      .child('users/${currentUser?.uid}/budgetMap')
-      .onValue
-      .listen((event) {
-    final dynamic snapshotValue = event.snapshot.value;
-    if (snapshotValue != null && snapshotValue is String) {
-      budgetData = Map<String, double>.from(
-        jsonDecode(snapshotValue),
-      );
+Future<Map<String, double>> getBudgetMapFromFirebase() async {
+  if (currentUser == null) {
+    // Handle the case where the user is not authenticated
+    return {}; // Return an empty map or an appropriate default value
+  }
 
-      print("Budget Data from database:");
-      print(budgetData);
-      print("data printed");
+  try {
+    final budgetReference =
+        reference.child('users/${currentUser?.uid}/budgetMap/budgetData');
+
+    // Fetch the budgetMap data from Firebase
+    DatabaseEvent event = await budgetReference.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    // Check if the data exists
+    if (snapshot.value != null) {
+      // Use explicit type casting to ensure all values are of type double
+      Map<String, dynamic> dynamicMap = snapshot.value as Map<String, dynamic>;
+      Map<String, double> budgetMap = {};
+
+      dynamicMap.forEach((key, value) {
+        if (value is double) {
+          budgetMap[key] = value;
+        } else if (value is int) {
+          budgetMap[key] = value.toDouble();
+        } else if (value is String) {
+          budgetMap[key] = double.tryParse(value) ?? 0.0;
+        }
+      });
+
+      return budgetMap;
     } else {
-      print("No budget data found in the database.");
+      // Handle the case where the data does not exist
+      return {}; // Return an empty map or an appropriate default value
     }
-  });
-  return budgetData;
+  } catch (error) {
+    // Handle any errors that occur during Firebase interaction
+    print("Error fetching budgetMap from Firebase: $error");
+    return {}; // Return an empty map or an appropriate default value
+  }
 }
 
-void putBudgetMapInDB() {}
+Future<bool> createBudgetInFirebase(
+    String budgetName, Map<String, double> budgetMap) async {
+  // final reference = FirebaseDatabase.instance.reference();
+  // final currentUser = FirebaseAuth.instance.currentUser;
+  print("Putting data in database");
+
+  if (currentUser == null) {
+    // Handle the case where the user is not authenticated
+    return false;
+  }
+
+  try {
+    final newBudgetReference =
+        reference.child('users/${currentUser?.uid}/budgetMap');
+
+    // Store the budgetMap under the unique key
+    await newBudgetReference.child("budgetData").set(budgetMap);
+
+    // Optionally, you can store the budgetName as well
+    await newBudgetReference.child('budgetName').set(budgetName);
+
+    return true; // Operation successful
+  } catch (error) {
+    // Handle any errors that occur during Firebase interaction
+    print("Error creating budget in Firebase: $error");
+    return false;
+  }
+}
+
+Future<bool> updateBudgetInFirebase(
+    Map<String, double> updatedBudgetMap) async {
+  if (currentUser == null) {
+    // Handle the case where the user is not authenticated
+    return false;
+  }
+
+  try {
+    final budgetReference =
+        reference.child('users/${currentUser?.uid}/budgetMap');
+
+    // Update the budgetMap with the new data
+    await budgetReference.child("budgetData").update(updatedBudgetMap);
+
+    return true; // Operation successful
+  } catch (error) {
+    // Handle any errors that occur during Firebase interaction
+    print("Error updating budget in Firebase: $error");
+    return false;
+  }
+}
+
+Future<bool> checkIfBudgetExists() async {
+  // final reference = FirebaseDatabase.instance.reference();
+  // final currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser == null) {
+    // Handle the case where the user is not authenticated
+    return false;
+  }
+
+  try {
+    final budgetReference = reference.child('users/${currentUser?.uid}');
+
+    // Fetch the budgetMap data from Firebase
+    DatabaseEvent event = await budgetReference.once();
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.hasChild("budgetMap")) {
+      final budgetMapReference =
+          reference.child('users/${currentUser?.uid}/budgetMap');
+      DatabaseEvent event2 = await budgetMapReference.once();
+      DataSnapshot snapshot2 = event2.snapshot;
+      if (snapshot2.hasChild("budgetName") &&
+          snapshot2.hasChild("budgetData")) {
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    // Handle any errors that occur during Firebase interaction
+    print("Error creating budget in Firebase: $error");
+    return false;
+  }
+}
 
 class BudgetTracking extends StatefulWidget {
   @override
@@ -58,11 +160,12 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   bool isFormValid = false;
   bool budgetCreated = false;
 
-  Map<String, double> budgetMap = {};
+  // Map<String, double> budgetMap =
+  //     getBudgetMapFromFirebase() as Map<String, double>;
 
   List<Expense> expenseList = <Expense>[];
 
-  // Map<String, double> budgetMap = {};
+  Map<String, double> budgetMap = {};
   double budgetAmount = 0;
   String budgetName = "Sample Budget";
 
@@ -157,16 +260,26 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                       showDialog(
                         context: context,
                         builder: (context) {
-                          return BudgetCreationPopup(
-                            onBudgetCreated: (Map<String, double> budgetMap,
-                                String budgetName) {
-                              setState(() {
-                                this.budgetMap = budgetMap;
-                                this.budgetName = budgetName;
-                                budgetCreated = true;
-                              });
-                            },
-                          );
+                          return BudgetCreationPopup(onBudgetCreated:
+                              (Map<String, double> budgetMap,
+                                  String budgetName) {
+                            // Step 1: Create the budget in Firebase
+                            print("creating budget in farebase");
+                            createBudgetInFirebase(budgetName, budgetMap)
+                                .then((result) {
+                              if (result == true) {
+                                print("result should be in firebase now");
+                                // Step 2: Update local state after Firebase operation is successful
+                                setState(() {
+                                  this.budgetMap = budgetMap;
+                                  this.budgetName = budgetName;
+                                  budgetCreated = true;
+                                });
+                              } else {
+                                // Handle error or show an error message
+                              }
+                            });
+                          });
                         },
                       );
                     },
@@ -199,6 +312,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                     final resp = await openAddToBudget();
                                     if (resp == null || resp.isEmpty) return;
                                     print(resp);
+
                                     setState(() {
                                       if (!dropdownItems
                                           .contains(actualCategory)) {
@@ -206,11 +320,24 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                             dropdownItems.length - 1,
                                             actualCategory);
                                       }
-                                      budgetMap.addAll(
-                                          {actualCategory: double.parse(resp)});
+
+                                      // Check if the category already exists in the budgetMap
+                                      if (budgetMap
+                                          .containsKey(actualCategory)) {
+                                        // If it exists, update the existing value
+                                        double currentValue =
+                                            budgetMap[actualCategory] ?? 0.0;
+                                        double newValue = double.parse(resp);
+                                        budgetMap[actualCategory] =
+                                            currentValue + newValue;
+                                      } else {
+                                        // If it doesn't exist, add a new entry
+                                        budgetMap[actualCategory] =
+                                            double.parse(resp);
+                                      }
+
                                       values_added = true;
                                     });
-                                    print(budgetMap);
                                   },
                                   child: const Text("Add Spending Category",
                                       style: TextStyle()),
@@ -364,10 +491,19 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             visible: budgetMap.isNotEmpty,
             child: BudgetTable(
               budgetMap: budgetMap,
-              onBudgetUpdate: (updatedBudgetMap) {
-                setState(() {
-                  budgetMap = updatedBudgetMap;
-                });
+              onBudgetUpdate: (updatedBudgetMap) async {
+                bool updateResult =
+                    await updateBudgetInFirebase(updatedBudgetMap);
+
+                if (updateResult) {
+                  // If the update was successful, update the local state
+                  setState(() {
+                    budgetMap = updatedBudgetMap;
+                  });
+                } else {
+                  // Handle the case where the update in Firebase failed
+                  // You can show an error message or take appropriate action here
+                }
               },
             ));
       },
@@ -399,6 +535,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     controller.clear();
     customCategoryController.clear();
     isOtherSelected = false;
+    updateBudgetInFirebase(budgetMap);
   }
 
   double getTotalBudget(Map<String, double> budgetMap) {
