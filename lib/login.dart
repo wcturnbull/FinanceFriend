@@ -1,6 +1,6 @@
 import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
-import 'ff_appbar.dart';
+import 'login_appbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -57,7 +57,7 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(),
+      appBar: const LoginAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
