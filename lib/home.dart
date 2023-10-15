@@ -454,6 +454,19 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 16), //spacing
             Row(
               children: <Widget>[
+                Text(''),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/credit_card');
+                  },
+                  child: const Text('Go to Credit Card Page'),
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 16), //spacing
+            Row(
+              children: <Widget>[
                 FutureBuilder(
                     future: _getProfilePreview(),
                     builder: ((context, snapshot) {
