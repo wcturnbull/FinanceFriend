@@ -78,6 +78,7 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(_getInvestmentsPreview()),
                 ElevatedButton(
@@ -87,10 +88,10 @@ class HomePage extends StatelessWidget {
                   child: const Text('Go to Investment Page'),
                 ),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 FutureBuilder(
                     future: _getBudgetsPreview(),
@@ -99,10 +100,10 @@ class HomePage extends StatelessWidget {
                       return Text(text);
                     })),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 FutureBuilder(
                     future: _getTrackingPreview(),
@@ -117,12 +118,12 @@ class HomePage extends StatelessWidget {
                   child: const Text('Go to Bill Tracking Page'),
                 ),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(''),
+                const Text(''),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/dashboard');
@@ -130,10 +131,10 @@ class HomePage extends StatelessWidget {
                   child: const Text('Go to Graph Dashboard Page'),
                 ),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 FutureBuilder(
                     future: _getProfilePreview(),
@@ -148,7 +149,6 @@ class HomePage extends StatelessWidget {
                   child: const Text("Go to Profile Page"),
                 )
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             ElevatedButton(
@@ -156,7 +156,7 @@ class HomePage extends StatelessWidget {
                 FirebaseAuth.instance.signOut();
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text('Sign Out'),
+              child: const Text('Sign Out'),
             ),
           ],
         ),
