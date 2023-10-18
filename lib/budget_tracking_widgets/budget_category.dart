@@ -16,14 +16,6 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-// Future<bool> editBudgetCategoryName(String oldName, String newName) async {
-
-// }
-
-// Future<bool> editBudgetCategoryValue(String categoryName, double value) async {
-
-// }
-
 Future<bool> removeBudgetCategory(String categoryName) async {
   if (currentUser == null) {
     // Handle the case where the user is not authenticated
