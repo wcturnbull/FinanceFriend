@@ -101,6 +101,7 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
   final TextEditingController itemController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   String selectedCategory = "Select Category";
+
   @override
   void initState() {
     super.initState();
@@ -237,6 +238,7 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
 
     widget.onExpensesListChanged(widget.expensesList);
+    saveExpensesToFirebase(widget.expensesList);
   }
 
   Future<void> _openAddExpenseDialog(BuildContext context) async {
@@ -547,6 +549,10 @@ class _BudgetDataTableState extends State<BudgetDataTable> {
               ? a.category.compareTo(b.category)
               : b.category.compareTo(a.category));
           break;
+        case 4:
+          widget.expenseList.sort((a, b) => sortAscending
+              ? a.category.compareTo(b.date)
+              : b.category.compareTo(a.date));
         // Handle other columns as needed
       }
     });
@@ -560,6 +566,13 @@ class _BudgetDataTableState extends State<BudgetDataTable> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            ElevatedButton(
+              onPressed: () {
+                sortTable(4); // Sort by Date
+              },
+              child: const Text('Sort by Date'),
+            ),
+            const SizedBox(width: 10),
             ElevatedButton(
               onPressed: () {
                 sortTable(1); // Sort by Item
