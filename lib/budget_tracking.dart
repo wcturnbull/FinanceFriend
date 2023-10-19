@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -8,210 +9,7 @@ import 'package:financefriend/budget_tracking_widgets/budget_creation.dart';
 import 'package:financefriend/budget_tracking_widgets/expense_tracking.dart';
 import 'package:financefriend/budget_tracking_widgets/usage_table.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_category.dart';
-
-final firebaseApp = Firebase.app();
-final database = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
-final DatabaseReference reference = database.ref();
-final currentUser = FirebaseAuth.instance.currentUser;
-
-Future<Map<String, double>> getBudgetMapFromFirebase() async {
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return {}; // Return an empty map or an appropriate default value
-  }
-
-  try {
-    final budgetReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetData');
-
-    // Fetch the budgetMap data from Firebase
-    DatabaseEvent event = await budgetReference.once();
-    DataSnapshot snapshot = event.snapshot;
-
-    // Check if the data exists
-    if (snapshot.value != null) {
-      // Use explicit type casting to ensure all values are of type double
-      Map<String, dynamic> dynamicMap = snapshot.value as Map<String, dynamic>;
-      Map<String, double> budgetMap = {};
-
-      dynamicMap.forEach((key, value) {
-        if (value is double) {
-          budgetMap[key] = value;
-        } else if (value is int) {
-          budgetMap[key] = value.toDouble();
-        } else if (value is String) {
-          budgetMap[key] = double.tryParse(value) ?? 0.0;
-        }
-      });
-
-      return budgetMap;
-    } else {
-      // Handle the case where the data does not exist
-      return {}; // Return an empty map or an appropriate default value
-    }
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error fetching budgetMap from Firebase: $error");
-    return {}; // Return an empty map or an appropriate default value
-  }
-}
-
-Future<String> getBudgetNameFromFirebase() async {
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return ""; // Return an empty map or an appropriate default value
-  }
-
-  try {
-    final budgetReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetName');
-
-    // Fetch the budgetMap data from Firebase
-    DatabaseEvent event = await budgetReference.once();
-    DataSnapshot snapshot = event.snapshot;
-
-    // Check if the data exists
-    if (snapshot.value != null) {
-      // Use explicit type casting to ensure all values are of type double
-      return snapshot.value as String;
-    } else {
-      // Handle the case where the data does not exist
-      return ""; // Return an empty map or an appropriate default value
-    }
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error fetching budgetMap from Firebase: $error");
-    return ""; // Return an empty map or an appropriate default value
-  }
-}
-
-Future<bool> createBudgetInFirebase(
-    String budgetName, Map<String, double> budgetMap) async {
-  // final reference = FirebaseDatabase.instance.reference();
-  // final currentUser = FirebaseAuth.instance.currentUser;
-  print("Putting data in database");
-
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
-  }
-
-  try {
-    final newBudgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
-
-    // Store the budgetMap under the unique key
-    await newBudgetReference.child("budgetData").set(budgetMap);
-
-    // Optionally, you can store the budgetName as well
-    await newBudgetReference.child('budgetName').set(budgetName);
-    await newBudgetReference.child("expenses").push();
-
-    return true; // Operation successful
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error creating budget in Firebase: $error");
-    return false;
-  }
-}
-
-Future<bool> updateBudgetInFirebase(
-    Map<String, double> updatedBudgetMap) async {
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
-  }
-
-  try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
-
-    // Update the budgetMap with the new data
-    await budgetReference.child("budgetData").update(updatedBudgetMap);
-
-    return true; // Operation successful
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error updating budget in Firebase: $error");
-    return false;
-  }
-}
-
-Future<bool> checkIfBudgetExists() async {
-  // final reference = FirebaseDatabase.instance.reference();
-  // final currentUser = FirebaseAuth.instance.currentUser;
-
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
-  }
-
-  try {
-    final budgetReference = reference.child('users/${currentUser?.uid}');
-
-    // Fetch the budgetMap data from Firebase
-    DatabaseEvent event = await budgetReference.once();
-    DataSnapshot snapshot = event.snapshot;
-    if (snapshot.hasChild("budgetMap")) {
-      final budgetMapReference =
-          reference.child('users/${currentUser?.uid}/budgets/budgetMap');
-      DatabaseEvent event2 = await budgetMapReference.once();
-      DataSnapshot snapshot2 = event2.snapshot;
-      if (snapshot2.hasChild("budgetName") &&
-          snapshot2.hasChild("budgetData")) {
-        return true;
-      }
-    }
-    return false;
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error creating budget in Firebase: $error");
-    return false;
-  }
-}
-
-Future<bool> updateBudgetNameInFirebase(String newBudgetName) async {
-  if (currentUser == null) {
-    return false;
-  }
-
-  try {
-    final budgetNameReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetName');
-
-    await budgetNameReference.set(newBudgetName);
-
-    return true; // Operation successful
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error updating budget name in Firebase: $error");
-    return false;
-  }
-}
-
-Future<bool> deleteBudgetFromFirebase() async {
-  if (currentUser == null) {
-    return false;
-  }
-
-  try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
-
-    // Delete the budgetData and budgetName nodes
-    await budgetReference.child("budgetData").remove();
-    await budgetReference.child('budgetName').remove();
-    await budgetReference.child("expenses").remove();
-
-    return true; // Operation successful
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error deleting budget from Firebase: $error");
-    return false;
-  }
-}
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class BudgetTracking extends StatefulWidget {
   @override
@@ -247,16 +45,13 @@ class _BudgetTrackingState extends State<BudgetTracking> {
 
   Future<void> setBudgetInit() async {
     final budgetExists = await checkIfBudgetExists();
+    print("does budget exist? " + budgetExists.toString());
     if (budgetExists) {
-      final existingBudgetMap = await getBudgetMapFromFirebase();
-      final existingBudgetName = await getBudgetNameFromFirebase();
-
-      print(existingBudgetMap);
-      print(existingBudgetName);
+      Budget existingBudget = await getBudgetFromFirebase();
 
       setState(() {
-        budgetMap = existingBudgetMap;
-        budgetName = existingBudgetName;
+        budgetMap = existingBudget.budgetMap;
+        budgetName = existingBudget.budgetName;
       });
     }
   }
@@ -334,7 +129,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                           "Debt Payments": 40
                         };
                         budgetName = "Default";
-                        createBudgetInFirebase("Default", budgetMap);
+                        createBudgetInFirebase(new Budget(
+                            budgetName: budgetName,
+                            budgetMap: budgetMap,
+                            expenses: []));
 
                         // print("printing budget:");
                         // print((await getBudgetMapFromFirebase()).toString());
@@ -355,8 +153,11 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               (Map<String, double> budgetMap,
                                   String budgetName) {
                             // Step 1: Create the budget in Firebase
-                            createBudgetInFirebase(budgetName, budgetMap)
-                                .then((result) {
+
+                            createBudgetInFirebase(new Budget(
+                                budgetName: budgetName,
+                                budgetMap: budgetMap,
+                                expenses: [])).then((result) {
                               if (result == true) {
                                 // Step 2: Update local state after Firebase operation is successful
                                 setState(() {
@@ -460,7 +261,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               builder: (BuildContext context) {
                                 return ElevatedButton(
                                   onPressed: openBudgetTable,
-                                  child: const Text("View Current Budget",
+                                  child: const Text("View/Edit Current Budget",
                                       style: TextStyle()),
                                 );
                               },

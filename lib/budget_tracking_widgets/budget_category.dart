@@ -8,35 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_creation.dart';
 import 'package:financefriend/budget_tracking_widgets/expense_tracking.dart';
 import 'package:financefriend/budget_tracking_widgets/usage_table.dart';
-
-final firebaseApp = Firebase.app();
-final database = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
-final DatabaseReference reference = database.ref();
-final currentUser = FirebaseAuth.instance.currentUser;
-
-Future<bool> removeBudgetCategory(String categoryName) async {
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
-  }
-
-  try {
-    final newBudgetReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetData');
-
-    print("trying to remove: " + categoryName);
-
-    await newBudgetReference.child(categoryName).remove();
-
-    return true; // Operation successful
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error creating budget in Firebase: $error");
-    return false;
-  }
-}
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class BudgetCategoryTable extends StatefulWidget {
   final Map<String, double> budgetMap;

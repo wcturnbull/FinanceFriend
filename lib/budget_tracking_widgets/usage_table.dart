@@ -6,47 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_creation.dart';
 import 'package:financefriend/budget_tracking_widgets/expense_tracking.dart';
-
-Future<List<Expense>> getExpensesFromDB() async {
-  if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return []; // Return an empty list or an appropriate default value
-  }
-
-  try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetMap/expenses');
-
-    // Fetch the expenses data from Firebase
-    DataSnapshot snapshot = (await budgetReference.once()).snapshot;
-
-    if (snapshot.value != null) {
-      final List<dynamic> expensesData = snapshot.value as List<dynamic>;
-
-      // Convert the Firebase data into a list of Expense objects
-      List<Expense> expensesList = expensesData.map((data) {
-        if (data is Map<String, dynamic>) {
-          return Expense(
-            item: data['item'] ?? '',
-            price: (data['price'] ?? 0.0).toDouble(),
-            category: data['category'] ?? '',
-            date: data['date'] ?? '',
-          );
-        }
-        return Expense(item: '', price: 0.0, category: '', date: '');
-      }).toList();
-
-      return expensesList;
-    } else {
-      // Handle the case where the data does not exist
-      return []; // Return an empty list or an appropriate default value
-    }
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error fetching expenses from Firebase: $error");
-    return []; // Return an empty list or an appropriate default value
-  }
-}
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class BudgetUsageTable extends StatefulWidget {
   final Map<String, double> budgetMap;
