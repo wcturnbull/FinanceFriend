@@ -15,7 +15,7 @@ Future<List<Expense>> getExpensesFromDB() async {
 
   try {
     final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap/expenses');
+        reference.child('users/${currentUser?.uid}/budgets/budgetMap/expenses');
 
     // Fetch the expenses data from Firebase
     DataSnapshot snapshot = (await budgetReference.once()).snapshot;

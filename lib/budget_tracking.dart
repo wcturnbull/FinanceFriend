@@ -23,8 +23,8 @@ Future<Map<String, double>> getBudgetMapFromFirebase() async {
   }
 
   try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap/budgetData');
+    final budgetReference = reference
+        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetData');
 
     // Fetch the budgetMap data from Firebase
     DatabaseEvent event = await budgetReference.once();
@@ -65,8 +65,8 @@ Future<String> getBudgetNameFromFirebase() async {
   }
 
   try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap/budgetName');
+    final budgetReference = reference
+        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetName');
 
     // Fetch the budgetMap data from Firebase
     DatabaseEvent event = await budgetReference.once();
@@ -100,7 +100,7 @@ Future<bool> createBudgetInFirebase(
 
   try {
     final newBudgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap');
+        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
 
     // Store the budgetMap under the unique key
     await newBudgetReference.child("budgetData").set(budgetMap);
@@ -126,7 +126,7 @@ Future<bool> updateBudgetInFirebase(
 
   try {
     final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap');
+        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
 
     // Update the budgetMap with the new data
     await budgetReference.child("budgetData").update(updatedBudgetMap);
@@ -156,7 +156,7 @@ Future<bool> checkIfBudgetExists() async {
     DataSnapshot snapshot = event.snapshot;
     if (snapshot.hasChild("budgetMap")) {
       final budgetMapReference =
-          reference.child('users/${currentUser?.uid}/budgetMap');
+          reference.child('users/${currentUser?.uid}/budgets/budgetMap');
       DatabaseEvent event2 = await budgetMapReference.once();
       DataSnapshot snapshot2 = event2.snapshot;
       if (snapshot2.hasChild("budgetName") &&
@@ -178,8 +178,8 @@ Future<bool> updateBudgetNameInFirebase(String newBudgetName) async {
   }
 
   try {
-    final budgetNameReference =
-        reference.child('users/${currentUser?.uid}/budgetMap/budgetName');
+    final budgetNameReference = reference
+        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetName');
 
     await budgetNameReference.set(newBudgetName);
 
@@ -198,7 +198,7 @@ Future<bool> deleteBudgetFromFirebase() async {
 
   try {
     final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap');
+        reference.child('users/${currentUser?.uid}/budgets/budgetMap');
 
     // Delete the budgetData and budgetName nodes
     await budgetReference.child("budgetData").remove();

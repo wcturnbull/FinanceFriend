@@ -23,8 +23,8 @@ Future<bool> removeBudgetCategory(String categoryName) async {
   }
 
   try {
-    final newBudgetReference =
-        reference.child('users/${currentUser?.uid}/budgetMap/budgetData');
+    final newBudgetReference = reference
+        .child('users/${currentUser?.uid}/budgets/budgetMap/budgetData');
 
     print("trying to remove: " + categoryName);
 
