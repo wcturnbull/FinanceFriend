@@ -16,8 +16,10 @@ class _CreditCardPageState extends State<CreditCardPage> {
       creditScoreStatus = 'Fair';
     } else if (creditScore >= 670 && creditScore < 750) {
       creditScoreStatus = 'Good';
-    } else {
+    } else if (creditScore >= 750) {
       creditScoreStatus = 'Excellent';
+    } else {
+      creditScoreStatus = 'Invalid Score';
     }
     // Update the UI with the new credit score status
     setState(() {});
