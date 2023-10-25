@@ -85,7 +85,7 @@ class CardSelectionDialog extends StatefulWidget {
 }
 
 class _CardSelectionDialogState extends State<CardSelectionDialog> {
-  String selectedCard = 'Card 1';
+  String selectedCard = 'Wells Fargo Active Cash';
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +96,13 @@ class _CardSelectionDialogState extends State<CardSelectionDialog> {
         children: <Widget>[
           DropdownButton<String>(
             value: selectedCard,
-            items: ['Card 1', 'Card 2', 'Card 3'].map((String value) {
+            items: [
+              'Wells Fargo Active Cash',
+              'Bank of America Travel Rewards',
+              'Chase Freedom Unlimited',
+              'Discover it Cash Back',
+              'Capital One QuickSilver',
+            ].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
