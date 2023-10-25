@@ -7,19 +7,29 @@ class CreditCardPage extends StatefulWidget {
 
 class _CreditCardPageState extends State<CreditCardPage> {
   String creditScoreStatus = ''; // Store the credit score status
+  String creditScoreAdvice = ''; // Store the credit score advice
 
   // Function to update the credit score status based on the score
   void updateCreditScoreStatus(int creditScore) {
     if (creditScore < 560) {
       creditScoreStatus = 'Bad';
+      creditScoreAdvice =
+          'Consider paying off outstanding debts and making on-time payments to improve your creditworthiness. Reducing credit card balances and addressing any delinquent accounts can help raise your score over time.';
     } else if (creditScore >= 560 && creditScore < 670) {
       creditScoreStatus = 'Fair';
+      creditScoreAdvice =
+          'Focus on reducing outstanding debts, making consistent, on-time payments, and avoiding new debt. Additionally, consider reviewing your credit report for errors and disputing any inaccuracies to help improve your credit score.';
     } else if (creditScore >= 670 && creditScore < 750) {
       creditScoreStatus = 'Good';
+      creditScoreAdvice =
+          'Aim to maintain your good credit by continuing to make on-time payments and avoiding excessive new debt. Additionally, consider diversifying your credit mix, which can have a positive impact on your credit score. Regularly monitor your credit report to ensure accuracy and address any discrepancies promptly.';
     } else if (creditScore >= 750) {
       creditScoreStatus = 'Excellent';
+      creditScoreAdvice =
+          'Explore opportunities to optimize your credit mix and consider leveraging your strong credit profile to secure favorable financial terms and benefits, such as lower interest rates and premium credit card offers. Regularly monitor your credit report to ensure accuracy and safeguard your exceptional credit status.';
     } else {
       creditScoreStatus = 'Invalid Score';
+      creditScoreAdvice = 'Please enter a valid credit score between 0 and 850';
     }
     // Update the UI with the new credit score status
     setState(() {});
@@ -72,6 +82,8 @@ class _CreditCardPageState extends State<CreditCardPage> {
             SizedBox(height: 20),
             Text(
                 'Credit Score: $creditScoreStatus'), // Display credit score status
+            SizedBox(height: 10),
+            Text(creditScoreAdvice), // Display credit score advice
           ],
         ),
       ),
