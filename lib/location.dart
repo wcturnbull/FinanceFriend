@@ -23,28 +23,31 @@ class LocationPage extends StatefulWidget {
 }
 
 class _LocationPageState extends State<LocationPage> {
-
-  List<Position> locations = [];
-
   void getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    locations.add(position);
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    storeLocationDetails(position.latitude, position.longitude);
   }
 
   void storeLocationDetails(double lat, double lng) async {
-    String url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&radius=1500&key=AIzaSyC39i7jLqJymR5goAU9ZuTwz4SE4MNXeG8';
+    String apiKey = 'AIzaSyDu2xvfCsKkP85kqcC0g6RDW-31P-_ygMs';
+    String url =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&key=$apiKey';
     var response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);
     for (var place in json['results']) {
-      //if the place is a place to spend money, add it to the database
+      print(place);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(title: 'Location Page'),
-      body: 
-    );
+        appBar: const FFAppBar(title: 'Location Page'),
+        body: Center(
+          child: ElevatedButton(
+              onPressed: () => getCurrentLocation(),
+              child: const Text('Get Current Location')),
+        ));
   }
 }
