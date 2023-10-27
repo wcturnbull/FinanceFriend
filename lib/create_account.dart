@@ -79,7 +79,7 @@ class CreateAccount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(),
+      appBar: const FFAppBar(title: 'Create Account'),
       body: SingleChildScrollView(
         child: Center(
           child: Column(

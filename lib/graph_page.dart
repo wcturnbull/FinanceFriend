@@ -119,7 +119,7 @@ class _GraphPageState extends State<GraphPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      appBar: const FFAppBar(),
+      appBar: const FFAppBar(title: 'Graph Page'),
       body: Center(
         child: SingleChildScrollView(
           child: Column(

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 class FFAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const FFAppBar({super.key});
+  final title;
+
+  const FFAppBar({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Image.asset('assets/images/FFLogo.png',
-          height:100, 
-          width: 100),
-        centerTitle: true,
+      backgroundColor: Colors.green,
+      leading: IconButton(
+        icon: Image.asset('images/FFLogo.png'),
+        onPressed: () => {Navigator.pushNamed(context, '/home')},
+      ),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
     );
   }
 
