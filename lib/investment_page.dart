@@ -171,12 +171,15 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   final currentDate =
                       DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+                  double price = double.parse(formData['price']);
+                  double amount = double.parse(formData['amount']);
+
                   setState(() {
                     investments.add({
                       'Stock Name': formData['stockOption'],
                       'Date Purchased': currentDate,
-                      'Amount': formData['amount'],
-                      'Price': formData['price'],
+                      'Amount': amount.toString() + ' Shares',
+                      'Price': (price * amount).toStringAsFixed(2),
                     });
                   });
                   Navigator.of(context).pop();
@@ -430,7 +433,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
 
     if (index != -1) {
       setState(() {
-        investments[index]['Price'] = price;
+        investments[index]['Price'] =
+            (double.parse(price) * double.parse(amount)).toStringAsFixed(2);
         investments[index]['Amount'] = amount;
         investments[index]['Date Purchased'] = datePurchased;
         editedPrice = '';
