@@ -466,6 +466,18 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/notifications');
+                  },
+                  child: const Text("Go to Notification Page"),
+                )
+              ],
+            ),
+            const SizedBox(height: 16), //spacing
+            Row(
               children: <Widget>[
                 FutureBuilder(
                     future: _getProfilePreview(),

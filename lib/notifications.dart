@@ -62,9 +62,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('notifications')) {
-      return [
-        {'title': '', 'note': ''}
-      ];
+      return;
     }
 
     DataSnapshot notifs = await userRef.child('notifications').get();
