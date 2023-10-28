@@ -10,9 +10,20 @@ final database = FirebaseDatabase.instanceFor(
 final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-class FFAppBar extends StatelessWidget implements PreferredSizeWidget {
-  FFAppBar({super.key});
+class FFAppBar extends StatefulWidget implements PreferredSizeWidget{
+  const FFAppBar({super.key});
+
+  @override
+  State<FFAppBar> createState() => _FFAppBarState();
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _FFAppBarState extends State<FFAppBar> {
   final _formKey = GlobalKey<FormState>();
+
+  bool _allNotifs = true;
+  bool _billNotifs = true;
 
   Future<void> _deleteUser() async {
     try {
@@ -30,6 +41,106 @@ class FFAppBar extends StatelessWidget implements PreferredSizeWidget {
     } catch (error) {
       print("Error setting landing page: $error");
     }
+  }
+
+  void _getAllNotifs() async {
+    try {
+      DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+      DataSnapshot settings = await settingsRef.get();
+      if (!settings.hasChild('allNotifs')) {
+        settingsRef.child('allNotifs').set(1);
+      } else {
+        setState(() {
+          _allNotifs = (settings.child('allNotifs').value == 1);
+        });
+      }
+      if (!settings.hasChild('billNotifs')) {
+        settingsRef.child('billNotifs').set(1);
+      } else {
+        setState(() {
+          _billNotifs = (settings.child('billNotifs').value == 1);
+        });
+      }
+    } catch (error) {
+      print("Error getting notifications settings: $error");
+    }
+  }
+
+  void _flipAllNotifs() {
+    setState(() {
+      _allNotifs = _allNotifs ? false : true;
+    });
+  }
+
+  void _flipBillNotifs() {
+    setState(() {
+      _billNotifs = _billNotifs ? false : true;
+    });
+  }
+
+  _openNotifsSettings(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Stack(children: <Widget>[
+          Positioned(
+            right: -40,
+            top: -40,
+            child: InkResponse(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: const CircleAvatar(
+                backgroundColor: Colors.red,
+                child: Icon(Icons.close),
+              ),
+            ),
+          ),
+          Form(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(
+                    'Notification Settings',
+                    style: TextStyle(fontSize: 20),
+                )),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('All Notifications'),
+                      Switch(
+                        value: _allNotifs, 
+                        onChanged: (bool newValue) {
+                          setState(() {
+                            _allNotifs = newValue;
+                          });
+                        },
+                      ),
+                    ],
+                )),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Bill Tracking Notifications'),
+                      Switch(
+                        value: _billNotifs, 
+                        onChanged: (bool newValue) {
+                          setState(() {
+                            _billNotifs = newValue;
+                          });
+                        },
+                      ),
+                    ],
+                )),
+            ])),
+        ]),
+    ));
   }
 
   _openAccountSaver(BuildContext context) async {
@@ -227,6 +338,15 @@ class FFAppBar extends StatelessWidget implements PreferredSizeWidget {
                           onPressed: _openLandingChanger(context)
                         )),
                     Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ElevatedButton(
+                          child: const Text('Notifications Settings'),
+                          onPressed: () {
+                            _getAllNotifs();
+                            _openNotifsSettings(context);
+                          }
+                        )),
+                    Padding(
                       padding: const EdgeInsets.all(8),
                       child: ElevatedButton(
                         child: const Text('Delete Account'),
@@ -270,7 +390,4 @@ class FFAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
