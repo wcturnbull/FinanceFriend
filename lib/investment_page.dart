@@ -56,7 +56,10 @@ class _InvestmentPageState extends State<InvestmentPage> {
       double investmentValue = (double.parse(investment['Price']) *
           double.parse(investment['Amount']));
       double percentage = (investmentValue / totalInvestment) * 100;
-      pieChartData[investment['Stock Name']] = percentage;
+      // Include both price and percent in the pie chart data
+      pieChartData['${investment['Stock Name']} - \$${investment['Price']}'] =
+          percentage;
+      //pieChartData[investment['Stock Name']] = percentage;
     }
   }
 
@@ -178,7 +181,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     investments.add({
                       'Stock Name': formData['stockOption'],
                       'Date Purchased': currentDate,
-                      'Amount': amount.toString() + ' Shares',
+                      'Amount': amount.toString(),
                       'Price': (price * amount).toStringAsFixed(2),
                     });
                   });
