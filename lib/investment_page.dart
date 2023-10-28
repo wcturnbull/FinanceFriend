@@ -59,7 +59,6 @@ class _InvestmentPageState extends State<InvestmentPage> {
       // Include both price and percent in the pie chart data
       pieChartData['${investment['Stock Name']} - \$${investment['Price']}'] =
           percentage;
-      //pieChartData[investment['Stock Name']] = percentage;
     }
   }
 
@@ -563,6 +562,26 @@ class _InvestmentPageState extends State<InvestmentPage> {
                       showGenerateGraphDialog(context);
                     },
                     child: Text('Generate Graph'),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Add code to handle the "Recommendations" button.
+                    },
+                    child: Text('Recommendations'),
+                  ),
+                  SizedBox(
+                      width: 16), // Add horizontal space between the buttons
+                  ElevatedButton(
+                    onPressed: () {
+                      // Add code to handle the "Compare" button.
+                    },
+                    child: Text('Compare'),
                   ),
                 ],
               ),
