@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -7,15 +8,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class ExpenseTracking extends StatefulWidget {
-  final Map<String, double> budgetMap;
+  final Budget budget;
   final List<String> dropdownItems;
-  List<Expense> expensesList;
   final Function(List<Expense>) onExpensesListChanged; // Add this callback
 
   ExpenseTracking({
-    required this.budgetMap,
+    required this.budget,
     required this.dropdownItems,
-    required this.expensesList,
     required this.onExpensesListChanged, // Initialize the callback
   });
 
@@ -35,10 +34,10 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
   }
 
   Future<void> loadExpensesFromFirebase() async {
-    List<Expense> expenses = await getExpensesFromDB();
+    List<Expense> expenses = await getExpensesFromDB(widget.budget.budgetName);
 
     setState(() {
-      widget.expensesList = expenses;
+      widget.budget.expenses = expenses;
     });
   }
 
@@ -101,13 +100,13 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
             elevation: 4,
             margin: const EdgeInsets.all(30),
             child: Visibility(
-              visible: widget.expensesList.isNotEmpty,
+              visible: widget.budget.expenses.isNotEmpty,
               child: SizedBox(
                 width: 700,
                 height: 360,
                 child: SingleChildScrollView(
                   child: BudgetDataTable(
-                    expenseList: widget.expensesList,
+                    expenseList: widget.budget.expenses,
                     onEditExpense: _onEditExpense, // Pass the edit function
                     onDeleteExpense:
                         _onDeleteExpense, // Pass the delete function
@@ -122,49 +121,49 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
   }
 
   void addDefaultExpenses(BuildContext context) {
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "McDonalds",
         price: 10,
         category: "Food",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Panda Express",
         price: 12,
         category: "Food",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "CFA Catering",
         price: 120,
         category: "Food",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Water Bill",
         price: 40,
         category: "Utilities",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Gas",
         price: 30,
         category: "Transportation",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Movie Tickets",
         price: 25,
         category: "Entertainment",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Stock Investment",
         price: 50,
         category: "Investments",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
+    widget.budget.expenses.add(Expense(
         item: "Credit Card Payment",
         price: 35,
         category: "Debt Payments",
         date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
 
-    widget.onExpensesListChanged(widget.expensesList);
-    saveExpensesToFirebase(widget.expensesList);
+    widget.onExpensesListChanged(widget.budget.expenses);
+    saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
   }
 
   Future<void> _openAddExpenseDialog(BuildContext context) async {
@@ -173,7 +172,7 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
     priceController.clear();
 
     // Create a filtered list of dropdown items without "Custom"
-    List<String> catNames = widget.budgetMap.keys.toList();
+    List<String> catNames = widget.budget.budgetMap.keys.toList();
     catNames.insert(0, "Select Category");
 
     final filteredDropdownItems =
@@ -250,12 +249,12 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
       );
 
       // Add the newExpense to the expensesList
-      widget.expensesList.add(newExpense);
-      saveExpensesToFirebase(widget.expensesList);
+      widget.budget.expenses.add(newExpense);
+      saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
 
       // Print the updated expensesList
       print("Expenses List:");
-      for (Expense expense in widget.expensesList) {
+      for (Expense expense in widget.budget.expenses) {
         print(
             "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
       }
@@ -265,7 +264,7 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
       priceController.clear();
       selectedCategory = "Select Category";
 
-      widget.onExpensesListChanged(widget.expensesList);
+      widget.onExpensesListChanged(widget.budget.expenses);
 
       setState(() {});
     }
@@ -279,7 +278,7 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
     final TextEditingController editedPriceController =
         TextEditingController(text: expenseToEdit.price.toString());
     String editedSelectedCategory = expenseToEdit.category;
-    List<String> catNames = widget.budgetMap.keys.toList();
+    List<String> catNames = widget.budget.budgetMap.keys.toList();
     catNames.insert(0, "Select Category");
 
     final filteredDropdownItems =
@@ -338,21 +337,22 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
 
                   // Update the values in the expensesList
                   final int indexOfEditedExpense =
-                      widget.expensesList.indexOf(expenseToEdit);
+                      widget.budget.expenses.indexOf(expenseToEdit);
                   if (indexOfEditedExpense != -1) {
-                    widget.expensesList[indexOfEditedExpense] = Expense(
+                    widget.budget.expenses[indexOfEditedExpense] = Expense(
                       item: editedItem,
                       price: editedPriceValue,
                       category: editedSelectedCategory,
-                      date: widget.expensesList[indexOfEditedExpense].date,
+                      date: widget.budget.expenses[indexOfEditedExpense].date,
                     );
                   }
 
-                  saveExpensesToFirebase(widget.expensesList);
+                  saveExpensesToFirebase(
+                      widget.budget.budgetName, widget.budget.expenses);
 
                   // Print the updated expensesList
                   print("Expenses List after editing:");
-                  for (Expense expense in widget.expensesList) {
+                  for (Expense expense in widget.budget.expenses) {
                     print(
                         "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
                   }
@@ -373,22 +373,22 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
       },
     );
 
-    widget.onExpensesListChanged(widget.expensesList);
+    widget.onExpensesListChanged(widget.budget.expenses);
   }
 
   // Function to handle deleting an expense
   void _onDeleteExpense(Expense expenseToDelete) {
     // Remove the expense from the expensesList
-    widget.expensesList.remove(expenseToDelete);
+    widget.budget.expenses.remove(expenseToDelete);
 
     // Print the updated expensesList
     print("Expenses List after deleting:");
-    for (Expense expense in widget.expensesList) {
+    for (Expense expense in widget.budget.expenses) {
       print(
           "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
     }
-    widget.onExpensesListChanged(widget.expensesList);
-    saveExpensesToFirebase(widget.expensesList);
+    widget.onExpensesListChanged(widget.budget.expenses);
+    saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
 
     setState(() {});
   }

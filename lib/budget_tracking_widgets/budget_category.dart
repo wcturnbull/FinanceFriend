@@ -1,4 +1,5 @@
 import 'package:financefriend/budget_tracking.dart';
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -11,10 +12,10 @@ import 'package:financefriend/budget_tracking_widgets/usage_table.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class BudgetCategoryTable extends StatefulWidget {
-  final Map<String, double> budgetMap;
   final Function(Map<String, double>) onBudgetUpdate;
+  Budget budget;
 
-  BudgetCategoryTable({required this.budgetMap, required this.onBudgetUpdate});
+  BudgetCategoryTable({required this.budget, required this.onBudgetUpdate});
 
   @override
   _BudgetCategoryTableState createState() => _BudgetCategoryTableState();
@@ -33,7 +34,8 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
   void editCategoryValue(String category) {
     setState(() {
       editingCategory = category;
-      editController.text = widget.budgetMap[category]!.toStringAsFixed(2);
+      editController.text =
+          widget.budget.budgetMap[category]!.toStringAsFixed(2);
     });
 
     String editedCategory = category;
@@ -78,9 +80,10 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                  widget.budgetMap.remove(category);
-                  widget.onBudgetUpdate(widget.budgetMap);
-                  bool success = await removeBudgetCategory(category);
+                  widget.budget.budgetMap.remove(category);
+                  widget.onBudgetUpdate(widget.budget.budgetMap);
+                  bool success = await removeBudgetCategory(
+                      widget.budget.budgetName, category);
                   if (success) {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
@@ -95,15 +98,16 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
                 if (editController.text.isNotEmpty) {
                   double newValue = double.tryParse(editController.text) ?? 0;
                   print("category: " + category);
-                  widget.budgetMap.remove(category);
-                  await removeBudgetCategory(category);
-                  // print(widget.budgetMap);
-                  // await updateBudgetInFirebase(widget.budgetMap);
+                  widget.budget.budgetMap.remove(category);
+                  await removeBudgetCategory(
+                      widget.budget.budgetName, category);
+                  // print(widget.budget.budgetMap);
+                  // await updateBudgetInFirebase(widget.budget.budgetMap);
                   // print(await getBudgetMapFromFirebase());
-                  widget.budgetMap[editedCategory] = newValue;
-                  widget.onBudgetUpdate(widget.budgetMap);
-                  final success =
-                      await updateBudgetInFirebase(widget.budgetMap);
+                  widget.budget.budgetMap[editedCategory] = newValue;
+                  widget.onBudgetUpdate(widget.budget.budgetMap);
+                  final success = await updateBudgetInFirebase(
+                      widget.budget.budgetName, widget.budget.budgetMap);
                   if (success) {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
@@ -119,9 +123,10 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
   }
 
   void removeCategory(String category) {
-    widget.budgetMap.remove(category);
-    widget.onBudgetUpdate(widget.budgetMap);
-    updateBudgetInFirebase(widget.budgetMap); // Update the database
+    widget.budget.budgetMap.remove(category);
+    widget.onBudgetUpdate(widget.budget.budgetMap);
+    updateBudgetInFirebase(widget.budget.budgetName,
+        widget.budget.budgetMap); // Update the database
   }
 
   @override
@@ -133,13 +138,13 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
       return double.parse(total.toStringAsFixed(2));
     }
 
-    final totalBudget = getTotalBudget(widget.budgetMap);
+    final totalBudget = getTotalBudget(widget.budget.budgetMap);
     final formattedTotalBudget = NumberFormat.currency(
       symbol: '\$', // Use "$" as the currency symbol
       decimalDigits: 2, // Display two decimal places
     ).format(totalBudget);
 
-    final budgetItems = widget.budgetMap.entries.map((entry) {
+    final budgetItems = widget.budget.budgetMap.entries.map((entry) {
       final category = entry.key;
       final amount = entry.value;
       return Column(

@@ -35,25 +35,134 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   double budgetAmount = 0;
   String budgetName = "";
 
-  @override
+  List<String> budgetList = [];
+
   @override
   void initState() {
     super.initState();
     controller = TextEditingController();
-    setBudgetInit(); // Check if a budget already exists
+    getBudgetListFromFirebase(); // Fetch the list of budget names
   }
 
-  Future<void> setBudgetInit() async {
-    final budgetExists = await checkIfBudgetExists();
-    print("does budget exist? " + budgetExists.toString());
-    if (budgetExists) {
-      Budget existingBudget = await getBudgetFromFirebase();
-
-      setState(() {
-        budgetMap = existingBudget.budgetMap;
-        budgetName = existingBudget.budgetName;
-      });
+  Future<void> getBudgetListFromFirebase() async {
+    if (currentUser == null) {
+      return;
     }
+
+    try {
+      final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
+
+      DatabaseEvent event = await budgetsRef.once();
+      DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.value != null) {
+        Map<String, dynamic> budgetData =
+            snapshot.value as Map<String, dynamic>;
+
+        // Extract the list of budget keys
+        List<String> budgetKeys = budgetData.keys.toList();
+
+        setState(() {
+          budgetList = budgetKeys;
+        });
+      }
+    } catch (error) {
+      print("Error fetching budget list from Firebase: $error");
+    }
+  }
+
+  // Function to open a specific budget based on the selected budget name
+  void openBudget(String selectedBudgetName) {
+    setState(() {
+      budgetName = selectedBudgetName;
+      budgetMap = {}; // Clear the current budget map
+      budgetCreated = false; // Reset budgetCreated to indicate loading
+    });
+
+    // Fetch the selected budget data and update your UI
+    getBudgetFromFirebaseByName(selectedBudgetName).then((selectedBudget) {
+      if (selectedBudget != null) {
+        print(selectedBudget.expenses);
+        setState(() {
+          budgetMap = selectedBudget.budgetMap;
+          expenseList = selectedBudget.expenses;
+          budgetName = selectedBudget.budgetName;
+          budgetCreated = true; // Set budgetCreated to true when data is loaded
+          // Load other budget-related data as needed
+        });
+      } else {
+        // Handle the case where the budget data could not be retrieved
+        print("Error loading budget data.");
+        // You can show an error message to the user if needed.
+      }
+    }).catchError((error) {
+      print("Error fetching budget data: $error");
+      // Handle the error. You might want to show an error message to the user.
+    });
+  }
+
+  // Build the list of budget buttons
+  Widget buildBudgetButtons() {
+    if (budgetList.isEmpty) {
+      return const Text("");
+    }
+
+    print("Printing budgetNames");
+    print(budgetList);
+
+    return Container(
+      width: 300, // Set the desired width for the Container
+      child: Card(
+        margin: const EdgeInsets.all(16), // Add margin to the card
+        color: Colors.green,
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0), // Add padding for the title
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .center, // Center the content horizontally
+                    children: [
+                      const Text(
+                        "Existing Budgets:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 200, // Set a fixed width for the divider
+                    child: const Divider(
+                      color: Colors.white, // Change the color as needed
+                      thickness: 1.0, // Adjust the thickness as needed
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...budgetList.map((budgetName) {
+              return Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      openBudget(budgetName);
+                    },
+                    child: Text("Open Budget: $budgetName"),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -112,71 +221,71 @@ class _BudgetTrackingState extends State<BudgetTracking> {
         child: Center(
           child: SingleChildScrollView(
             child: Column(children: <Widget>[
-              Visibility(
-                visible:
-                    budgetMap.isEmpty, // Show the button if budgetMap is empty
-                child: Column(children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        budgetMap = {
-                          "Housing": 250,
-                          "Utilities": 250,
-                          "Food": 150,
-                          "Transportation": 140,
-                          "Entertainment": 120,
-                          "Investments": 50,
-                          "Debt Payments": 40
-                        };
-                        budgetName = "Default";
-                        createBudgetInFirebase(new Budget(
-                            budgetName: budgetName,
-                            budgetMap: budgetMap,
-                            expenses: []));
+              Column(children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      budgetMap = {
+                        "Housing": 250,
+                        "Utilities": 250,
+                        "Food": 150,
+                        "Transportation": 140,
+                        "Entertainment": 120,
+                        "Investments": 50,
+                        "Debt Payments": 40
+                      };
+                      budgetName = "Default";
+                      createBudgetInFirebase(Budget(
+                          budgetName: budgetName,
+                          budgetMap: budgetMap,
+                          expenses: []));
 
-                        // print("printing budget:");
-                        // print((await getBudgetMapFromFirebase()).toString());
-                        // You can also set other values here if needed.
-                      });
-                    },
-                    child: const Text("Set Default Budget"),
-                  ),
-                  const SizedBox(
-                    height: 50,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return BudgetCreationPopup(onBudgetCreated:
-                              (Map<String, double> budgetMap,
-                                  String budgetName) {
-                            // Step 1: Create the budget in Firebase
+                      // print("printing budget:");
+                      // print((await getBudgetMapFromFirebase()).toString());
+                      // You can also set other values here if needed.
+                    });
+                  },
+                  child: const Text("Set Default Budget"),
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return BudgetCreationPopup(onBudgetCreated:
+                            (Map<String, double> budgetMap, String budgetName) {
+                          // Step 1: Create the budget in Firebase
 
-                            createBudgetInFirebase(new Budget(
-                                budgetName: budgetName,
-                                budgetMap: budgetMap,
-                                expenses: [])).then((result) {
-                              if (result == true) {
-                                // Step 2: Update local state after Firebase operation is successful
-                                setState(() {
-                                  this.budgetMap = budgetMap;
-                                  this.budgetName = budgetName;
-                                  budgetCreated = true;
-                                });
-                              } else {
-                                // Handle error or show an error message
-                              }
-                            });
+                          createBudgetInFirebase(Budget(
+                              budgetName: budgetName,
+                              budgetMap: budgetMap,
+                              expenses: [])).then((result) {
+                            if (result == true) {
+                              // Step 2: Update local state after Firebase operation is successful
+                              setState(() {
+                                this.budgetMap = budgetMap;
+                                this.budgetName = budgetName;
+                                budgetCreated = true;
+                                this.budgetList.add(budgetName);
+                              });
+                            } else {
+                              // Handle error or show an error message
+                            }
                           });
-                        },
-                      );
-                    },
-                    child: const Text("Create New Budget"),
-                  ),
-                ]),
+                        });
+                      },
+                    );
+                  },
+                  child: const Text("Create New Budget"),
+                ),
+              ]),
+              const SizedBox(
+                height: 15,
               ),
+              buildBudgetButtons(),
               Visibility(
                 visible: budgetMap.isNotEmpty,
                 child: Column(
@@ -277,7 +386,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                         Column(
                           children: [
                             BudgetUsageTable(
-                              budgetMap: budgetMap,
+                              budget: Budget(
+                                  budgetMap: budgetMap,
+                                  budgetName: budgetName,
+                                  expenses: expenseList),
                               expensesList: expenseList,
                             )
                           ],
@@ -286,9 +398,11 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                         Column(
                           children: [
                             ExpenseTracking(
-                              budgetMap: budgetMap,
+                              budget: Budget(
+                                  budgetMap: budgetMap,
+                                  expenses: expenseList,
+                                  budgetName: budgetName),
                               dropdownItems: dropdownItems,
-                              expensesList: expenseList,
                               onExpensesListChanged: (updatedExpensesList) {
                                 setState(() {
                                   expenseList = updatedExpensesList;
@@ -311,6 +425,9 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                       ),
                       onPressed: () {
                         deleteBudget();
+                        setState(() {
+                          budgetList.remove(this.budgetName);
+                        });
                       },
                     ),
                     const SizedBox(
@@ -349,7 +466,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             ElevatedButton(
               onPressed: () {
                 // Delete the budget from the database and reset the local state
-                deleteBudgetFromFirebase().then((success) {
+                deleteBudgetFromFirebase(budgetName).then((success) {
                   if (success) {
                     setState(() {
                       budgetMap = {};
@@ -377,8 +494,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller:
-                    newBudgetNameController, // Step 3: Use the controller for user input
+                controller: newBudgetNameController,
                 decoration: const InputDecoration(labelText: "New Budget Name"),
               ),
             ],
@@ -386,23 +502,24 @@ class _BudgetTrackingState extends State<BudgetTracking> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text("Cancel"),
             ),
             ElevatedButton(
               onPressed: () {
                 String newBudgetName = newBudgetNameController.text;
-                // Step 4: Call updateBudgetNameInFirebase with the new budget name
-                updateBudgetNameInFirebase(newBudgetName).then((success) {
+                updateBudgetNameInFirebase(budgetName, newBudgetName)
+                    .then((success) {
                   if (success) {
-                    // Update the local budgetName if the operation is successful
                     setState(() {
+                      budgetList.remove(budgetName);
+                      budgetList.add(newBudgetName);
                       budgetName = newBudgetName;
                     });
                   }
                 });
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text("Save"),
             ),
@@ -486,10 +603,13 @@ class _BudgetTrackingState extends State<BudgetTracking> {
         return Visibility(
             visible: budgetMap.isNotEmpty,
             child: BudgetCategoryTable(
-              budgetMap: budgetMap,
+              budget: Budget(
+                  budgetMap: budgetMap,
+                  budgetName: budgetName,
+                  expenses: expenseList),
               onBudgetUpdate: (updatedBudgetMap) async {
                 bool updateResult =
-                    await updateBudgetInFirebase(updatedBudgetMap);
+                    await updateBudgetInFirebase(budgetName, updatedBudgetMap);
 
                 if (updateResult) {
                   // If the update was successful, update the local state
@@ -529,7 +649,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     controller.clear();
     customCategoryController.clear();
     isOtherSelected = false;
-    updateBudgetInFirebase(budgetMap);
+    updateBudgetInFirebase(budgetName, budgetMap);
   }
 
   double getTotalBudget(Map<String, double> budgetMap) {

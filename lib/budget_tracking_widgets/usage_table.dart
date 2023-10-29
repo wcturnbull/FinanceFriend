@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -9,11 +10,11 @@ import 'package:financefriend/budget_tracking_widgets/expense_tracking.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 
 class BudgetUsageTable extends StatefulWidget {
-  final Map<String, double> budgetMap;
+  Budget budget;
   List<Expense> expensesList;
 
   BudgetUsageTable({
-    required this.budgetMap,
+    required this.budget,
     required this.expensesList,
   });
 
@@ -37,7 +38,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   }
 
   Future<void> loadExpensesFromFirebase() async {
-    List<Expense> expenses = await getExpensesFromDB();
+    List<Expense> expenses = await getExpensesFromDB(widget.budget.budgetName);
 
     setState(() {
       widget.expensesList = expenses;
@@ -142,7 +143,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   Widget buildPieCharts() {
     final Map<String, double> categoryUsageMap = calculateCategoryUsage();
     final double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
+        widget.budget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
     final double totalExpenses =
         widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
 
@@ -258,7 +259,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   Widget buildDonutCharts() {
     final Map<String, double> categoryUsageMap = calculateCategoryUsage();
     final double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
+        widget.budget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
     final double totalExpenses =
         widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
 
@@ -370,14 +371,14 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
 
     // Calculate the total budget amount
     double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
+        widget.budget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
 
     // Calculate the total expenses amount
     double totalExpenses =
         widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
 
     // Calculate the percentage of each category used
-    widget.budgetMap.forEach((category, budgetAmount) {
+    widget.budget.budgetMap.forEach((category, budgetAmount) {
       double expensesAmount = widget.expensesList
           .where((expense) => expense.category == category)
           .fold(0, (prev, expense) => prev + expense.price);

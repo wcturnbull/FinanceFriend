@@ -1,4 +1,5 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
+import 'package:financefriend/graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -17,23 +18,20 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-Future<List<Expense>> getExpensesFromDB() async {
+Future<List<Expense>> getExpensesFromDB(String budgetName) async {
   if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return []; // Return an empty list or an appropriate default value
+    return [];
   }
 
   try {
     final budgetReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetData/expenses');
+        .child('users/${currentUser?.uid}/budgets/$budgetName/expenses');
 
-    // Fetch the expenses data from Firebase
     DataSnapshot snapshot = (await budgetReference.once()).snapshot;
 
     if (snapshot.value != null) {
       final List<dynamic> expensesData = snapshot.value as List<dynamic>;
 
-      // Convert the Firebase data into a list of Expense objects
       List<Expense> expensesList = expensesData.map((data) {
         if (data is Map<String, dynamic>) {
           return Expense(
@@ -48,24 +46,25 @@ Future<List<Expense>> getExpensesFromDB() async {
 
       return expensesList;
     } else {
-      // Handle the case where the data does not exist
-      return []; // Return an empty list or an appropriate default value
+      return [];
     }
   } catch (error) {
-    // Handle any errors that occur during Firebase interaction
     print("Error fetching expenses from Firebase: $error");
-    return []; // Return an empty list or an appropriate default value
+    return [];
   }
 }
 
-Future<bool> saveExpensesToFirebase(List<Expense> expenses) async {
+Future<bool> saveExpensesToFirebase(
+    String budgetName, List<Expense> expenses) async {
+  print("SAVING EXPENSES TO DB");
   if (currentUser == null) {
     return false;
   }
 
   try {
     final expensesReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetData/expenses');
+        .child('users/${currentUser?.uid}/budgets/$budgetName/expenses');
+    print(budgetName);
 
     final List<Map<String, dynamic>> expensesData = expenses.map((expense) {
       return {
@@ -78,14 +77,14 @@ Future<bool> saveExpensesToFirebase(List<Expense> expenses) async {
 
     await expensesReference.set(expensesData);
 
-    return true; // Operation successful
+    return true;
   } catch (error) {
     print("Error saving expenses to Firebase: $error");
     return false;
   }
 }
 
-Future<Budget> getBudgetFromFirebase() async {
+Future<Budget> getBudgetFromFirebaseByName(String budgetName) async {
   if (currentUser == null) {
     // Handle the case where the user is not authenticated
     return Budget(
@@ -96,7 +95,7 @@ Future<Budget> getBudgetFromFirebase() async {
 
   try {
     final budgetDataRef =
-        reference.child('users/${currentUser?.uid}/budgets/budgetData');
+        reference.child('users/${currentUser?.uid}/budgets/$budgetName');
 
     // Fetch the budgetMap data from Firebase
     DatabaseEvent event = await budgetDataRef.once();
@@ -106,22 +105,25 @@ Future<Budget> getBudgetFromFirebase() async {
     if (snapshot.value != null) {
       // Use explicit type casting to ensure all values are of type double
       Map<String, dynamic> dataMap = snapshot.value as Map<String, dynamic>;
+      List<Expense> expensesList;
 
       String budgetName = dataMap['budgetName'] ?? "";
       Map<String, dynamic> budgetData = dataMap['budgetMap'] ?? {};
-
-      List<Expense> expensesList =
-          (dataMap['expenses'] as List<dynamic>).map((data) {
-        if (data is Map<String, dynamic>) {
-          return Expense(
-            item: data['item'] ?? '',
-            price: (data['price'] ?? 0.0).toDouble(),
-            category: data['category'] ?? '',
-            date: data['date'] ?? '',
-          );
-        }
-        return Expense(item: '', price: 0.0, category: '', date: '');
-      }).toList();
+      if (dataMap['expenses'] != null) {
+        expensesList = (dataMap['expenses'] as List<dynamic>).map((data) {
+          if (data is Map<String, dynamic>) {
+            return Expense(
+              item: data['item'] ?? '',
+              price: (data['price'] ?? 0.0).toDouble(),
+              category: data['category'] ?? '',
+              date: data['date'] ?? '',
+            );
+          }
+          return Expense(item: '', price: 0.0, category: '', date: '');
+        }).toList();
+      } else {
+        expensesList = [];
+      }
 
       Map<String, double> budgetMap = {};
       budgetData.forEach((key, value) {
@@ -153,55 +155,55 @@ Future<Budget> getBudgetFromFirebase() async {
   }
 }
 
-Future<String> getBudgetNameFromFirebase() async {
+Future<String> getBudgetNameFromFirebaseByRef(String refLocation) async {
   if (currentUser == null) {
     // Handle the case where the user is not authenticated
-    return ""; // Return an empty map or an appropriate default value
+    return "";
   }
 
   try {
-    final budgetReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetData/budgetName');
+    final budgetDataRef =
+        reference.child('users/${currentUser?.uid}/budgets/$refLocation');
 
     // Fetch the budgetMap data from Firebase
-    DatabaseEvent event = await budgetReference.once();
+    DatabaseEvent event = await budgetDataRef.once();
     DataSnapshot snapshot = event.snapshot;
+
+    Map<String, dynamic> dataMap = snapshot.value as Map<String, dynamic>;
 
     // Check if the data exists
     if (snapshot.value != null) {
-      // Use explicit type casting to ensure all values are of type double
-      return snapshot.value as String;
+      String budgetName = dataMap['budgetName'] ?? "";
+
+      return budgetName;
     } else {
       // Handle the case where the data does not exist
-      return ""; // Return an empty map or an appropriate default value
+      return "";
     }
   } catch (error) {
     // Handle any errors that occur during Firebase interaction
-    print("Error fetching budgetMap from Firebase: $error");
-    return ""; // Return an empty map or an appropriate default value
+    print("Error fetching budget data from Firebase: $error");
+    return ""; // Return an empty Budget object with empty expenses or an appropriate default value
   }
 }
 
 Future<bool> createBudgetInFirebase(Budget budget) async {
-  // final reference = FirebaseDatabase.instance.reference();
-  // final currentUser = FirebaseAuth.instance.currentUser;
-  print("Putting data in database");
-
   if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
+    return false; // Handle the case where the user is not authenticated
   }
 
   try {
-    final newBudgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetData');
+    // Generate a unique key for the new budget
+    final newBudgetReference = reference
+        .child('users/${currentUser?.uid}/budgets/${budget.budgetName}');
 
     // Store the budgetMap under the unique key
     await newBudgetReference.child("budgetMap").set(budget.budgetMap);
 
     // Optionally, you can store the budgetName as well
     await newBudgetReference.child('budgetName').set(budget.budgetName);
-    await newBudgetReference.child("expenses").push();
+
+    await newBudgetReference.child('expenses').set(budget.expenses);
 
     return true; // Operation successful
   } catch (error) {
@@ -212,7 +214,7 @@ Future<bool> createBudgetInFirebase(Budget budget) async {
 }
 
 Future<bool> updateBudgetInFirebase(
-    Map<String, double> updatedBudgetMap) async {
+    String budgetName, Map<String, double> updatedBudgetMap) async {
   if (currentUser == null) {
     // Handle the case where the user is not authenticated
     return false;
@@ -220,7 +222,7 @@ Future<bool> updateBudgetInFirebase(
 
   try {
     final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetData');
+        reference.child('users/${currentUser?.uid}/budgets/$budgetName/');
 
     // Update the budgetMap with the new data
     await budgetReference.child("budgetMap").update(updatedBudgetMap);
@@ -233,49 +235,28 @@ Future<bool> updateBudgetInFirebase(
   }
 }
 
-Future<bool> checkIfBudgetExists() async {
-  // final reference = FirebaseDatabase.instance.reference();
-  // final currentUser = FirebaseAuth.instance.currentUser;
-
+Future<bool> updateBudgetNameInFirebase(
+    String oldBudgetName, String newBudgetName) async {
   if (currentUser == null) {
-    // Handle the case where the user is not authenticated
-    return false;
+    return false; // Handle the case where the user is not authenticated
   }
 
   try {
-    final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets');
+    // Create references for the old and new budget locations
+    final newBudgetReference =
+        reference.child('users/${currentUser?.uid}/budgets/$newBudgetName');
 
-    // Fetch the budgetMap data from Firebase
-    DatabaseEvent event = await budgetReference.once();
-    DataSnapshot snapshot = event.snapshot;
-    if (snapshot.hasChild("budgetData")) {
-      final budgetMapReference =
-          reference.child('users/${currentUser?.uid}/budgets/budgetData');
-      DatabaseEvent event2 = await budgetMapReference.once();
-      DataSnapshot snapshot2 = event2.snapshot;
-      if (snapshot2.hasChild("budgetName") && snapshot2.hasChild("budgetMap")) {
-        return true;
-      }
-    }
-    return false;
-  } catch (error) {
-    // Handle any errors that occur during Firebase interaction
-    print("Error creating budget in Firebase: $error");
-    return false;
-  }
-}
+    Budget temp = await getBudgetFromFirebaseByName(oldBudgetName);
+    print(temp.expenses);
 
-Future<bool> updateBudgetNameInFirebase(String newBudgetName) async {
-  if (currentUser == null) {
-    return false;
-  }
+    // Delete the old budget
+    await reference
+        .child('users/${currentUser?.uid}/budgets/$oldBudgetName')
+        .remove();
 
-  try {
-    final budgetNameReference = reference
-        .child('users/${currentUser?.uid}/budgets/budgetData/budgetName');
-
-    await budgetNameReference.set(newBudgetName);
+    await newBudgetReference.child('budgetName').set(newBudgetName);
+    await newBudgetReference.child('budgetMap').set(temp.budgetMap);
+    saveExpensesToFirebase(newBudgetName, temp.expenses);
 
     return true; // Operation successful
   } catch (error) {
@@ -285,14 +266,14 @@ Future<bool> updateBudgetNameInFirebase(String newBudgetName) async {
   }
 }
 
-Future<bool> deleteBudgetFromFirebase() async {
+Future<bool> deleteBudgetFromFirebase(String budgetName) async {
   if (currentUser == null) {
     return false;
   }
 
   try {
     final budgetReference =
-        reference.child('users/${currentUser?.uid}/budgets/budgetData');
+        reference.child('users/${currentUser?.uid}/budgets/$budgetName');
 
     // Delete the budgetData and budgetName nodes
     await budgetReference.child("budgetMap").remove();
@@ -307,7 +288,8 @@ Future<bool> deleteBudgetFromFirebase() async {
   }
 }
 
-Future<bool> removeBudgetCategory(String categoryName) async {
+Future<bool> removeBudgetCategory(
+    String budgetName, String categoryName) async {
   if (currentUser == null) {
     // Handle the case where the user is not authenticated
     return false;
