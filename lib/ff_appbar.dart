@@ -66,18 +66,6 @@ class _FFAppBarState extends State<FFAppBar> {
     }
   }
 
-  void _flipAllNotifs() {
-    setState(() {
-      _allNotifs = _allNotifs ? false : true;
-    });
-  }
-
-  void _flipBillNotifs() {
-    setState(() {
-      _billNotifs = _billNotifs ? false : true;
-    });
-  }
-
   _openNotifsSettings(BuildContext context) async {
     await showDialog<void>(
       context: context,
