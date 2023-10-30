@@ -5,11 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:financefriend/budget_tracking_widgets/budget_creation.dart';
-import 'package:financefriend/budget_tracking_widgets/expense_tracking.dart';
-import 'package:financefriend/budget_tracking_widgets/usage_table.dart';
-import 'package:financefriend/budget_tracking_widgets/budget_category.dart';
-import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
+import 'budget_tracking_widgets/budget_creation.dart';
+import 'budget_tracking_widgets/expense_tracking.dart';
+import 'budget_tracking_widgets/usage_table.dart';
+import 'budget_tracking_widgets/budget_category.dart';
+import 'budget_tracking_widgets/budget_db_utils.dart';
+import 'budget_tracking_widgets/budget_colors.dart';
 
 class BudgetTracking extends StatefulWidget {
   @override
@@ -111,21 +112,20 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     print(budgetList);
 
     return Container(
-      width: 300, // Set the desired width for the Container
+      width: 300,
       child: Card(
-        margin: const EdgeInsets.all(16), // Add margin to the card
+        margin: const EdgeInsets.all(16),
         color: Colors.green,
         child: Column(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.all(8.0), // Add padding for the title
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .center, // Center the content horizontally
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Existing Budgets:",
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -174,16 +174,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   final Color color =
       Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000);
 
-  final colorList = <Color>[
-    Color(int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#15510a".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#1c6c0e".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#4f9f41".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#7bb770".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#a7cfa0".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#d3e7cf".substring(1, 7), radix: 16) + 0xFF0000000),
-  ];
+  List<Color> colorList = greenColorList;
 
   List<String> dropdownItems = [
     "Select Category",
@@ -223,7 +214,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                 color: Colors.white,
                 child: Column(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       height: 20,
                     ),
                     Column(children: [
@@ -294,7 +285,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                     buildBudgetButtons(),
                   ],
                 )),
-            VerticalDivider(
+            const VerticalDivider(
               color: Colors.black,
             ),
             Expanded(
@@ -312,7 +303,12 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               child: Center(
                                 child: Column(
                                   children: <Widget>[
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
                                     Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           "Budget: $budgetName",
@@ -373,16 +369,46 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                         );
                                       },
                                     ),
+                                    const SizedBox(height: 35),
                                     Visibility(
                                       visible: budgetMap.isNotEmpty,
-                                      child: Column(
-                                        children: <Widget>[
-                                          const SizedBox(height: 35),
-                                          BudgetPieChart(
-                                            budgetMap: budgetMap,
-                                            valuesAdded: budgetMap.isNotEmpty,
-                                            colorList: colorList,
-                                            color: color,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: <Widget>[
+                                              const SizedBox(height: 35),
+                                              BudgetPieChart(
+                                                budgetMap: budgetMap,
+                                                valuesAdded:
+                                                    budgetMap.isNotEmpty,
+                                                colorList: colorList,
+                                                color: colorList[0],
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            width: 30,
+                                          ),
+                                          Container(
+                                            width: 2,
+                                            height: 500,
+                                            color: Colors.green,
+                                          ),
+                                          const SizedBox(
+                                            width: 30,
+                                          ),
+                                          Column(
+                                            children: [
+                                              BudgetUsageTable(
+                                                budget: Budget(
+                                                    budgetMap: budgetMap,
+                                                    budgetName: budgetName,
+                                                    expenses: expenseList),
+                                                expensesList: expenseList,
+                                              )
+                                            ],
                                           ),
                                         ],
                                       ),
@@ -398,7 +424,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                         );
                                       },
                                     ),
-                                    const SizedBox(height: 40),
+                                    const SizedBox(height: 35),
                                   ],
                                 ),
                               ),
@@ -408,17 +434,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Column(
-                                    children: [
-                                      BudgetUsageTable(
-                                        budget: Budget(
-                                            budgetMap: budgetMap,
-                                            budgetName: budgetName,
-                                            expenses: expenseList),
-                                        expensesList: expenseList,
-                                      )
-                                    ],
-                                  ),
                                   const SizedBox(width: 20),
                                   Column(
                                     children: [
@@ -442,7 +457,11 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               ),
                             ),
                             const SizedBox(
-                              height: 40,
+                              height: 35,
+                            ),
+                            Text("test"),
+                            SizedBox(
+                              height: 35,
                             ),
                             ElevatedButton(
                               // Add a button to delete the budget
@@ -458,7 +477,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               },
                             ),
                             const SizedBox(
-                              height: 40,
+                              height: 35,
                             )
                           ],
                         ),
@@ -565,7 +584,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: const Text("Enter Expense:", style: TextStyle()),
+                title: const Text("Enter New Category:", style: TextStyle()),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -728,8 +747,7 @@ class BudgetPieChart extends StatelessWidget {
       ringStrokeWidth: 35,
       centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-        color: Color(
-            int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
+        color: color,
         fontSize: 40,
       ),
       chartValuesOptions: ChartValuesOptions(

@@ -103,18 +103,22 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
             ],
           ),
           const SizedBox(height: 10),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            elevation: 4,
-            margin: const EdgeInsets.all(30),
-            child: displayMode == DisplayMode.Table
-                ? buildTable()
-                : displayMode == DisplayMode.PieCharts
-                    ? buildPieCharts()
-                    : buildDonutCharts(), // Render content based on the selected display mode
-          )
+          Container(
+              height: (calculateCategoryUsage().length * 48.0 + 118.0)
+                  .clamp(400, double.infinity),
+              width: 500,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                elevation: 4,
+                margin: const EdgeInsets.all(30),
+                child: displayMode == DisplayMode.Table
+                    ? buildTable()
+                    : displayMode == DisplayMode.PieCharts
+                        ? buildPieCharts()
+                        : buildDonutCharts(),
+              )),
         ],
       ),
     );
@@ -123,20 +127,24 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   Widget buildTable() {
     final Map<String, double> categoryUsageMap = calculateCategoryUsage();
 
-    return DataTable(
-      columns: [
-        const DataColumn(label: Text("Category")),
-        const DataColumn(label: Text("Percentage")),
-        const DataColumn(label: Text("Dollar Amount")),
-      ],
-      rows: categoryUsageMap.entries.map((entry) {
-        return DataRow(cells: [
-          DataCell(Text(entry.key)),
-          DataCell(Text("${entry.value.toStringAsFixed(2)}%")),
-          DataCell(Text(
-              "\$${widget.expensesList.where((expense) => expense.category == entry.key).fold(0, (prev, expense) => prev + expense.price.toInt()).toStringAsFixed(2)}"))
-        ]);
-      }).toList(),
+    return SingleChildScrollView(
+      // Make it scrollable
+      child: DataTable(
+        dataRowMaxHeight: 48,
+        columns: const [
+          DataColumn(label: Text("Category")),
+          DataColumn(label: Text("Percentage")),
+          DataColumn(label: Text("Dollar Amount")),
+        ],
+        rows: categoryUsageMap.entries.map((entry) {
+          return DataRow(cells: [
+            DataCell(Text(entry.key)),
+            DataCell(Text("${entry.value.toStringAsFixed(2)}%")),
+            DataCell(Text(
+                "\$${widget.expensesList.where((expense) => expense.category == entry.key).fold(0, (prev, expense) => prev + expense.price.toInt()).toStringAsFixed(2)}"))
+          ]);
+        }).toList(),
+      ),
     );
   }
 
@@ -149,11 +157,11 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
 
     final List<Widget> pieCharts = [];
 
-    // Create a chart for overall expenses vs. overall budget
     final Map<String, double> overallDataMap = {
       "Spent": totalExpenses,
       "Available": totalBudget - totalExpenses,
     };
+
     pieCharts.add(
       Column(
         children: [
@@ -251,8 +259,11 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
       return const Text("No data to display");
     }
 
-    return Column(
-      children: pieCharts,
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        children: pieCharts,
+      ),
     );
   }
 
@@ -361,8 +372,11 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
       return const Text("No data to display");
     }
 
-    return Column(
-      children: donutCharts,
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        children: donutCharts,
+      ),
     );
   }
 
