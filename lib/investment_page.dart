@@ -428,19 +428,19 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     decoration: InputDecoration(labelText: 'Risk Level'),
                     items: [
                       DropdownMenuItem(
-                        value: 'Option 1',
+                        value: 'low',
                         child: Text('Low'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 2',
+                        value: 'medium',
                         child: Text('Medium'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 3',
+                        value: 'high',
                         child: Text('High'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 4',
+                        value: 'noPreference',
                         child: Text('No Preference'),
                       ),
                     ],
@@ -455,19 +455,19 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     decoration: InputDecoration(labelText: 'Asset Preference'),
                     items: [
                       DropdownMenuItem(
-                        value: 'Option 1',
+                        value: 'stocks',
                         child: Text('Stocks'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 2',
+                        value: 'bonds',
                         child: Text('Bonds'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 3',
+                        value: 'pms',
                         child: Text('Precious Metals'),
                       ),
                       DropdownMenuItem(
-                        value: 'Option 4',
+                        value: 'noPreference',
                         child: Text('No Preference'),
                       ),
                     ],
@@ -482,8 +482,55 @@ class _InvestmentPageState extends State<InvestmentPage> {
               actions: [
                 ElevatedButton(
                   onPressed: () {
-                    // Handle Save button click and process recommendations.
-                    // You can use selectedRecommendation1 and selectedRecommendation2 here.
+                    String advice = '';
+                    if (selectedRecommendation1 == 'low') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice = 'Low Stock Advice';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice = 'Low Bond Advice';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice = 'Low Precious Metal Advice';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice = 'Low No Preference Advice';
+                      }
+                    } else if (selectedRecommendation1 == 'medium') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice = 'Medium Stock Advice';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice = 'Medium Bond Advice';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice = 'Medium Precious Metal Advice';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice = 'Medium No Preference Advice';
+                      }
+                    } else if (selectedRecommendation1 == 'high') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice = 'High Stock Advice';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice = 'High Bond Advice';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice = 'High Precious Metal Advice';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice = 'High No Preference Advice';
+                      }
+                    } else if (selectedRecommendation1 == 'noPreference') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice = 'No Preference Stock Advice';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice = 'No Preference Bond Advice';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice = 'No Preference Precious Metal Advice';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice = 'No Preference No Preference Advice';
+                      }
+                    }
+                    // Display the advice underneath the DataTable
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(advice),
+                        duration: Duration(seconds: 10),
+                      ),
+                    );
                     Navigator.of(context).pop();
                   },
                   child: Text('Save'),
