@@ -1,46 +1,16 @@
-import 'dart:io';
-
-import 'package:financefriend/ff_appbar.dart';
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:convert';
-import 'dart:math';
-import 'package:data_table_2/data_table_2.dart';
-
-final firebaseApp = Firebase.app();
-final database = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
-final DatabaseReference reference = database.ref();
-final currentUser = FirebaseAuth.instance.currentUser;
-
-Map<String, double> getBudgetMapFromDB() {
-  Map<String, double> budgetData = {};
-  reference
-      .child('users/${currentUser?.uid}/budgetMap')
-      .onValue
-      .listen((event) {
-    final dynamic snapshotValue = event.snapshot.value;
-    if (snapshotValue != null && snapshotValue is String) {
-      budgetData = Map<String, double>.from(
-        jsonDecode(snapshotValue),
-      );
-
-      print("Budget Data from database:");
-      print(budgetData);
-      print("data printed");
-    } else {
-      print("No budget data found in the database.");
-    }
-  });
-  return budgetData;
-}
-
-void putBudgetMapInDB() {}
+import 'budget_tracking_widgets/budget_creation.dart';
+import 'budget_tracking_widgets/expense_tracking.dart';
+import 'budget_tracking_widgets/usage_table.dart';
+import 'budget_tracking_widgets/budget_category.dart';
+import 'budget_tracking_widgets/budget_db_utils.dart';
+import 'budget_tracking_widgets/budget_colors.dart';
 
 class BudgetTracking extends StatefulWidget {
   @override
@@ -50,6 +20,8 @@ class BudgetTracking extends StatefulWidget {
 class _BudgetTrackingState extends State<BudgetTracking> {
   late TextEditingController controller;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  TextEditingController newBudgetNameController =
+      TextEditingController(); // Step 1: Create the controller
 
   String actualCategory = "";
   bool values_added = false;
@@ -58,18 +30,139 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   bool isFormValid = false;
   bool budgetCreated = false;
 
-  Map<String, double> budgetMap = {};
-
   List<Expense> expenseList = <Expense>[];
 
-  // Map<String, double> budgetMap = {};
+  Map<String, double> budgetMap = {};
   double budgetAmount = 0;
-  String budgetName = "Sample Budget";
+  String budgetName = "";
+
+  List<String> budgetList = [];
 
   @override
   void initState() {
     super.initState();
     controller = TextEditingController();
+    getBudgetListFromFirebase(); // Fetch the list of budget names
+  }
+
+  Future<void> getBudgetListFromFirebase() async {
+    if (currentUser == null) {
+      return;
+    }
+
+    try {
+      final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
+
+      DatabaseEvent event = await budgetsRef.once();
+      DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.value != null) {
+        Map<String, dynamic> budgetData =
+            snapshot.value as Map<String, dynamic>;
+
+        // Extract the list of budget keys
+        List<String> budgetKeys = budgetData.keys.toList();
+
+        setState(() {
+          budgetList = budgetKeys;
+        });
+      }
+    } catch (error) {
+      print("Error fetching budget list from Firebase: $error");
+    }
+  }
+
+  // Function to open a specific budget based on the selected budget name
+  void openBudget(String selectedBudgetName) {
+    setState(() {
+      budgetName = selectedBudgetName;
+      budgetMap = {}; // Clear the current budget map
+      budgetCreated = false; // Reset budgetCreated to indicate loading
+    });
+
+    // Fetch the selected budget data and update your UI
+    getBudgetFromFirebaseByName(selectedBudgetName).then((selectedBudget) {
+      if (selectedBudget != null) {
+        print(selectedBudget.expenses);
+        setState(() {
+          budgetMap = selectedBudget.budgetMap;
+          expenseList = selectedBudget.expenses;
+          budgetName = selectedBudget.budgetName;
+          budgetCreated = true; // Set budgetCreated to true when data is loaded
+          // Load other budget-related data as needed
+        });
+      } else {
+        // Handle the case where the budget data could not be retrieved
+        print("Error loading budget data.");
+        // You can show an error message to the user if needed.
+      }
+    }).catchError((error) {
+      print("Error fetching budget data: $error");
+      // Handle the error. You might want to show an error message to the user.
+    });
+  }
+
+  // Build the list of budget buttons
+  Widget buildBudgetButtons() {
+    if (budgetList.isEmpty) {
+      return const Text("");
+    }
+
+    print("Printing budgetNames");
+    print(budgetList);
+
+    return Container(
+      width: 300,
+      child: Card(
+        margin: const EdgeInsets.all(16),
+        color: Colors.green,
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Existing Budgets:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 200, // Set a fixed width for the divider
+                    child: const Divider(
+                      color: Colors.white, // Change the color as needed
+                      thickness: 1.0, // Adjust the thickness as needed
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...budgetList.map((budgetName) {
+              return Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      openBudget(budgetName);
+                    },
+                    child: Text("Open Budget: $budgetName"),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -81,16 +174,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   final Color color =
       Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000);
 
-  final colorList = <Color>[
-    Color(int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#15510a".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#1c6c0e".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#4f9f41".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#7bb770".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#a7cfa0".substring(1, 7), radix: 16) + 0xFF0000000),
-    Color(int.parse("#d3e7cf".substring(1, 7), radix: 16) + 0xFF0000000),
-  ];
+  List<Color> colorList = greenColorList;
 
   List<String> dropdownItems = [
     "Select Category",
@@ -113,179 +197,384 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        leading: IconButton(
-          icon: Image.asset('images/FFLogo.png'),
-          onPressed: () => {Navigator.pushNamed(context, '/home')},
+        key: scaffoldKey,
+        appBar: AppBar(
+          backgroundColor: Colors.green,
+          leading: IconButton(
+            icon: Image.asset('images/FFLogo.png'),
+            onPressed: () => {Navigator.pushNamed(context, '/home')},
+          ),
+          title: const Text('FinanceFriend Dashboard',
+              style: TextStyle(color: Colors.white)),
         ),
-        title: Text('FinanceFriend Dashboard',
-            style: TextStyle(color: Colors.white)),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(children: <Widget>[
-              Visibility(
-                visible:
-                    budgetMap.isEmpty, // Show the button if budgetMap is empty
-                child: Column(children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        budgetMap = {
-                          "Housing": 250,
-                          "Utilities": 250,
-                          "Food": 150,
-                          "Transportation": 140,
-                          "Entertainment": 120,
-                          "Investments": 50,
-                          "Debt Payments": 40
-                        };
-                        // You can also set other values here if needed.
-                      });
-                    },
-                    child: Text("Set Default Budget"),
-                  ),
-                  SizedBox(
-                    height: 50,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return BudgetCreationPopup(
-                            onBudgetCreated: (Map<String, double> budgetMap,
-                                String budgetName) {
-                              setState(() {
-                                this.budgetMap = budgetMap;
-                                this.budgetName = budgetName;
-                                budgetCreated = true;
+        body: Row(
+          children: [
+            Container(
+                width: 300,
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Column(children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            budgetMap = {
+                              "Housing": 250,
+                              "Utilities": 250,
+                              "Food": 150,
+                              "Transportation": 140,
+                              "Entertainment": 120,
+                              "Investments": 50,
+                              "Debt Payments": 40
+                            };
+                            budgetName = "Default";
+                            createBudgetInFirebase(Budget(
+                                budgetName: budgetName,
+                                budgetMap: budgetMap,
+                                expenses: []));
+
+                            // print("printing budget:");
+                            // print((await getBudgetMapFromFirebase()).toString());
+                            // You can also set other values here if needed.
+                          });
+                        },
+                        child: const Text("Set Default Budget"),
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return BudgetCreationPopup(onBudgetCreated:
+                                  (Map<String, double> budgetMap,
+                                      String budgetName) {
+                                // Step 1: Create the budget in Firebase
+
+                                createBudgetInFirebase(Budget(
+                                    budgetName: budgetName,
+                                    budgetMap: budgetMap,
+                                    expenses: [])).then((result) {
+                                  if (result == true) {
+                                    // Step 2: Update local state after Firebase operation is successful
+                                    setState(() {
+                                      this.budgetMap = budgetMap;
+                                      this.budgetName = budgetName;
+                                      budgetCreated = true;
+                                      this.budgetList.add(budgetName);
+                                    });
+                                  } else {
+                                    // Handle error or show an error message
+                                  }
+                                });
                               });
                             },
                           );
                         },
-                      );
-                    },
-                    child: Text("Create New Budget"),
-                  ),
-                ]),
-              ),
-              Visibility(
-                visible: budgetMap.isNotEmpty,
-                child: Column(
-                  children: <Widget>[
-                    Transform.scale(
-                      scale: 1,
-                      child: Visibility(
+                        child: const Text("Create New Budget"),
+                      ),
+                    ]),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    buildBudgetButtons(),
+                  ],
+                )),
+            const VerticalDivider(
+              color: Colors.black,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Container(
+                  clipBehavior: Clip.none,
+                  child: Center(
+                    child: Column(children: <Widget>[
+                      Visibility(
                         visible: budgetMap.isNotEmpty,
                         child: Column(
                           children: <Widget>[
-                            Text(
-                              "Budget: $budgetName",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 35),
-                            Builder(
-                              builder: (BuildContext context) {
-                                return ElevatedButton(
-                                  onPressed: () async {
-                                    final resp = await openAddToBudget();
-                                    if (resp == null || resp.isEmpty) return;
-                                    print(resp);
-                                    setState(() {
-                                      if (!dropdownItems
-                                          .contains(actualCategory)) {
-                                        dropdownItems.insert(
-                                            dropdownItems.length - 1,
-                                            actualCategory);
-                                      }
-                                      budgetMap.addAll(
-                                          {actualCategory: double.parse(resp)});
-                                      values_added = true;
-                                    });
-                                    print(budgetMap);
-                                  },
-                                  child: const Text("Add Spending Category",
-                                      style: TextStyle()),
-                                );
-                              },
-                            ),
                             Visibility(
                               visible: budgetMap.isNotEmpty,
-                              child: Column(
-                                children: <Widget>[
-                                  const SizedBox(height: 35),
-                                  BudgetPieChart(
-                                    budgetMap: budgetMap,
-                                    valuesAdded: budgetMap.isNotEmpty,
-                                    colorList: colorList,
-                                    color: color,
+                              child: Center(
+                                child: Column(
+                                  children: <Widget>[
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Budget: $budgetName",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () {
+                                            editBudgetName();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 35),
+                                    Builder(
+                                      builder: (BuildContext context) {
+                                        return ElevatedButton(
+                                          onPressed: () async {
+                                            final resp =
+                                                await openAddToBudget();
+                                            if (resp == null || resp.isEmpty)
+                                              return;
+                                            print(resp);
+
+                                            setState(() {
+                                              if (!dropdownItems
+                                                  .contains(actualCategory)) {
+                                                dropdownItems.insert(
+                                                    dropdownItems.length - 1,
+                                                    actualCategory);
+                                              }
+
+                                              // Check if the category already exists in the budgetMap
+                                              if (budgetMap.containsKey(
+                                                  actualCategory)) {
+                                                // If it exists, update the existing value
+                                                double currentValue =
+                                                    budgetMap[actualCategory] ??
+                                                        0.0;
+                                                double newValue =
+                                                    double.parse(resp);
+                                                budgetMap[actualCategory] =
+                                                    currentValue + newValue;
+                                              } else {
+                                                // If it doesn't exist, add a new entry
+                                                budgetMap[actualCategory] =
+                                                    double.parse(resp);
+                                              }
+                                              values_added = true;
+                                            });
+                                          },
+                                          child: const Text(
+                                              "Add Spending Category",
+                                              style: TextStyle()),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 35),
+                                    Visibility(
+                                      visible: budgetMap.isNotEmpty,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: <Widget>[
+                                              const SizedBox(height: 35),
+                                              BudgetPieChart(
+                                                budgetMap: budgetMap,
+                                                valuesAdded:
+                                                    budgetMap.isNotEmpty,
+                                                colorList: colorList,
+                                                color: colorList[0],
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            width: 30,
+                                          ),
+                                          Container(
+                                            width: 2,
+                                            height: 500,
+                                            color: Colors.green,
+                                          ),
+                                          const SizedBox(
+                                            width: 30,
+                                          ),
+                                          Column(
+                                            children: [
+                                              BudgetUsageTable(
+                                                budget: Budget(
+                                                    budgetMap: budgetMap,
+                                                    budgetName: budgetName,
+                                                    expenses: expenseList),
+                                                expensesList: expenseList,
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 35),
+                                    Builder(
+                                      builder: (BuildContext context) {
+                                        return ElevatedButton(
+                                          onPressed: openBudgetTable,
+                                          child: const Text(
+                                              "View/Edit Current Budget",
+                                              style: TextStyle()),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 35),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(width: 20),
+                                  Column(
+                                    children: [
+                                      ExpenseTracking(
+                                        budget: Budget(
+                                            budgetMap: budgetMap,
+                                            expenses: expenseList,
+                                            budgetName: budgetName),
+                                        dropdownItems: dropdownItems,
+                                        onExpensesListChanged:
+                                            (updatedExpensesList) {
+                                          setState(() {
+                                            expenseList = updatedExpensesList;
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(width: 20),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 35),
-                            Builder(
-                              builder: (BuildContext context) {
-                                return ElevatedButton(
-                                  onPressed: openBudgetTable,
-                                  child: const Text("View Current Budget",
-                                      style: TextStyle()),
-                                );
-                              },
+                            const SizedBox(
+                              height: 35,
                             ),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment
-                          .center, // Center the columns horizontally
-                      children: [
-                        Column(
-                          children: [
-                            BudgetUsageTable(
-                              budgetMap: budgetMap,
-                              expensesList: expenseList,
-                            )
-                          ],
-                        ),
-                        const SizedBox(width: 20),
-                        Column(
-                          children: [
-                            MiddleSection(
-                              budgetMap: budgetMap,
-                              dropdownItems: dropdownItems,
-                              expensesList: expenseList,
-                              onExpensesListChanged: (updatedExpensesList) {
+                            Text("test"),
+                            SizedBox(
+                              height: 35,
+                            ),
+                            ElevatedButton(
+                              // Add a button to delete the budget
+                              child: const Text(
+                                "Delete Budget",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              onPressed: () {
+                                deleteBudget();
                                 setState(() {
-                                  expenseList =
-                                      updatedExpensesList; // Update the expensesList
+                                  budgetList.remove(this.budgetName);
                                 });
                               },
                             ),
+                            const SizedBox(
+                              height: 35,
+                            )
                           ],
                         ),
-                        const SizedBox(width: 20),
-                      ],
-                    )
-
-                    // Right side text
-                  ],
+                      ),
+                    ]),
+                  ),
                 ),
               ),
-            ]),
+            ),
+          ],
+        ));
+  }
+
+  void deleteBudget() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Budget"),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                  "Are you sure you want to delete the budget? This action cannot be undone."),
+            ],
           ),
-        ),
-      ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Delete the budget from the database and reset the local state
+                deleteBudgetFromFirebase(budgetName).then((success) {
+                  if (success) {
+                    setState(() {
+                      budgetMap = {};
+                      budgetName = "";
+                    });
+                  }
+                });
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void editBudgetName() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Budget Name"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: newBudgetNameController,
+                decoration: const InputDecoration(labelText: "New Budget Name"),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String newBudgetName = newBudgetNameController.text;
+                updateBudgetNameInFirebase(budgetName, newBudgetName)
+                    .then((success) {
+                  if (success) {
+                    setState(() {
+                      budgetList.remove(budgetName);
+                      budgetList.add(newBudgetName);
+                      budgetName = newBudgetName;
+                    });
+                  }
+                });
+                newBudgetNameController.clear();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -295,7 +584,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: const Text("Enter Expense:", style: TextStyle()),
+                title: const Text("Enter New Category:", style: TextStyle()),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -306,7 +595,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                           value: value,
                           child: Text(
                             value,
-                            style: TextStyle(),
+                            style: const TextStyle(),
                           ),
                         );
                       }).toList(),
@@ -362,19 +651,29 @@ class _BudgetTrackingState extends State<BudgetTracking> {
       builder: (context) {
         return Visibility(
             visible: budgetMap.isNotEmpty,
-            child: BudgetTable(
-              budgetMap: budgetMap,
-              onBudgetUpdate: (updatedBudgetMap) {
-                setState(() {
-                  budgetMap = updatedBudgetMap;
-                });
+            child: BudgetCategoryTable(
+              budget: Budget(
+                  budgetMap: budgetMap,
+                  budgetName: budgetName,
+                  expenses: expenseList),
+              onBudgetUpdate: (updatedBudgetMap) async {
+                bool updateResult =
+                    await updateBudgetInFirebase(budgetName, updatedBudgetMap);
+
+                if (updateResult) {
+                  // If the update was successful, update the local state
+                  setState(() {
+                    budgetMap = updatedBudgetMap;
+                  });
+                } else {
+                  // Handle the case where the update in Firebase failed
+                  // You can show an error message or take appropriate action here
+                }
               },
             ));
       },
     );
   }
-
-  double curr_val = 0;
 
   void submit() {
     actualCategory = selectedCategory;
@@ -399,6 +698,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     controller.clear();
     customCategoryController.clear();
     isOtherSelected = false;
+    updateBudgetInFirebase(budgetName, budgetMap);
   }
 
   double getTotalBudget(Map<String, double> budgetMap) {
@@ -407,205 +707,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     });
 
     return double.parse(total.toStringAsFixed(2));
-  }
-}
-
-class BudgetTable extends StatefulWidget {
-  final Map<String, double> budgetMap;
-  final Function(Map<String, double>) onBudgetUpdate;
-
-  BudgetTable({required this.budgetMap, required this.onBudgetUpdate});
-
-  @override
-  _BudgetTableState createState() => _BudgetTableState();
-}
-
-class _BudgetTableState extends State<BudgetTable> {
-  TextEditingController editController = TextEditingController();
-  String editingCategory = "";
-
-  @override
-  void dispose() {
-    editController.dispose();
-    super.dispose();
-  }
-
-  void editCategoryValue(String category) {
-    setState(() {
-      editingCategory = category;
-      editController.text = widget.budgetMap[category]!.toStringAsFixed(2);
-    });
-
-    String editedCategory = category;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Edit Category"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                initialValue: category, // Set initial category name
-                onChanged: (value) {
-                  setState(() {
-                    editedCategory = value; // Update edited category name
-                  });
-                },
-                decoration: InputDecoration(labelText: "Category Name"),
-              ),
-              TextFormField(
-                controller: editController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: "New Value"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter a value.";
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-                onPressed: () {
-                  widget.budgetMap.remove(category);
-                  widget.onBudgetUpdate(widget.budgetMap);
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  "Delete Category",
-                  style: TextStyle(color: Colors.red),
-                )),
-            ElevatedButton(
-              onPressed: () {
-                if (editController.text.isNotEmpty) {
-                  double newValue = double.tryParse(editController.text) ?? 0;
-                  widget.budgetMap.remove(category); // Remove the old category
-                  widget.budgetMap[editedCategory] =
-                      newValue; // Add the new category
-                  widget.onBudgetUpdate(widget.budgetMap);
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void removeCategory(String category) {
-    widget.budgetMap.remove(category);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    double totalAmount = 0;
-
-    double getTotalBudget(Map<String, double> budgetMap) {
-      double total = budgetMap.values.fold(0, (previousValue, currentValue) {
-        return previousValue + currentValue;
-      });
-      return double.parse(total.toStringAsFixed(2));
-    }
-
-    final totalBudget = getTotalBudget(widget.budgetMap);
-    final formattedTotalBudget = NumberFormat.currency(
-      symbol: '\$', // Use "$" as the currency symbol
-      decimalDigits: 2, // Display two decimal places
-    ).format(totalBudget);
-
-    final budgetItems = widget.budgetMap.entries.map((entry) {
-      final category = entry.key;
-      final amount = entry.value;
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 4,
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 18.5,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  '\$$amount',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () {
-                    editCategoryValue(category);
-                  },
-                ),
-              )
-            ],
-          ),
-          SizedBox(
-            height: 10,
-          ),
-        ],
-      );
-    }).toList();
-
-    return AlertDialog(
-      title: const Text(
-        "Current Budget",
-        style: TextStyle(
-          fontSize: 22,
-        ),
-      ),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: budgetItems,
-              ),
-              const SizedBox(height: 2),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        Center(
-          child: Text(
-            "Total: $formattedTotalBudget",
-            style: const TextStyle(fontSize: 20, fontFamily: "Trebuchet"),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Close the dialog
-          },
-          child: const Text("Close", style: TextStyle()),
-        ),
-      ],
-    );
   }
 }
 
@@ -646,8 +747,7 @@ class BudgetPieChart extends StatelessWidget {
       ringStrokeWidth: 35,
       centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-        color: Color(
-            int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
+        color: color,
         fontSize: 40,
       ),
       chartValuesOptions: ChartValuesOptions(
@@ -655,7 +755,7 @@ class BudgetPieChart extends StatelessWidget {
         showChartValuesInPercentage: true,
         showChartValueBackground: false,
         decimalPlaces: 0,
-        chartValueStyle: TextStyle(fontSize: 20),
+        chartValueStyle: const TextStyle(fontSize: 20),
       ),
       // legendLabels: ,
       //legendLabels: budgetMap.entries.where((element) => ),
@@ -681,1159 +781,5 @@ class BudgetPieChart extends StatelessWidget {
     });
 
     return double.parse(total.toStringAsFixed(2));
-  }
-}
-
-class BudgetDataTable extends StatefulWidget {
-  final List<Expense> expenseList;
-  final Function(Expense) onEditExpense;
-  final Function(Expense) onDeleteExpense;
-
-  BudgetDataTable({
-    required this.expenseList,
-    required this.onEditExpense,
-    required this.onDeleteExpense,
-  });
-
-  @override
-  _BudgetDataTableState createState() => _BudgetDataTableState();
-}
-
-class _BudgetDataTableState extends State<BudgetDataTable> {
-  List<DataColumn> columns = [
-    DataColumn(
-      label: Text('Date'),
-    ),
-    DataColumn(
-      label: Text('Item'),
-    ),
-    DataColumn(
-      label: Text('Price'),
-      numeric: true,
-    ),
-    DataColumn(
-      label: Text('Category'),
-    ),
-    DataColumn(
-      label: Text('Actions'),
-    ),
-  ];
-
-  bool sortAscending = true;
-  int sortColumnIndex = 0;
-
-  // Sorting function
-  void sortTable(int columnIndex) {
-    setState(() {
-      if (columnIndex == sortColumnIndex) {
-        sortAscending = !sortAscending;
-      } else {
-        sortColumnIndex = columnIndex;
-        sortAscending = true;
-      }
-
-      switch (columnIndex) {
-        case 2:
-          // Sort by price
-          widget.expenseList.sort((a, b) => sortAscending
-              ? a.price.compareTo(b.price)
-              : b.price.compareTo(a.price));
-          break;
-        case 1:
-          // Sort by item name
-          widget.expenseList.sort((a, b) => sortAscending
-              ? a.item.compareTo(b.item)
-              : b.item.compareTo(a.item));
-          break;
-        case 3:
-          // Sort by category
-          widget.expenseList.sort((a, b) => sortAscending
-              ? a.category.compareTo(b.category)
-              : b.category.compareTo(a.category));
-          break;
-        // Handle other columns as needed
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                sortTable(1); // Sort by Item
-              },
-              child: Text('Sort by Item'),
-            ),
-            SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () {
-                sortTable(2); // Sort by Price
-              },
-              child: Text('Sort by Price'),
-            ),
-            SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () {
-                sortTable(3); // Sort by Category
-              },
-              child: Text('Sort by Category'),
-            ),
-          ],
-        ),
-        DataTable(
-          sortAscending: sortAscending,
-          sortColumnIndex: sortColumnIndex,
-          columns: columns,
-          rows: widget.expenseList.isEmpty
-              ? [
-                  DataRow(cells: [DataCell(Text('No expenses'))])
-                ]
-              : generateExpenseRows(widget.expenseList),
-        ),
-      ],
-    );
-  }
-
-  List<DataRow> generateExpenseRows(List<Expense> expenses) {
-    List<DataRow> rows = [];
-
-    for (int i = 0; i < expenses.length; i++) {
-      Expense expense = expenses[i];
-      rows.add(DataRow(
-        cells: [
-          DataCell(Text(expense.date.toString())),
-          DataCell(Text(expense.item)),
-          DataCell(Text('\$${expense.price.toStringAsFixed(2)}')),
-          DataCell(Text(expense.category)),
-          DataCell(
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    widget.onEditExpense(expense);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    widget.onDeleteExpense(expense);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ));
-    }
-
-    return rows;
-  }
-}
-
-class MiddleSection extends StatefulWidget {
-  final Map<String, double> budgetMap;
-  final List<String> dropdownItems;
-  final List<Expense> expensesList;
-  final Function(List<Expense>) onExpensesListChanged; // Add this callback
-
-  MiddleSection({
-    required this.budgetMap,
-    required this.dropdownItems,
-    required this.expensesList,
-    required this.onExpensesListChanged, // Initialize the callback
-  });
-
-  @override
-  _MiddleSectionState createState() => _MiddleSectionState();
-}
-
-class _MiddleSectionState extends State<MiddleSection> {
-  final TextEditingController itemController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-  String selectedCategory = "Select Category";
-
-  @override
-  void dispose() {
-    itemController.dispose();
-    priceController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 20,
-      color: Colors.green,
-      margin: EdgeInsets.all(30),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 10,
-          ),
-          Text(
-            "Expenses List",
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          ElevatedButton(
-              onPressed: () {
-                addDefaultExpenses(context);
-                setState(() {});
-              },
-              child: Text("[TESTING] auto populate transactions")),
-          SizedBox(height: 10),
-          Row(
-            children: [
-              SizedBox(
-                width: 10,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _openAddExpenseDialog(context);
-                },
-                child: Text("Enter New Expense"),
-              ),
-              SizedBox(
-                width: 10,
-              )
-            ],
-          ),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            elevation: 4,
-            margin: EdgeInsets.all(30),
-            child: Visibility(
-              visible: widget.expensesList.isNotEmpty,
-              child: SizedBox(
-                width: 700,
-                height: 360,
-                child: SingleChildScrollView(
-                  child: BudgetDataTable(
-                    expenseList: widget.expensesList,
-                    onEditExpense: _onEditExpense, // Pass the edit function
-                    onDeleteExpense:
-                        _onDeleteExpense, // Pass the delete function
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void addDefaultExpenses(BuildContext context) {
-    widget.expensesList.add(Expense(
-        item: "McDonalds",
-        price: 10,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Panda Express",
-        price: 12,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "CFA Catering",
-        price: 120,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Water Bill",
-        price: 40,
-        category: "Utilities",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Gas",
-        price: 30,
-        category: "Transportation",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Movie Tickets",
-        price: 25,
-        category: "Entertainment",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Stock Investment",
-        price: 50,
-        category: "Investments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.expensesList.add(Expense(
-        item: "Credit Card Payment",
-        price: 35,
-        category: "Debt Payments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-
-    widget.onExpensesListChanged(widget.expensesList);
-  }
-
-  Future<void> _openAddExpenseDialog(BuildContext context) async {
-    selectedCategory = "Select Category";
-    itemController.clear();
-    priceController.clear();
-
-    // Create a filtered list of dropdown items without "Custom"
-    List<String> catNames = widget.budgetMap.keys.toList();
-    catNames.insert(0, "Select Category");
-
-    final filteredDropdownItems =
-        catNames.where((item) => item != "Custom").toList();
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter Expense"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: itemController,
-                decoration: InputDecoration(labelText: 'Item'),
-              ),
-              TextFormField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Price'),
-              ),
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                items: filteredDropdownItems.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue!;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _submitExpense();
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text("Submit"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _submitExpense() {
-    final String item = itemController.text;
-    final String price = priceController.text;
-
-    if (item.isNotEmpty &&
-        price.isNotEmpty &&
-        selectedCategory != "Select Category") {
-      double priceValue = double.tryParse(price) ?? 0.0;
-
-      // Create a new Expense object
-      Expense newExpense = Expense(
-        item: item,
-        price: priceValue,
-        category: selectedCategory,
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now()),
-      );
-
-      // Add the newExpense to the expensesList
-      widget.expensesList.add(newExpense);
-
-      // Print the updated expensesList
-      print("Expenses List:");
-      for (Expense expense in widget.expensesList) {
-        print(
-            "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-      }
-
-      // Clear text fields and selectedCategory
-      itemController.clear();
-      priceController.clear();
-      selectedCategory = "Select Category";
-
-      widget.onExpensesListChanged(widget.expensesList);
-
-      setState(() {});
-    }
-  }
-
-  // Function to handle editing an expense
-  void _onEditExpense(Expense expenseToEdit) async {
-    // Create controllers for editing
-    final TextEditingController editedItemController =
-        TextEditingController(text: expenseToEdit.item);
-    final TextEditingController editedPriceController =
-        TextEditingController(text: expenseToEdit.price.toString());
-    String editedSelectedCategory = expenseToEdit.category;
-    List<String> catNames = widget.budgetMap.keys.toList();
-    catNames.insert(0, "Select Category");
-
-    final filteredDropdownItems =
-        catNames.where((item) => item != "Custom").toList();
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Edit Expense"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: editedItemController,
-                decoration: InputDecoration(labelText: 'Item'),
-              ),
-              TextFormField(
-                controller: editedPriceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Price'),
-              ),
-              DropdownButtonFormField<String>(
-                value: editedSelectedCategory,
-                items: filteredDropdownItems.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    editedSelectedCategory = newValue!;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Validate and save the edited values
-                final String editedItem = editedItemController.text;
-                final String editedPrice = editedPriceController.text;
-
-                if (editedItem.isNotEmpty &&
-                    editedPrice.isNotEmpty &&
-                    editedSelectedCategory != "Select Category") {
-                  double editedPriceValue = double.tryParse(editedPrice) ?? 0.0;
-
-                  // Update the values in the expensesList
-                  final int indexOfEditedExpense =
-                      widget.expensesList.indexOf(expenseToEdit);
-                  if (indexOfEditedExpense != -1) {
-                    widget.expensesList[indexOfEditedExpense] = Expense(
-                      item: editedItem,
-                      price: editedPriceValue,
-                      category: editedSelectedCategory,
-                      date: widget.expensesList[indexOfEditedExpense].date,
-                    );
-                  }
-
-                  // Print the updated expensesList
-                  print("Expenses List after editing:");
-                  for (Expense expense in widget.expensesList) {
-                    print(
-                        "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-                  }
-
-                  // Clear text fields and selectedCategory
-                  editedItemController.clear();
-                  editedPriceController.clear();
-                  editedSelectedCategory = "Select Category";
-
-                  setState(() {});
-                  Navigator.of(context).pop(); // Close the dialog
-                }
-              },
-              child: Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-
-    widget.onExpensesListChanged(widget.expensesList);
-  }
-
-  // Function to handle deleting an expense
-  void _onDeleteExpense(Expense expenseToDelete) {
-    // Remove the expense from the expensesList
-    widget.expensesList.remove(expenseToDelete);
-
-    // Print the updated expensesList
-    print("Expenses List after deleting:");
-    for (Expense expense in widget.expensesList) {
-      print(
-          "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-    }
-    widget.onExpensesListChanged(widget.expensesList);
-
-    setState(() {});
-  }
-}
-
-class Expense {
-  String item;
-  double price;
-  String category;
-  String date; // Add a DateTime property for the date
-
-  Expense({
-    required this.item,
-    required this.price,
-    required this.category,
-    required this.date, // Initialize the date property
-  });
-}
-
-class BudgetUsageTable extends StatefulWidget {
-  final Map<String, double> budgetMap;
-  final List<Expense> expensesList;
-
-  BudgetUsageTable({
-    required this.budgetMap,
-    required this.expensesList,
-  });
-
-  @override
-  _BudgetUsageTableState createState() => _BudgetUsageTableState();
-}
-
-enum DisplayMode {
-  Table,
-  PieCharts,
-  DonutChart,
-}
-
-class _BudgetUsageTableState extends State<BudgetUsageTable> {
-  DisplayMode displayMode = DisplayMode.Table; // Initialize the display mode
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 20,
-      color: Colors.green,
-      child: Column(
-        children: [
-          SizedBox(
-            height: 10,
-          ),
-          Text(
-            "Budget Usage",
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 10),
-          // Add buttons to switch between display modes
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 5,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    displayMode = DisplayMode.Table;
-                  });
-                },
-                child: Text("Table"),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    displayMode = DisplayMode.PieCharts;
-                  });
-                },
-                child: Text("Pie Charts"),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    displayMode = DisplayMode.DonutChart;
-                  });
-                },
-                child: Text("Ring Chart"), // Add Histogram button
-              ),
-              SizedBox(
-                width: 5,
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            elevation: 4,
-            margin: EdgeInsets.all(30),
-            child: displayMode == DisplayMode.Table
-                ? buildTable()
-                : displayMode == DisplayMode.PieCharts
-                    ? buildPieCharts()
-                    : buildDonutCharts(), // Render content based on the selected display mode
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget buildTable() {
-    final Map<String, double> categoryUsageMap = calculateCategoryUsage();
-
-    return DataTable(
-      columns: [
-        DataColumn(label: Text("Category")),
-        DataColumn(label: Text("Percentage")),
-        DataColumn(label: Text("Dollar Amount")),
-      ],
-      rows: categoryUsageMap.entries.map((entry) {
-        return DataRow(cells: [
-          DataCell(Text(entry.key)),
-          DataCell(Text("${entry.value.toStringAsFixed(2)}%")),
-          DataCell(Text(
-              "\$${widget.expensesList.where((expense) => expense.category == entry.key).fold(0, (prev, expense) => prev + expense.price.toInt()).toStringAsFixed(2)}"))
-        ]);
-      }).toList(),
-    );
-  }
-
-  Widget buildPieCharts() {
-    final Map<String, double> categoryUsageMap = calculateCategoryUsage();
-    final double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
-    final double totalExpenses =
-        widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
-
-    final List<Widget> pieCharts = [];
-
-    // Create a chart for overall expenses vs. overall budget
-    final Map<String, double> overallDataMap = {
-      "Spent": totalExpenses,
-      "Available": totalBudget - totalExpenses,
-    };
-    pieCharts.add(
-      Column(
-        children: [
-          SizedBox(
-            height: 10,
-          ),
-          Text(
-            "Overall Budget",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          PieChart(
-            dataMap: overallDataMap,
-            animationDuration: Duration(milliseconds: 800),
-            chartLegendSpacing: 80,
-            chartRadius: 100,
-            initialAngleInDegree: 0,
-            ringStrokeWidth: 20,
-            centerTextStyle: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-            colorList: [
-              Color(
-                  int.parse("#871224".substring(1, 7), radix: 16) + 0xFF000000),
-              Colors.green,
-            ],
-            // centerText:
-            //     "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
-            chartValuesOptions: ChartValuesOptions(
-              showChartValues: false,
-              showChartValuesInPercentage: true,
-              showChartValuesOutside: true,
-              showChartValueBackground: true,
-              decimalPlaces: 0,
-              chartValueStyle: TextStyle(fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    categoryUsageMap.forEach((category, usage) {
-      if (usage > 0) {
-        final Map<String, double> dataMap = {
-          "Spent": usage,
-          "Available": 100 - usage,
-        };
-        pieCharts.add(
-          Column(
-            children: [
-              Text(
-                category,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 10),
-              PieChart(
-                dataMap: dataMap,
-                animationDuration: Duration(milliseconds: 800),
-                chartLegendSpacing: 80,
-                chartRadius: 100,
-                initialAngleInDegree: 0,
-                centerTextStyle: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-                colorList: [
-                  Color(int.parse("#871224".substring(1, 7), radix: 16) +
-                      0xFF000000),
-                  Colors.green,
-                ],
-                // centerText:
-                //     "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
-                chartValuesOptions: ChartValuesOptions(
-                  showChartValues: false,
-                  showChartValuesInPercentage: true,
-                  showChartValuesOutside: true,
-                  showChartValueBackground: true,
-                  decimalPlaces: 0,
-                  chartValueStyle: TextStyle(fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-    });
-
-    if (pieCharts.isEmpty) {
-      return Text("No data to display");
-    }
-
-    return Column(
-      children: pieCharts,
-    );
-  }
-
-  Widget buildDonutCharts() {
-    final Map<String, double> categoryUsageMap = calculateCategoryUsage();
-    final double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
-    final double totalExpenses =
-        widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
-
-    final List<Widget> donutCharts = [];
-
-    // Create a chart for overall expenses vs. overall budget
-    final Map<String, double> overallDataMap = {
-      "Spent": totalExpenses,
-      "Available": totalBudget - totalExpenses,
-    };
-
-    donutCharts.add(Container(
-      margin: EdgeInsets.all(10), // 20px margin around the donut chart
-      child: Column(
-        children: [
-          Text(
-            "Overall Budget",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 10),
-          PieChart(
-            dataMap: overallDataMap,
-            animationDuration: Duration(milliseconds: 800),
-            chartLegendSpacing: 80,
-            chartRadius: 80,
-            initialAngleInDegree: 0,
-            chartType: ChartType.ring,
-            ringStrokeWidth: 20,
-            colorList: [
-              Color(
-                  int.parse("#871224".substring(1, 7), radix: 16) + 0xFF000000),
-              Colors.green,
-            ],
-            centerText:
-                "${(totalExpenses / totalBudget * 100).toStringAsFixed(2)}%",
-            chartValuesOptions: ChartValuesOptions(
-              showChartValues: false,
-              showChartValuesInPercentage: true,
-              showChartValueBackground: false,
-              decimalPlaces: 0,
-              chartValueStyle: TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
-      ),
-    ));
-
-    categoryUsageMap.forEach((category, usage) {
-      if (usage > 0) {
-        final Map<String, double> dataMap = {
-          "Spent": usage,
-          "Available": 100 - usage,
-        };
-        donutCharts.add(Container(
-          margin: EdgeInsets.all(10), // 20px margin around the donut chart
-          child: Column(
-            children: [
-              Text(
-                category,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 10),
-              PieChart(
-                dataMap: dataMap,
-                animationDuration: Duration(milliseconds: 800),
-                chartLegendSpacing: 80,
-                chartRadius: 80,
-                initialAngleInDegree: 0,
-                chartType: ChartType.ring,
-                ringStrokeWidth: 20,
-                colorList: [
-                  Color(int.parse("#871224".substring(1, 7), radix: 16) +
-                      0xFF000000),
-                  Colors.green,
-                ],
-                centerText: "${usage.toStringAsFixed(2)}%",
-                chartValuesOptions: ChartValuesOptions(
-                  showChartValues: false,
-                  showChartValuesInPercentage: true,
-                  showChartValueBackground: false,
-                  decimalPlaces: 0,
-                  chartValueStyle: TextStyle(fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ));
-      }
-    });
-
-    if (donutCharts.isEmpty) {
-      return Text("No data to display");
-    }
-
-    return Column(
-      children: donutCharts,
-    );
-  }
-
-  Map<String, double> calculateCategoryUsage() {
-    final Map<String, double> categoryUsageMap = {};
-
-    // Calculate the total budget amount
-    double totalBudget =
-        widget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
-
-    // Calculate the total expenses amount
-    double totalExpenses =
-        widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
-
-    // Calculate the percentage of each category used
-    widget.budgetMap.forEach((category, budgetAmount) {
-      double expensesAmount = widget.expensesList
-          .where((expense) => expense.category == category)
-          .fold(0, (prev, expense) => prev + expense.price);
-      double categoryPercentage = (expensesAmount / budgetAmount) * 100;
-      categoryUsageMap[category] = categoryPercentage;
-    });
-
-    return categoryUsageMap;
-  }
-}
-
-class BudgetCreationPopup extends StatefulWidget {
-  final void Function(Map<String, double>, String) onBudgetCreated;
-
-  BudgetCreationPopup({required this.onBudgetCreated});
-
-  @override
-  _BudgetCreationPopupState createState() => _BudgetCreationPopupState();
-}
-
-class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
-  List<BudgetItem> budgetItems = [
-    BudgetItem(categoryName: "", percentage: 0.0)
-  ]; // Initialize with one item
-
-  Map<String, double> budgetMap = {}; // Initialize the budgetMap
-
-  TextEditingController budgetAmountController = TextEditingController();
-  TextEditingController budgetNameController = TextEditingController();
-  String budgetNameError = '';
-  String budgetAmountError = '';
-  @override
-  void dispose() {
-    budgetAmountController
-        .dispose(); // Dispose of the controller when not needed
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("Create Budget"),
-      content: SizedBox(
-        width: 600,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              controller: budgetNameController,
-              keyboardType: TextInputType.name,
-              decoration: InputDecoration(
-                labelText: "Enter Budget Name",
-                errorText: budgetNameError, // Display error message
-              ),
-            ),
-            Divider(),
-            TextField(
-              controller: budgetAmountController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: "Enter Budget Amount",
-                errorText: budgetAmountError, // Display error message
-              ),
-            ),
-            Divider(),
-            Expanded(
-              child: ListView.builder(
-                itemCount: budgetItems.length,
-                itemBuilder: (context, index) {
-                  return BudgetItemInput(
-                      item: budgetItems[index],
-                      onDelete: () {
-                        setState(() {
-                          budgetItems.removeAt(index);
-                        });
-                      },
-                      onUpdate: () {
-                        setState(() {});
-                      },
-                      budgetAmount:
-                          double.tryParse(budgetAmountController.text) ?? 0.0,
-                      categoryError: getCategoryError(budgetItems[index]));
-                },
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Add a new empty BudgetItem
-                setState(() {
-                  budgetItems
-                      .add(BudgetItem(categoryName: "", percentage: 0.0));
-                });
-              },
-              child: Text("Add Budget Item"),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                if (validateInputs()) {
-                  double totalPercentage = 0;
-                  for (var item in budgetItems) {
-                    totalPercentage += item.percentage;
-                  }
-
-                  // Close the popup and send the created budget back
-                  Navigator.of(context).pop();
-
-                  // Get the budget amount from the text field
-                  double budgetAmount =
-                      double.tryParse(budgetAmountController.text) ?? 0.0;
-                  print("Budget Amount: \$${budgetAmount.toStringAsFixed(2)}");
-
-                  // Process the budgetItems list here
-                  // You can access category names and percentages from budgetItems
-
-                  // Update the budgetMap with the category and slider value
-                  for (var item in budgetItems) {
-                    budgetMap[item.categoryName] = double.parse(
-                        (item.percentage / 100 * budgetAmount)
-                            .toStringAsFixed(2));
-                  }
-
-                  print(budgetMap);
-                  widget.onBudgetCreated(budgetMap, budgetNameController.text);
-                }
-              },
-              child: Text("Make Budget"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String getCategoryError(BudgetItem item) {
-    if (item.categoryName.isEmpty) {
-      return 'Category Name is required';
-    }
-    return ''; // No error
-  }
-
-  bool validateInputs() {
-    bool isValid = true;
-    budgetNameError = '';
-    budgetAmountError = '';
-
-    String categoryError = '';
-
-    if (budgetNameController.text.isEmpty) {
-      budgetNameError = 'Budget Name is required';
-      isValid = false;
-    }
-
-    if (budgetAmountController.text.isEmpty) {
-      budgetAmountError = 'Budget Amount is required';
-      isValid = false;
-    } else {
-      double? budgetAmount = double.tryParse(budgetAmountController.text);
-      if (budgetAmount == null || budgetAmount <= 0) {
-        budgetAmountError = 'Invalid Budget Amount';
-        isValid = false;
-      }
-    }
-
-    if (budgetItems.any((item) => item.categoryName.isEmpty)) {
-      categoryError =
-          'Category Name is required'; // Check if any category name is empty
-      isValid = false;
-    }
-
-    setState(() {}); // Update the UI with error messages
-    return isValid;
-  }
-}
-
-class BudgetItem {
-  String categoryName = "";
-  double percentage = 0.0;
-
-  BudgetItem({required this.categoryName, required this.percentage});
-}
-
-class BudgetItemInput extends StatefulWidget {
-  final BudgetItem item;
-  final Function() onDelete;
-  final Function() onUpdate;
-  final double budgetAmount;
-  final String categoryError;
-
-  BudgetItemInput({
-    required this.item,
-    required this.onDelete,
-    required this.onUpdate,
-    required this.budgetAmount,
-    required this.categoryError,
-  });
-
-  @override
-  _BudgetItemInputState createState() => _BudgetItemInputState();
-}
-
-class _BudgetItemInputState extends State<BudgetItemInput> {
-  String category = "";
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    widget.item.categoryName = value;
-                    category = value;
-                    widget
-                        .onUpdate(); // Call onUpdate when the category name changes
-                  });
-                },
-                decoration: InputDecoration(labelText: "Category Name"),
-              ),
-            ),
-            Expanded(
-              flex: 4,
-              child: Column(
-                children: [
-                  Text(
-                    "\$${(widget.item.percentage / 100 * widget.budgetAmount).toStringAsFixed(2)}", // Display the calculated percentage
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                  Slider(
-                    value: widget.item.percentage,
-                    onChanged: (value) {
-                      setState(() {
-                        widget.item.percentage = value;
-                        widget.onUpdate();
-                      });
-                    },
-                    min: 0,
-                    max: 100,
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: widget.onDelete,
-              icon: Icon(Icons.delete),
-            ),
-          ],
-        ),
-        // Display the category error message
-        Text(
-          widget.categoryError,
-          style: TextStyle(color: Colors.red),
-        ),
-      ],
-    );
   }
 }
