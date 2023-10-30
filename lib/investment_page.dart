@@ -485,50 +485,67 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     String advice = '';
                     if (selectedRecommendation1 == 'low') {
                       if (selectedRecommendation2 == 'stocks') {
-                        advice = 'Low Stock Advice';
+                        advice =
+                            'Recommendation: VOO - Vanguard S&P 500 ETF. This investment provides broad exposure to the top stocks of the NYSE with little cumulative risk.';
                       } else if (selectedRecommendation2 == 'bonds') {
-                        advice = 'Low Bond Advice';
+                        advice =
+                            'Recommendation: SHY - iShares 1-3 Years Treasury Bond ETF. This investment tracks a market weighted index of debt issued by the US Treasury with 1-3 years remaining to maturity.';
                       } else if (selectedRecommendation2 == 'pms') {
-                        advice = 'Low Precious Metal Advice';
+                        advice =
+                            'Recommendation: GLD - SPDR Gold Trust. This investment tracks the gold spot price, less expenses and liabilities, using gold bars held in London vaults.';
                       } else if (selectedRecommendation2 == 'noPreference') {
-                        advice = 'Low No Preference Advice';
+                        advice =
+                            'Recommendation: VEA - Vanguard FTSE Developed Markets ETF. This investment is passively managed to provide exposure to the developed markets ex-US equity space. It holds stocks of any market capitalization.';
                       }
                     } else if (selectedRecommendation1 == 'medium') {
                       if (selectedRecommendation2 == 'stocks') {
-                        advice = 'Medium Stock Advice';
+                        advice =
+                            'Recommendation: IBM - International Business Machines Corp. IBM is an information technology company, which engages in the provision of integrated solutions that leverage information technology and knowledge of business processes';
                       } else if (selectedRecommendation2 == 'bonds') {
-                        advice = 'Medium Bond Advice';
+                        advice =
+                            'Recommendation: VCIT - Vanguard Intermediate-Term Corporate Bond ETF. This investment tracks a market value-weighted index of US investment grade corporate bonds with maturities of 5-10 years.';
                       } else if (selectedRecommendation2 == 'pms') {
-                        advice = 'Medium Precious Metal Advice';
+                        advice =
+                            'Recommendation: SLV - iShares Silver Trust. This investment tracks the silver spot price, less expenses and liabilities, using silver bullion held in London.';
                       } else if (selectedRecommendation2 == 'noPreference') {
-                        advice = 'Medium No Preference Advice';
+                        advice =
+                            'Recommendation: CBT - Cabot Corp. Cabot Corp. is a global specialty chemicals and performance materials company. Its products are rubber and specialty grade carbon blacks, specialty compounds, fumed metal oxides, activated carbons, inkjet colorants, and aerogel.';
                       }
                     } else if (selectedRecommendation1 == 'high') {
                       if (selectedRecommendation2 == 'stocks') {
-                        advice = 'High Stock Advice';
+                        advice =
+                            'Recommendation: CZR - Caesars Entertainment, Inc. Caesars Entertainment, Inc. engages in the management of casinos and resorts under the Caesars, Harrah\'s, Horseshoe, and Eldorado brands. It was founded in the Las Vegas area.';
                       } else if (selectedRecommendation2 == 'bonds') {
-                        advice = 'High Bond Advice';
+                        advice =
+                            'Recommendation: BNDX - Vanguard Total International Bond ETF. This investment tracks an investment-grade, non-USD denominated bond index, hedged against currency fluctuations for US investors.';
                       } else if (selectedRecommendation2 == 'pms') {
-                        advice = 'High Precious Metal Advice';
+                        advice =
+                            'Recommendation: SPPP - Sprott Physical Platinum and Palladium Trust. SPPP is a closed-end trust that invests in unencumbered and fully-allocated Good Delivery physical platinum and palladium bullion.';
                       } else if (selectedRecommendation2 == 'noPreference') {
-                        advice = 'High No Preference Advice';
+                        advice =
+                            'Recommendation: BTC - BitCoin. Bitcoin is the first successful internet money based on peer-to-peer technology; whereby no central bank or authority is involved in the transaction and production of the Bitcoin currency.';
                       }
                     } else if (selectedRecommendation1 == 'noPreference') {
                       if (selectedRecommendation2 == 'stocks') {
-                        advice = 'No Preference Stock Advice';
+                        advice =
+                            'Recommendation: AMD - Advanced Micro Devices, Inc. Advanced Micro Devices, Inc. engages in the provision of semiconductor businesses. It operates through the following segments: Computing & Graphics, and Enterprise, Embedded and Semi-Custom. ';
                       } else if (selectedRecommendation2 == 'bonds') {
-                        advice = 'No Preference Bond Advice';
+                        advice =
+                            'Recommendation: MUB - iShares National Muni Bond ETF. This investment tracks a market-weighted index of investment-grade debt issued by state and local governments and agencies. Interest is exempt from US income tax and from AMT.';
                       } else if (selectedRecommendation2 == 'pms') {
-                        advice = 'No Preference Precious Metal Advice';
+                        advice =
+                            'Recommendation: GOLD - Barrick Gold Corp. Barrick Gold Corp. engages in the production and sale of gold, copper, and related activities. It also provides exploration and mining development.';
                       } else if (selectedRecommendation2 == 'noPreference') {
-                        advice = 'No Preference No Preference Advice';
+                        advice =
+                            'Recommendation: VNQ - Vanguard Real Estate ETF. This investment tracks a market-cap-weighted index of companies involved in the ownership and operation of real estate in the United States.';
                       }
                     }
                     // Display the advice underneath the DataTable
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(advice),
-                        duration: Duration(seconds: 10),
+                        backgroundColor: Color.fromARGB(255, 59, 139, 61),
+                        duration: Duration(seconds: 100),
                       ),
                     );
                     Navigator.of(context).pop();
