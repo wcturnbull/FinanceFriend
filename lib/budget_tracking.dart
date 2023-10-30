@@ -1,4 +1,5 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
+import 'package:financefriend/budget_tracking_widgets/wishlist.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -209,7 +210,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
         ),
         body: Row(
           children: [
-            Container(
+            AnimatedContainer(
+                duration: Duration(seconds: 2),
                 width: 300,
                 color: Colors.white,
                 child: Column(
@@ -218,34 +220,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                       height: 20,
                     ),
                     Column(children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            budgetMap = {
-                              "Housing": 250,
-                              "Utilities": 250,
-                              "Food": 150,
-                              "Transportation": 140,
-                              "Entertainment": 120,
-                              "Investments": 50,
-                              "Debt Payments": 40
-                            };
-                            budgetName = "Default";
-                            createBudgetInFirebase(Budget(
-                                budgetName: budgetName,
-                                budgetMap: budgetMap,
-                                expenses: []));
-
-                            // print("printing budget:");
-                            // print((await getBudgetMapFromFirebase()).toString());
-                            // You can also set other values here if needed.
-                          });
-                        },
-                        child: const Text("Set Default Budget"),
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
                       ElevatedButton(
                         onPressed: () {
                           showDialog(
@@ -459,7 +433,12 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                             const SizedBox(
                               height: 35,
                             ),
-                            Text("test"),
+                            WishList(
+                              budget: Budget(
+                                  budgetMap: budgetMap,
+                                  budgetName: budgetName,
+                                  expenses: expenseList),
+                            ),
                             SizedBox(
                               height: 35,
                             ),

@@ -70,13 +70,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
           const SizedBox(
             height: 10,
           ),
-          ElevatedButton(
-              onPressed: () {
-                addDefaultExpenses(context);
-                setState(() {});
-              },
-              child: const Text("[TESTING] auto populate transactions")),
-          const SizedBox(height: 10),
           Row(
             children: [
               const SizedBox(
