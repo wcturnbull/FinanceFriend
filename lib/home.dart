@@ -446,7 +446,7 @@ class HomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushNamed(context, '/dashboard');
                   },
-                  child: const Text('Go to Graph Dashboard Page'),
+                  child: const Text('Go to Budget Dashboard Page'),
                 ),
               ],
               mainAxisAlignment: MainAxisAlignment.center,
