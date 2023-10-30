@@ -24,6 +24,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
   String historicalPrice = '';
   String percentChange = '';
   String selectedInterval = '1min';
+  String selectedRecommendation1 = '';
+  String selectedRecommendation2 = '';
 
   List<DataRow> investmentsTableRows = [];
 
@@ -409,6 +411,73 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method For New Screen When You Click The Recommendations Button
+  void showRecommendationsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Recommendations'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FormBuilderDropdown(
+                    name: 'recommendation1',
+                    decoration: InputDecoration(labelText: 'Recommendation 1'),
+                    items: stocks.map((stock) {
+                      return DropdownMenuItem(
+                        value: stock['1. symbol'],
+                        child: Text(stock['1. symbol']!),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRecommendation1 = value!;
+                      });
+                    },
+                  ),
+                  FormBuilderDropdown(
+                    name: 'recommendation2',
+                    decoration: InputDecoration(labelText: 'Recommendation 2'),
+                    items: stocks.map((stock) {
+                      return DropdownMenuItem(
+                        value: stock['1. symbol'],
+                        child: Text(stock['1. symbol']!),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRecommendation2 = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle Save button click and process recommendations.
+                    // You can use selectedRecommendation1 and selectedRecommendation2 here.
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Save'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   String getSelectedStockInfo(String stockName) {
     final selectedStock = investments.firstWhere(
       (investment) => investment['Stock Name'] == stockName,
@@ -571,7 +640,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Add code to handle the "Recommendations" button.
+                      showRecommendationsDialog(context);
                     },
                     child: Text('Recommendations'),
                   ),
