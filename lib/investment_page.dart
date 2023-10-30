@@ -424,14 +424,26 @@ class _InvestmentPageState extends State<InvestmentPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FormBuilderDropdown(
-                    name: 'recommendation1',
-                    decoration: InputDecoration(labelText: 'Recommendation 1'),
-                    items: stocks.map((stock) {
-                      return DropdownMenuItem(
-                        value: stock['1. symbol'],
-                        child: Text(stock['1. symbol']!),
-                      );
-                    }).toList(),
+                    name: 'riskPreference',
+                    decoration: InputDecoration(labelText: 'Risk Level'),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'Option 1',
+                        child: Text('Low'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 2',
+                        child: Text('Medium'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 3',
+                        child: Text('High'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 4',
+                        child: Text('No Preference'),
+                      ),
+                    ],
                     onChanged: (value) {
                       setState(() {
                         selectedRecommendation1 = value!;
@@ -439,14 +451,26 @@ class _InvestmentPageState extends State<InvestmentPage> {
                     },
                   ),
                   FormBuilderDropdown(
-                    name: 'recommendation2',
-                    decoration: InputDecoration(labelText: 'Recommendation 2'),
-                    items: stocks.map((stock) {
-                      return DropdownMenuItem(
-                        value: stock['1. symbol'],
-                        child: Text(stock['1. symbol']!),
-                      );
-                    }).toList(),
+                    name: 'assetPreference',
+                    decoration: InputDecoration(labelText: 'Asset Preference'),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'Option 1',
+                        child: Text('Stocks'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 2',
+                        child: Text('Bonds'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 3',
+                        child: Text('Precious Metals'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Option 4',
+                        child: Text('No Preference'),
+                      ),
+                    ],
                     onChanged: (value) {
                       setState(() {
                         selectedRecommendation2 = value!;
