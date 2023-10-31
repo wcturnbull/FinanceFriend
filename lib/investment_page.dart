@@ -203,6 +203,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method To Handle More Information Button Section
   void showMoreInformationDialog(BuildContext context) {
     final stockSymbolNames = investments.map((investment) {
       return investment['Stock Name'];
@@ -375,6 +376,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method For Handling Graph Generation
   void showGenerateGraphDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -566,6 +568,143 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method To Handle The Compare Button's Click Events
+  void showCompareDialog(BuildContext context) {
+    final stockSymbolNames = investments.map((investment) {
+      return investment['Stock Name'];
+    }).toList();
+
+    String selectedStockName = ''; // To store the selected stock name
+    String originalPrice = '';
+    String currentPrice = '';
+    String percentChange = '';
+    String oldPrice = '';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Compare Dialog'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FormBuilderDropdown(
+                    name: 'selectedStock',
+                    decoration: InputDecoration(labelText: 'Select Investment'),
+                    items: stockSymbolNames.map((symbol) {
+                      return DropdownMenuItem(
+                        value: symbol,
+                        child: Text(symbol),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedStockName = value.toString();
+                        originalPrice =
+                            getSelectedStockPrice(selectedStockName);
+                        oldPrice = getOldPrice(selectedStockName);
+                      });
+                    },
+                  ),
+                  if (selectedStockName
+                      .isNotEmpty) // Display when a stock is selected
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await fetchHistoricalStockData(
+                                selectedStockSymbol, '60min');
+                            setState(() {
+                              selectedInterval = '60min';
+                              percentChange = calculatePercentChange(
+                                  originalPrice, oldPrice);
+                            });
+                          },
+                          child: Text('Compare'),
+                        ),
+                        if (historicalPrice.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Original Price: \$$originalPrice'),
+                              Text(
+                                  'Current Price: \$${(double.parse(historicalPrice) * double.parse(investments.firstWhere((investment) => investment['Stock Name'] == selectedStockName)['Amount'])).toStringAsFixed(2)}'),
+                              Text('Percent Change: $percentChange%'),
+                            ],
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Update the color of the selected stock symbol based on percentChange
+                    updateSelectedStockColor(percentChange);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Save'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Method to update the color of the selected stock symbol based on percentChange
+  void updateSelectedStockColor(String percentChange) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == selectedStockName,
+    );
+
+    if (selectedStock != null) {
+      final double change = double.parse(percentChange);
+      if (change > 0) {
+        selectedStock['Color'] =
+            'green'; // Change to green if percentChange is positive
+      } else if (change < 0) {
+        selectedStock['Color'] =
+            'red'; // Change to red if percentChange is negative
+      }
+    }
+  }
+
+  String calculatePercentChange(String originalPrice, String currentPrice) {
+    double original = double.parse(originalPrice);
+    double current = double.parse(currentPrice);
+
+    double change = current - original;
+    double percentChange = (change / original * 100);
+
+    return percentChange.toStringAsFixed(2);
+  }
+
+//Helper Method For Compare Dialog Method
+  String getSelectedStockPrice(String stockName) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == stockName,
+      orElse: () => {},
+    );
+
+    if (selectedStock != null) {
+      return selectedStock['Price'];
+    } else {
+      return 'Stock information not found';
+    }
+  }
+
   String getSelectedStockInfo(String stockName) {
     final selectedStock = investments.firstWhere(
       (investment) => investment['Stock Name'] == stockName,
@@ -580,6 +719,18 @@ class _InvestmentPageState extends State<InvestmentPage> {
       ''';
 
       return stockInfo;
+    } else {
+      return 'Stock information not found';
+    }
+  }
+
+  String getOldPrice(String stockSymbol) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == stockSymbol,
+    );
+
+    if (selectedStock != null) {
+      return selectedStock['Price'];
     } else {
       return 'Stock information not found';
     }
@@ -736,7 +887,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
                       width: 16), // Add horizontal space between the buttons
                   ElevatedButton(
                     onPressed: () {
-                      // Add code to handle the "Compare" button.
+                      showCompareDialog(context);
                     },
                     child: Text('Compare'),
                   ),
