@@ -8,8 +8,9 @@ class LoginAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         title: Image.asset('assets/images/FFLogo.png',
-          height:100, 
-          width: 100),
+          height: 100, 
+          width: 100
+        ),
         centerTitle: true,
     );
   }

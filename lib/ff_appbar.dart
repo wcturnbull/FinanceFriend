@@ -66,7 +66,7 @@ class _FFAppBarState extends State<FFAppBar> {
     }
   }
 
-  _openNotifsSettings(BuildContext context) async {
+  void _openNotifsSettings(BuildContext context) async {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -131,7 +131,7 @@ class _FFAppBarState extends State<FFAppBar> {
     ));
   }
 
-  _openAccountSaver(BuildContext context) async {
+  void _openAccountSaver(BuildContext context) async {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -193,8 +193,8 @@ class _FFAppBarState extends State<FFAppBar> {
       ));
   }
 
-  _openLandingChanger(BuildContext context) async {
-    return await showDialog<void>(
+  void _openLandingChanger(BuildContext context) async {
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
               content: Stack(
@@ -287,95 +287,102 @@ class _FFAppBarState extends State<FFAppBar> {
               ])));
   }
 
-  _openSettings(BuildContext context) async {
-    return await showDialog<void>(
+  void _openSettings(BuildContext context) async {
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-          content: Stack(
-            children: <Widget>[
-              Positioned(
-                right: -40,
-                top: -40,
-                child: InkResponse(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.red,
-                    child: Icon(Icons.close),
-                  ),
+        content: Stack(
+          children: <Widget>[
+            Positioned(
+              right: -40,
+              top: -40,
+              child: InkResponse(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: const CircleAvatar(
+                  backgroundColor: Colors.red,
+                  child: Icon(Icons.close),
                 ),
               ),
-              Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text('Settings',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 32,
-                            ))),
-                    Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Set Custom Homepage'),
-                          onPressed: _openLandingChanger(context)
-                        )),
-                    Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Notifications Settings'),
-                          onPressed: () {
-                            _getAllNotifs();
-                            _openNotifsSettings(context);
-                          }
-                        )),
-                    Padding(
+            ),
+            Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text('Settings',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ))),
+                  Padding(
                       padding: const EdgeInsets.all(8),
                       child: ElevatedButton(
-                        child: const Text('Delete Account'),
-                        onPressed: _openAccountSaver(context)
-                      ),
-                    ),
-                    Padding(
+                        child: const Text('Set Custom Homepage'),
+                        onPressed: () => _openLandingChanger(context)
+                      )),
+                  Padding(
                       padding: const EdgeInsets.all(8),
                       child: ElevatedButton(
-                        child: const Text('Close'),
+                        child: const Text('Notifications Settings'),
                         onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    )
-                  ],
-                ),
+                          _getAllNotifs();
+                          _openNotifsSettings(context);
+                        }
+                      )),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: ElevatedButton(
+                      child: const Text('Delete Account'),
+                      onPressed: () => _openAccountSaver(context),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: ElevatedButton(
+                      child: const Text('Close'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  )
+                ],
               ),
-            ],
-          )));
+            ),
+          ],
+        )
+      )
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        leading: 
-            IconButton(
-              icon: Image.asset('images/FFLogo.png'),
-              onPressed: () => {
-                Navigator.pushNamed(context, '/home')
-              },
-            ),
-        title: Image.asset('assets/images/FFLogo.png',height:100, width: 100),
-        centerTitle: true,
-        actions: <Widget>[
-          IconButton(
-            icon: Image.asset('images/Settings.png'),
-            onPressed: _openSettings(context)
-          ),
-        ],
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      leading: IconButton(
+        icon: Image.asset('images/FFLogo.png', height: 100),
+        onPressed: () => Navigator.pushNamed(context, '/home'),
+      ),
+      title: const Text(
+        'Finance Friend',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 44,
+          color: Colors.white,
+        ),
+      ),
+      centerTitle: true,
+      actions: <Widget>[
+        IconButton(
+          icon: Image.asset('images/Settings.png', height: 100),
+          onPressed: () => _openSettings(context),
+        ),
+      ],
     );
   }
 }
