@@ -49,6 +49,8 @@ dependencies:
   firebase_storage: ^11.2.7
   table_calendar: ^3.0.9
   data_table_2: ^2.5.8
+  geocoding: ^2.1.1
+  geolocator: ^10.1.0
 
 dev_dependencies:
   flutter_test:
