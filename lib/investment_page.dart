@@ -577,7 +577,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     String selectedStockName = ''; // To store the selected stock name
     String originalPrice = '';
     String currentPrice = '';
-    String percentChange = '';
+    String percentChange = '5';
     String oldPrice = '';
 
     showDialog(
@@ -633,7 +633,14 @@ class _InvestmentPageState extends State<InvestmentPage> {
                               Text('Original Price: \$$originalPrice'),
                               Text(
                                   'Current Price: \$${(double.parse(historicalPrice) * double.parse(investments.firstWhere((investment) => investment['Stock Name'] == selectedStockName)['Amount'])).toStringAsFixed(2)}'),
-                              Text('Percent Change: $percentChange%'),
+                              Text(
+                                'Percent Change: $percentChange',
+                                style: TextStyle(
+                                  color: double.parse(percentChange) > 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              )
                             ],
                           ),
                       ],
@@ -644,7 +651,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
                 ElevatedButton(
                   onPressed: () {
                     // Update the color of the selected stock symbol based on percentChange
-                    updateSelectedStockColor(percentChange);
+                    updateSelectedStockColor(percentChange, selectedStockName);
                     Navigator.of(context).pop();
                   },
                   child: Text('Save'),
@@ -664,19 +671,19 @@ class _InvestmentPageState extends State<InvestmentPage> {
   }
 
   // Method to update the color of the selected stock symbol based on percentChange
-  void updateSelectedStockColor(String percentChange) {
+  void updateSelectedStockColor(String percentChange, String stockName) {
     final selectedStock = investments.firstWhere(
-      (investment) => investment['Stock Name'] == selectedStockName,
+      (investment) => investment['Stock Name'] == stockName,
     );
 
     if (selectedStock != null) {
       final double change = double.parse(percentChange);
       if (change > 0) {
         selectedStock['Color'] =
-            'green'; // Change to green if percentChange is positive
+            Colors.green; // Change to green if percentChange is positive
       } else if (change < 0) {
         selectedStock['Color'] =
-            'red'; // Change to red if percentChange is negative
+            Colors.red; // Change to red if percentChange is negative
       }
     }
   }
