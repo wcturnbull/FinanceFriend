@@ -23,22 +23,38 @@ class LocationPage extends StatefulWidget {
 }
 
 class _LocationPageState extends State<LocationPage> {
+  String apiKey = 'AIzaSyC39i7jLqJymR5goAU9ZuTwz4SE4MNXeG8';
+
+  //Get current location using browser's geolocator
   void getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    storeLocationDetails(position.latitude, position.longitude);
+    getPlaceId(position.latitude, position.longitude);
   }
 
-  void storeLocationDetails(double lat, double lng) async {
-    String apiKey = 'AIzaSyDu2xvfCsKkP85kqcC0g6RDW-31P-_ygMs';
+  //Use Google Place API to get the place id of location
+  void getPlaceId(double lat, double lng) async {
     String url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
     var response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);
-    for (var place in json['results']) {
-      print(place);
-    }
+    String placeId = json['results'][0]['place_id'];
+    getLocationDetails(placeId);
   }
+
+  //Get the type of location, so the app knows to ask the user to enter expense
+  void getLocationDetails(String placeId) async {
+    String url =
+        'https://maps.googleapis.com/maps/api/place/details/json?fields=name%2Ctypes&place_id=$placeId&key=$apiKey';
+    var response = await http.get(Uri.parse(url));
+    var json = jsonDecode(response.body);
+    //if types correspond to a place where an expense would be made,
+    //call a separate function to store location in the database
+    List<String> types = List.from(json['results'][0]['types']);
+
+  }
+
+  void storeLocationDetails(String name) {}
 
   @override
   Widget build(BuildContext context) {
