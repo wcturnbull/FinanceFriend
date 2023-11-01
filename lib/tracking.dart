@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -389,17 +390,7 @@ class _TrackingPageState extends State<TrackingPage> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.green,
-          leading: 
-            IconButton(
-              icon: Image.asset('images/FFLogo.png'),
-              onPressed: () => {
-                Navigator.pushNamed(context, '/home')
-              },
-            ),
-          title: Text('Bill Tracking Page'),
-        ),
+        appBar: FFAppBar(),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

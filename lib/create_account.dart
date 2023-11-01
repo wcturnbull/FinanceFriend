@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'ff_appbar.dart';
+import 'login_appbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_state.dart';
 import 'profile_picture_widget.dart';
@@ -79,7 +79,7 @@ class CreateAccount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(title: 'Create Account'),
+      appBar: const LoginAppBar(),
       body: SingleChildScrollView(
         child: Center(
           child: Column(

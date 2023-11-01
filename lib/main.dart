@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
           '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
           '/credit_card': (context) => CreditCardPage(),
-          '/home': (context) => HomePage(),
+          '/home': (context) => const HomePage(),
           '/dashboard': (context) => BudgetTracking(),
           '/profile': (context) => Profile(),
           '/locations': (context) => LocationPage(),
