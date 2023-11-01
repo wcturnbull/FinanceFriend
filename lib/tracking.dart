@@ -70,7 +70,7 @@ class _TrackingPageState extends State<TrackingPage> {
       });
       notifRef.child('state').set(1);
     } catch (error) {
-      print('Error writing notification: $error');
+      print('Error writing bill notification: $error');
     }
   }
 
