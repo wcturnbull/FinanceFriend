@@ -6,11 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 import 'budget_tracking_widgets/budget_creation.dart';
 import 'budget_tracking_widgets/expense_tracking.dart';
 import 'budget_tracking_widgets/usage_table.dart';
 import 'budget_tracking_widgets/budget_category.dart';
-import 'budget_tracking_widgets/budget_db_utils.dart';
 import 'budget_tracking_widgets/budget_colors.dart';
 
 class BudgetTracking extends StatefulWidget {
@@ -38,13 +38,31 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   String budgetName = "";
 
   List<String> budgetList = [];
+  List<WishListItem> wishlistLoaded = [];
 
   @override
   void initState() {
     super.initState();
     controller = TextEditingController();
+    loadBudgetListFromDB();
     getBudgetListFromFirebase(); // Fetch the list of budget names
+    loadWishlistFromDB();
   }
+
+  Future<void> loadWishlistFromDB() async {
+    print("loading wishlist");
+    if (currentUser == null) {
+      return;
+    }
+
+    List<WishListItem> tempWishList = await getWishlistFromDB();
+    print(tempWishList);
+    setState(() {
+      wishlistLoaded = tempWishList;
+    });
+  }
+
+  Future<void> loadBudgetListFromDB() async {}
 
   Future<void> getBudgetListFromFirebase() async {
     if (currentUser == null) {
@@ -100,6 +118,18 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     }).catchError((error) {
       print("Error fetching budget data: $error");
       // Handle the error. You might want to show an error message to the user.
+    });
+
+    getWishlistFromDB().then((wishlist) {
+      if (wishlist != null) {
+        setState(() {
+          wishlistLoaded = wishlist;
+        });
+      } else {
+        print("Error locating wishlist");
+      }
+    }).catchError((error) {
+      print("Error locating error: $error");
     });
   }
 
@@ -276,6 +306,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               visible: budgetMap.isNotEmpty,
                               child: Center(
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     const SizedBox(
                                       height: 10,
@@ -388,15 +420,25 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                       ),
                                     ),
                                     const SizedBox(height: 35),
-                                    Builder(
-                                      builder: (BuildContext context) {
-                                        return ElevatedButton(
-                                          onPressed: openBudgetTable,
-                                          child: const Text(
-                                              "View/Edit Current Budget",
-                                              style: TextStyle()),
-                                        );
-                                      },
+                                    Center(
+                                      child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            ElevatedButton(
+                                                onPressed: openColorChoice,
+                                                child: Text(
+                                                    "Change Chart Colors")),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: openBudgetTable,
+                                              child: const Text(
+                                                  "View/Edit Current Budget",
+                                                  style: TextStyle()),
+                                            ),
+                                          ]),
                                     ),
                                     const SizedBox(height: 35),
                                   ],
@@ -438,6 +480,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                   budgetMap: budgetMap,
                                   budgetName: budgetName,
                                   expenses: expenseList),
+                              wishlist: wishlistLoaded,
                             ),
                             SizedBox(
                               height: 35,
@@ -652,6 +695,19 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             ));
       },
     );
+  }
+
+  openColorChoice() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Card(
+              child: DropdownMenu(
+            dropdownMenuEntries: [
+              DropdownMenuEntry(label: "color 1", value: "two")
+            ],
+          ));
+        });
   }
 
   void submit() {

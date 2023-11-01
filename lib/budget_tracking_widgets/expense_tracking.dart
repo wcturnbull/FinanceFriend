@@ -113,52 +113,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
     );
   }
 
-  void addDefaultExpenses(BuildContext context) {
-    widget.budget.expenses.add(Expense(
-        item: "McDonalds",
-        price: 10,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Panda Express",
-        price: 12,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "CFA Catering",
-        price: 120,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Water Bill",
-        price: 40,
-        category: "Utilities",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Gas",
-        price: 30,
-        category: "Transportation",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Movie Tickets",
-        price: 25,
-        category: "Entertainment",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Stock Investment",
-        price: 50,
-        category: "Investments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Credit Card Payment",
-        price: 35,
-        category: "Debt Payments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-
-    widget.onExpensesListChanged(widget.budget.expenses);
-    saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
-  }
-
   Future<void> _openAddExpenseDialog(BuildContext context) async {
     selectedCategory = "Select Category";
     itemController.clear();

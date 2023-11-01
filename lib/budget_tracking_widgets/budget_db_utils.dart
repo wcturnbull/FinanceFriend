@@ -1,4 +1,5 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
+import 'package:financefriend/budget_tracking_widgets/wishlist.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
@@ -54,6 +55,41 @@ Future<List<Expense>> getExpensesFromDB(String budgetName) async {
   }
 }
 
+Future<List<WishListItem>> getWishlistFromDB() async {
+  if (currentUser == null) {
+    return [];
+  }
+
+  try {
+    final budgetReference =
+        reference.child('users/${currentUser?.uid}/wishlist');
+
+    DataSnapshot snapshot = (await budgetReference.once()).snapshot;
+
+    if (snapshot.value != null) {
+      final List<dynamic> wishlistData = snapshot.value as List<dynamic>;
+
+      List<WishListItem> wishlist = wishlistData.map((data) {
+        if (data is Map<String, dynamic>) {
+          return WishListItem(
+            itemName: data['itemName'] ?? '',
+            price: (data['price'] ?? 0.0).toDouble(),
+            progress: (data['progress'] ?? 0.0).toDouble(),
+          );
+        }
+        return WishListItem(itemName: "", price: 0.0, progress: 0.0);
+      }).toList();
+
+      return wishlist;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    print("Error fetching expenses from Firebase: $error");
+    return [];
+  }
+}
+
 Future<bool> saveExpensesToFirebase(
     String budgetName, List<Expense> expenses) async {
   print("SAVING EXPENSES TO DB");
@@ -76,6 +112,34 @@ Future<bool> saveExpensesToFirebase(
     }).toList();
 
     await expensesReference.set(expensesData);
+
+    return true;
+  } catch (error) {
+    print("Error saving expenses to Firebase: $error");
+    return false;
+  }
+}
+
+Future<bool> saveWishlistToFirebase(List<WishListItem> wishlist) async {
+  print("SAVING EXPENSES TO DB");
+  if (currentUser == null) {
+    return false;
+  }
+
+  try {
+    final expensesReference =
+        reference.child('users/${currentUser?.uid}/wishlist');
+
+    final List<Map<String, dynamic>> wishlistData =
+        wishlist.map((wishlistItem) {
+      return {
+        'itemName': wishlistItem.itemName,
+        'price': wishlistItem.price,
+        'progress': wishlistItem.progress,
+      };
+    }).toList();
+
+    await expensesReference.set(wishlistData);
 
     return true;
   } catch (error) {

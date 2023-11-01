@@ -1,25 +1,29 @@
 import 'dart:ui';
 
+Color getColorFromHex(String hex) {
+  return Color(int.parse(hex.substring(1, 7), radix: 16) + 0xFF0000000);
+}
+
 final greenColorList = <Color>[
-  Color(int.parse("#124309".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#15510a".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#1c6c0e".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#4f9f41".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#7bb770".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#a7cfa0".substring(1, 7), radix: 16) + 0xFF0000000),
-  Color(int.parse("#d3e7cf".substring(1, 7), radix: 16) + 0xFF0000000),
+  getColorFromHex("#124309"),
+  getColorFromHex("#15510a"),
+  getColorFromHex("#1c6c0e"),
+  getColorFromHex("#248712"),
+  getColorFromHex("#4f9f41"),
+  getColorFromHex("#7bb770"),
+  getColorFromHex("#a7cfa0"),
+  getColorFromHex("#d3e7cf"),
 ];
 
 final blueColorList = <Color>[
-  Color(int.parse("#0099FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#33A1FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#66A9FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#99B1FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#CCB9FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#FFC1FF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#FFCDE3".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#FFD9EB".substring(1, 7), radix: 16) + 0xFF000000),
+  getColorFromHex("#0099FF"),
+  getColorFromHex("#33A1FF"),
+  getColorFromHex("#66A9FF"),
+  getColorFromHex("#99B1FF"),
+  getColorFromHex("#CCB9FF"),
+  getColorFromHex("#FFC1FF"),
+  getColorFromHex("#FFCDE3"),
+  getColorFromHex("#FFD9EB"),
 ];
 
 final orangeColorList = <Color>[
