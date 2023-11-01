@@ -168,7 +168,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
               ElevatedButton(
                 onPressed: _silenceNotifs,
-                child: const Text('Silence Notifications'),
+                child: const Text('Mark All Notifications As Read'),
               ),
             ]),
         ),

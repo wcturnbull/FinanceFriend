@@ -34,6 +34,46 @@ class _TrackingPageState extends State<TrackingPage> {
   DateTime? _selectedDay;
   Map<DateTime, List<String>> _events = {};
 
+  DateTime _parseDate(String date) {
+    String year = date.substring(6);
+    String month = date.substring(0, 2);
+    String day = date.substring(3, 5);
+    String reformattedDate = year + '-' + month + '-' + day;
+    return DateTime.parse(reformattedDate);
+  }
+
+  Future<bool> _billNotifsOn() async {
+    DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+    DataSnapshot settings = await settingsRef.get();
+    if (!settings.hasChild('allNotifs')) {
+      settingsRef.child('allNotifs').set(1);
+    } else if (settings.child('allNotifs').value == 0) {
+      return false;
+    }
+    if (!settings.hasChild('billNotifs')) {
+      settingsRef.child('billNotifs').set(1);
+      return true;
+    } else {
+      return (settings.child('billNotifs').value == 1);
+    }
+  }
+
+  void _writeNotif(String billTitle, String dueDate) {
+    String title = billTitle + ' is due soon!';
+    String note = 'This bill is due on ' + dueDate;
+    try {
+      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference newNotif = notifRef.push();
+      newNotif.set({
+        'title': title,
+        'note': note,
+      });
+      notifRef.child('state').set(1);
+    } catch (error) {
+      print('Error writing notification: $error');
+    }
+  }
+
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     if (!isSameDay(_selectedDay, selectedDay)) {
       setState(() {
@@ -46,7 +86,7 @@ class _TrackingPageState extends State<TrackingPage> {
     }
   }
 
-  void _writeBill(String title, String note, String duedate) {
+  void _writeBill(String title, String note, String duedate) async {
     try {
       DatabaseReference newBill =
           reference.child('users/${currentUser?.uid}/bills').push();
@@ -55,13 +95,19 @@ class _TrackingPageState extends State<TrackingPage> {
         'note': note,
         'duedate': duedate,
       });
+      if (await _billNotifsOn()) {
+        DateTime parsedDueDate = _parseDate(duedate);
+        if (parsedDueDate.isAfter(DateTime.now()) && parsedDueDate.difference(DateTime.now()).inDays <= 7) {
+          _writeNotif(title, duedate);
+        }
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Bill added successfully! Refresh to update page.'),
         ),
       );
     } catch (error) {
-      print(error);
+      print('Error adding bill: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to add bill.'),
