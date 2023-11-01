@@ -4,6 +4,7 @@ import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
 import 'package:financefriend/location.dart';
 import 'package:financefriend/profile.dart';
+import 'package:financefriend/notifications.dart';
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
 import 'tracking.dart'; // Import the TrackingPage
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
           '/dashboard': (context) => BudgetTracking(),
           '/profile': (context) => Profile(),
           '/locations': (context) => LocationPage(),
+          '/notifications': (context) => const NotificationsPage(),
         });
   }
 }
