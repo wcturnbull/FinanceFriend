@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -27,6 +29,7 @@ class LocationPage extends StatefulWidget {
 class _LocationPageState extends State<LocationPage> {
   String apiKey = 'AIzaSyC39i7jLqJymR5goAU9ZuTwz4SE4MNXeG8';
   String location = '';
+  late Timer _timer;
 
   //Get current location using browser's geolocator
   void getCurrentLocation() async {
@@ -75,6 +78,9 @@ class _LocationPageState extends State<LocationPage> {
   @override
   void initState() {
     super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      getCurrentLocation();
+    });
 
     userLocationReference.onValue.listen((event) {
       DataSnapshot snapshot = event.snapshot;
@@ -88,17 +94,20 @@ class _LocationPageState extends State<LocationPage> {
 
   @override
   Widget build(BuildContext context) {
-    getCurrentLocation();
     return Scaffold(
         appBar: const FFAppBar(title: 'Location Page'),
         body: Center(
-            child: Column(children: [
-          ElevatedButton(
-            child: Text('Get Current Location'),
-            onPressed: () => getCurrentLocation(),
-          ),
-          Text(location)
-        ])));
+            child: Column(
+              children: [
+                ElevatedButton(
+                  child: Text('Get Current Location'),
+                  onPressed: () => getCurrentLocation(),
+                ),
+                Text(location)
+              ]
+            )
+          )
+        );
   }
 
   final types = [
