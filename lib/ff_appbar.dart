@@ -66,8 +66,8 @@ class _FFAppBarState extends State<FFAppBar> {
     }
   }
 
-  void _openNotifsSettings(BuildContext context) async {
-    await showDialog<void>(
+  void _openNotifsSettings(BuildContext context) {
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         content: Stack(children: <Widget>[
@@ -75,9 +75,7 @@ class _FFAppBarState extends State<FFAppBar> {
             right: -40,
             top: -40,
             child: InkResponse(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
+              onTap: () => Navigator.of(context).pop(),
               child: const CircleAvatar(
                 backgroundColor: Colors.red,
                 child: Icon(Icons.close),
@@ -126,6 +124,17 @@ class _FFAppBarState extends State<FFAppBar> {
                       ),
                     ],
                 )),
+                /*Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        child: const Text('Submit'),
+                        onPressed: () => _submitNotifSettings(),
+                      ),
+                    ],
+                )),*/
             ])),
         ]),
     ));
@@ -287,8 +296,8 @@ class _FFAppBarState extends State<FFAppBar> {
               ])));
   }
 
-  void _openSettings(BuildContext context) async {
-    await showDialog<void>(
+  void _openSettings(BuildContext context) {
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         content: Stack(
@@ -311,11 +320,11 @@ class _FFAppBarState extends State<FFAppBar> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Padding(
-                      padding: const EdgeInsets.all(8),
+                  const Padding(
+                      padding: EdgeInsets.all(8),
                       child: Text('Settings',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 32,
                           ))),
@@ -364,7 +373,7 @@ class _FFAppBarState extends State<FFAppBar> {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
       leading: IconButton(
-        icon: Image.asset('images/FFLogo.png', height: 100),
+        icon: Image.asset('images/FFLogo.png'),
         onPressed: () => Navigator.pushNamed(context, '/home'),
       ),
       title: const Text(
@@ -379,7 +388,7 @@ class _FFAppBarState extends State<FFAppBar> {
       centerTitle: true,
       actions: <Widget>[
         IconButton(
-          icon: Image.asset('images/Settings.png', height: 100),
+          icon: Image.asset('images/Settings.png'),
           onPressed: () => _openSettings(context),
         ),
       ],
