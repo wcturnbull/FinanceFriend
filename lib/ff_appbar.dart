@@ -328,33 +328,46 @@ class _FFAppBarState extends State<FFAppBar> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text('Settings',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                        ))),
+                  padding: EdgeInsets.all(8),
+                  child: Text('Settings',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                      ))
+                ),
                 Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: ElevatedButton(
-                      child: const Text('Set Custom Homepage'),
-                      onPressed: () => _openLandingChanger(context)
-                    )),
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    child: const Text('Set Custom Homepage'),
+                    onPressed: () => _openLandingChanger(context)
+                  )
+                ),
                 Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: ElevatedButton(
-                      child: const Text('Notifications Settings'),
-                      onPressed: () {
-                        _getAllNotifs();
-                        _openNotifsSettings(context);
-                      }
-                    )),
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    child: const Text('Notifications Settings'),
+                    onPressed: () {
+                      _getAllNotifs();
+                      _openNotifsSettings(context);
+                    }
+                  )
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
                     child: const Text('Delete Account'),
                     onPressed: () => _openAccountSaver(context),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    child: const Text('Sign Out'),
+                    onPressed: () {
+                      FirebaseAuth.instance.signOut();
+                      Navigator.pushNamed(context, '/login');
+                    },
                   ),
                 ),
                 Padding(
