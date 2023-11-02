@@ -20,8 +20,6 @@ class FFAppBar extends StatefulWidget implements PreferredSizeWidget{
 }
 
 class _FFAppBarState extends State<FFAppBar> {
-  final _formKey = GlobalKey<FormState>();
-
   bool _allNotifs = true;
   bool _billNotifs = true;
 
@@ -66,6 +64,12 @@ class _FFAppBarState extends State<FFAppBar> {
     }
   }
 
+  void _writeNotifSettings() {
+    DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+    settingsRef.child('allNotifs').set(_allNotifs ? 1 : 0);
+    settingsRef.child('billNotifs').set(_billNotifs ? 1 : 0);
+  }
+
   void _openNotifsSettings(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -82,60 +86,70 @@ class _FFAppBarState extends State<FFAppBar> {
               ),
             ),
           ),
-          Form(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Text(
-                    'Notification Settings',
-                    style: TextStyle(fontSize: 20),
-                )),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('All Notifications'),
-                      Switch(
-                        value: _allNotifs, 
-                        onChanged: (bool newValue) {
-                          setState(() {
-                            _allNotifs = newValue;
-                          });
-                        },
-                      ),
-                    ],
-                )),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Bill Tracking Notifications'),
-                      Switch(
-                        value: _billNotifs, 
-                        onChanged: (bool newValue) {
-                          setState(() {
-                            _billNotifs = newValue;
-                          });
-                        },
-                      ),
-                    ],
-                )),
-                /*Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        child: const Text('Submit'),
-                        onPressed: () => _submitNotifSettings(),
-                      ),
-                    ],
-                )),*/
-            ])),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                  'Notification Settings',
+                  style: TextStyle(fontSize: 20),
+              )),
+              StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('All Notifications'),
+                        Switch(
+                          value: _allNotifs, 
+                          onChanged: (bool newValue) {
+                            setState(() {
+                              _allNotifs = newValue;
+                            });
+                          },
+                        ),
+                      ],
+                  ));
+                }
+              ),
+              StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Bill Tracking Notifications'),
+                        Switch(
+                          value: _billNotifs, 
+                          onChanged: (bool newValue) {
+                            setState(() {
+                              _billNotifs = newValue;
+                            });
+                          },
+                        ),
+                      ],
+                  ));
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      child: const Text('Save'),
+                      onPressed: () {
+                        _writeNotifSettings();
+                        Navigator.of(context).pop();
+                      }
+                    ),
+                  ],
+              )),
+          ]),
         ]),
     ));
   }
@@ -149,55 +163,51 @@ class _FFAppBarState extends State<FFAppBar> {
             right: -40,
             top: -40,
             child: InkResponse(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
+              onTap: () => Navigator.of(context).pop(),
               child: const CircleAvatar(
                 backgroundColor: Colors.red,
                 child: Icon(Icons.close),
               ),
             ),
           ),
-          Form(
-              child: Column(
-                  mainAxisSize:
-                      MainAxisSize.min,
-                  children: <Widget>[
-                const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                        'Are you sure that you would like to delete your account?',
-                        style: TextStyle(fontSize: 20)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+            const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                    'Are you sure that you would like to delete your account?',
+                    style: TextStyle(fontSize: 20)
+            )),
+            const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                    'This action is permanent and cannot be reversed.',
+                    style: TextStyle(fontSize: 20)
+            )),
+            Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      child: const Text(
+                          'Delete Account'),
+                      onPressed: () {
+                        _deleteUser();
+                        Navigator.of(context).pop();
+                        Navigator.pushNamed(context,'/login');
+                      },
+                    ),
+                    ElevatedButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 )),
-                const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                        'This action is permanent and cannot be reversed.',
-                        style: TextStyle(fontSize: 20)
-                )),
-                Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          child: const Text(
-                              'Delete Account'),
-                          onPressed: () {
-                            _deleteUser();
-                            Navigator.of(context).pop();
-                            Navigator.pushNamed(context,'/login');
-                          },
-                        ),
-                        ElevatedButton(
-                          child: const Text('Cancel'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    )),
-              ]))
+          ])
         ]),
       ));
   }
@@ -206,94 +216,93 @@ class _FFAppBarState extends State<FFAppBar> {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-              content: Stack(
-                  children: <Widget>[
-                Positioned(
-                  right: -40,
-                  top: -40,
-                  child: InkResponse(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child:
-                        const CircleAvatar(
-                      backgroundColor:
-                          Colors.red,
-                      child: Icon(
-                          Icons.close),
-                    ),
-                  ),
-                ),
-                Form(
-                    child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                      const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                          'Choose which page you want to see when you login',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                          )),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Default Homepage'),
-                          onPressed: () {
-                            _setLandingPage('/home');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Investments Page'),
-                          onPressed: () {
-                            _setLandingPage('/investments');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Bill Tracking Page'),
-                          onPressed: () {
-                            _setLandingPage('/tracking');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Budget Page'),
-                          onPressed: () {
-                            _setLandingPage('/budgets');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Profile Page'),
-                          onPressed: () {
-                            _setLandingPage('/profile');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Graph Page'),
-                          onPressed: () {
-                            _setLandingPage('/dashboard');
-                            Navigator.of(context).pop();
-                          }),
-                      ),
-                    ]))
-              ])));
+        content: Stack(
+            children: <Widget>[
+          Positioned(
+            right: -40,
+            top: -40,
+            child: InkResponse(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child:
+                  const CircleAvatar(
+                backgroundColor:
+                    Colors.red,
+                child: Icon(
+                    Icons.close),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                  'Choose which page you want to see when you login',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                  )),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Default Homepage'),
+                  onPressed: () {
+                    _setLandingPage('/home');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Investments Page'),
+                  onPressed: () {
+                    _setLandingPage('/investments');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Bill Tracking Page'),
+                  onPressed: () {
+                    _setLandingPage('/tracking');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Budget Page'),
+                  onPressed: () {
+                    _setLandingPage('/budgets');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Profile Page'),
+                  onPressed: () {
+                    _setLandingPage('/profile');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Graph Page'),
+                  onPressed: () {
+                    _setLandingPage('/dashboard');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+            ])
+        ])));
   }
 
   void _openSettings(BuildContext context) {
@@ -315,59 +324,56 @@ class _FFAppBarState extends State<FFAppBar> {
                 ),
               ),
             ),
-            Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Settings',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                          ))),
-                  Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: ElevatedButton(
-                        child: const Text('Set Custom Homepage'),
-                        onPressed: () => _openLandingChanger(context)
-                      )),
-                  Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: ElevatedButton(
-                        child: const Text('Notifications Settings'),
-                        onPressed: () {
-                          _getAllNotifs();
-                          _openNotifsSettings(context);
-                        }
-                      )),
-                  Padding(
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text('Settings',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                        ))),
+                Padding(
                     padding: const EdgeInsets.all(8),
                     child: ElevatedButton(
-                      child: const Text('Delete Account'),
-                      onPressed: () => _openAccountSaver(context),
-                    ),
-                  ),
-                  Padding(
+                      child: const Text('Set Custom Homepage'),
+                      onPressed: () => _openLandingChanger(context)
+                    )),
+                Padding(
                     padding: const EdgeInsets.all(8),
                     child: ElevatedButton(
-                      child: const Text('Close'),
+                      child: const Text('Notifications Settings'),
                       onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  )
-                ],
-              ),
+                        _getAllNotifs();
+                        _openNotifsSettings(context);
+                      }
+                    )),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    child: const Text('Delete Account'),
+                    onPressed: () => _openAccountSaver(context),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    child: const Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                )
+              ],
             ),
           ],
         )
       )
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return AppBar(
