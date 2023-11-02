@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
 
 String creditScoreStatus = ''; // Store the credit score status
 String creditScoreAdvice = ''; // Store the credit score advice
+
+//Method For Expense Retrieval
 
 class CreditCardPage extends StatefulWidget {
   @override
