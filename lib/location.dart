@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'location_card_widget.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -9,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -18,6 +20,8 @@ final DatabaseReference reference = database.ref();
 final userLocationReference =
     reference.child('users/${currentUser?.uid}/locations');
 final currentUser = FirebaseAuth.instance.currentUser;
+String selectedTimeRange = "All Time";
+final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
 class LocationPage extends StatefulWidget {
   const LocationPage({super.key});
@@ -53,24 +57,21 @@ class _LocationPageState extends State<LocationPage> {
   void getLocationDetails(String placeId) async {
     String url =
         'https://maps.googleapis.com/maps/api/place/details/json?fields=name%2Ctypes%2Cformatted_address&place_id=$placeId&key=$apiKey';
-    print("url: $url");
     var response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);
     print("response: ${json['result']}");
 
     List<String> currentTypes = List.from(json['result']['types']);
-    print("types: $currentTypes");
+    final DateTime now = DateTime.now();
+    final String formatted = formatter.format(now);
+
     for (var currentType in currentTypes) {
       if (types.contains(currentType)) {
-        storeLocationDetails(json['result']['name'],
-            json['result']['formatted_address']);
+        userLocationReference
+            .child(json['result']['name'] + ':${formatted.toString()}')
+            .set(json['result']['formatted_address']);
       }
     }
-  }
-
-  void storeLocationDetails(String name, String address) {
-    String time = DateTime.now().toString();
-    userLocationReference.child(name).set(address);
   }
 
   @override
@@ -95,6 +96,21 @@ class _LocationPageState extends State<LocationPage> {
 
     if (locationSnapshot.exists) {
       locations = locationSnapshot.value as Map;
+
+      locations.removeWhere((key, value) {
+        final now = DateTime.now();
+        final locationTime = DateTime.parse(key.toString().split(":")[1]);
+        switch (selectedTimeRange) {
+          case "1 Day":
+            return now.difference(locationTime).inHours > 24;
+          case "1 Week":
+            return now.difference(locationTime).inDays > 7;
+          case "1 Month":
+            return now.difference(locationTime).inDays > 30;
+          default:
+            return false;
+        }
+      });
     }
     return locations;
   }
@@ -105,37 +121,53 @@ class _LocationPageState extends State<LocationPage> {
         appBar: const FFAppBar(),
         body: Center(
             child: Flex(
-              direction: Axis.vertical,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child:FutureBuilder<Map<dynamic, dynamic>>(
-                future: getLocationData(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<Map<dynamic, dynamic>> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else {
-                    return ListView(
-                      children: snapshot.data!.entries.map((entry) {
-                        print('entry: $entry');
-                        print('entry key: ${entry.key}');
-                        print('entry value: ${entry.value}');
-                        if (entry.key == "No Location Data") {
-                          return Text(entry.key);
-                        } else {
-                          return LocationCard(
-                            locationName: entry.key,
-                            locationAddress: entry.value,
-                          );
-                        }
-                      }).toList(),
-                    );
-                  }
+                direction: Axis.vertical,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+              DropdownButton<String>(
+                value: selectedTimeRange,
+                items: ["1 Day", "1 Week", "1 Month", "All Time"]
+                    .map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  setState(() {
+                    selectedTimeRange = value!;
+                  });
                 },
               ),
-            ),
+              Expanded(
+                child: FutureBuilder<Map<dynamic, dynamic>>(
+                  future: getLocationData(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<Map<dynamic, dynamic>> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else {
+                      return ListView(
+                        children: snapshot.data!.entries.map((entry) {
+                          print('entry: $entry');
+                          print('entry key: ${entry.key}');
+                          print('entry value: ${entry.value}');
+                          if (entry.key == "No Location Data") {
+                            return Text(entry.key);
+                          } else {
+                            return LocationCard(
+                              locationName: entry.key.toString().split(':')[0],
+                              locationAddress: entry.value,
+                              date: entry.key.toString().split(':')[1],
+                            );
+                          }
+                        }).toList(),
+                      );
+                    }
+                  },
+                ),
+              ),
             ])));
   }
 
@@ -225,77 +257,4 @@ class _LocationPageState extends State<LocationPage> {
     "veterinary_care",
     "zoo"
   ];
-}
-
-class LocationCard extends StatefulWidget {
-  final String locationName;
-  final String locationAddress;
-
-  LocationCard({required this.locationName, required this.locationAddress});
-
-  @override
-  _LocationCardState createState() => _LocationCardState();
-}
-
-class _LocationCardState extends State<LocationCard> {
-  final _formKey = GlobalKey<FormState>();
-  String dropdownValue1 = 'Option 1';
-  String dropdownValue2 = 'Option 1';
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              widget.locationName,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              widget.locationAddress,
-              style: TextStyle(fontSize: 16),
-            ),
-            Form(
-              key: _formKey,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextFormField(
-                      decoration: InputDecoration(labelText: 'Enter a number'),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  DropdownButton<String>(
-                    value: dropdownValue1,
-                    items: <String>['Option 1', 'Option 2', 'Option 3']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? value) {},
-                  ),
-                  DropdownButton<String>(
-                    value: dropdownValue2,
-                    onChanged: (String? value) {},
-                    items: <String>['Option 1', 'Option 2', 'Option 3']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
