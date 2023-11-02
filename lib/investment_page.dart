@@ -620,8 +620,18 @@ class _InvestmentPageState extends State<InvestmentPage> {
                                 selectedStockSymbol, '60min');
                             setState(() {
                               selectedInterval = '60min';
+                              String cAmount = investments.firstWhere(
+                                (investment) =>
+                                    investment['Stock Name'] ==
+                                    selectedStockName,
+                                orElse: () => {'Amount': ''},
+                              )['Amount'];
+                              String newhistoricalPrice =
+                                  (double.parse(historicalPrice) *
+                                          double.parse(cAmount))
+                                      .toStringAsFixed(2);
                               percentChange = calculatePercentChange(
-                                  originalPrice, oldPrice);
+                                  originalPrice, newhistoricalPrice);
                             });
                           },
                           child: Text('Compare'),
@@ -631,10 +641,11 @@ class _InvestmentPageState extends State<InvestmentPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Original Price: \$$originalPrice'),
+                              Text('Historical: $historicalPrice'),
                               Text(
                                   'Current Price: \$${(double.parse(historicalPrice) * double.parse(investments.firstWhere((investment) => investment['Stock Name'] == selectedStockName)['Amount'])).toStringAsFixed(2)}'),
                               Text(
-                                'Percent Change: $percentChange',
+                                'Percent Change: $percentChange%',
                                 style: TextStyle(
                                   color: double.parse(percentChange) > 0
                                       ? Colors.green
@@ -693,9 +704,9 @@ class _InvestmentPageState extends State<InvestmentPage> {
     double current = double.parse(currentPrice);
 
     double change = current - original;
-    double percentChange = (change / original * 100);
+    double percentChange1 = (change / original * 100);
 
-    return percentChange.toStringAsFixed(2);
+    return percentChange1.toStringAsFixed(2);
   }
 
 //Helper Method For Compare Dialog Method
