@@ -62,17 +62,15 @@ class _LocationPageState extends State<LocationPage> {
     print("types: $currentTypes");
     for (var currentType in currentTypes) {
       if (types.contains(currentType)) {
-        storeLocationDetails(
-            json['result']['name'], json['result']['formatted_address']);
+        storeLocationDetails(json['result']['name'],
+            json['result']['formatted_address']);
       }
     }
   }
 
   void storeLocationDetails(String name, String address) {
-    Map<String, String> locationDetails = {
-      'address': address,
-    };
-    userLocationReference.child(name).set(locationDetails);
+    String time = DateTime.now().toString();
+    userLocationReference.child(name).set(address);
   }
 
   @override
@@ -87,27 +85,58 @@ class _LocationPageState extends State<LocationPage> {
       var newLocation = snapshot.value.toString();
       setState(() {
         location = newLocation;
-        print(location);
       });
     });
+  }
+
+  Future<Map> getLocationData() async {
+    Map<dynamic, dynamic>? locations = {"No Location Data": ''};
+    final DataSnapshot locationSnapshot = await userLocationReference.get();
+
+    if (locationSnapshot.exists) {
+      locations = locationSnapshot.value as Map;
+    }
+    return locations;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const FFAppBar(title: 'Location Page'),
+        appBar: const FFAppBar(),
         body: Center(
-            child: Column(
+            child: Flex(
+              direction: Axis.vertical,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  child: Text('Get Current Location'),
-                  onPressed: () => getCurrentLocation(),
-                ),
-                Text(location)
-              ]
-            )
-          )
-        );
+                Expanded(
+                  child:FutureBuilder<Map<dynamic, dynamic>>(
+                future: getLocationData(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<Map<dynamic, dynamic>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else {
+                    return ListView(
+                      children: snapshot.data!.entries.map((entry) {
+                        print('entry: $entry');
+                        print('entry key: ${entry.key}');
+                        print('entry value: ${entry.value}');
+                        if (entry.key == "No Location Data") {
+                          return Text(entry.key);
+                        } else {
+                          return LocationCard(
+                            locationName: entry.key,
+                            locationAddress: entry.value,
+                          );
+                        }
+                      }).toList(),
+                    );
+                  }
+                },
+              ),
+            ),
+            ])));
   }
 
   final types = [
@@ -196,4 +225,77 @@ class _LocationPageState extends State<LocationPage> {
     "veterinary_care",
     "zoo"
   ];
+}
+
+class LocationCard extends StatefulWidget {
+  final String locationName;
+  final String locationAddress;
+
+  LocationCard({required this.locationName, required this.locationAddress});
+
+  @override
+  _LocationCardState createState() => _LocationCardState();
+}
+
+class _LocationCardState extends State<LocationCard> {
+  final _formKey = GlobalKey<FormState>();
+  String dropdownValue1 = 'Option 1';
+  String dropdownValue2 = 'Option 1';
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              widget.locationName,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.locationAddress,
+              style: TextStyle(fontSize: 16),
+            ),
+            Form(
+              key: _formKey,
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      decoration: InputDecoration(labelText: 'Enter a number'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  DropdownButton<String>(
+                    value: dropdownValue1,
+                    items: <String>['Option 1', 'Option 2', 'Option 3']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? value) {},
+                  ),
+                  DropdownButton<String>(
+                    value: dropdownValue2,
+                    onChanged: (String? value) {},
+                    items: <String>['Option 1', 'Option 2', 'Option 3']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

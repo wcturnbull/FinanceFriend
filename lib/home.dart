@@ -144,7 +144,6 @@ class HomePage extends StatelessWidget {
                   child: const Text('Go to Credit Card Page'),
                 ),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
@@ -160,6 +159,7 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16), //spacing
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 FutureBuilder(
                     future: _getProfilePreview(),
