@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
+String creditScoreStatus = ''; // Store the credit score status
+String creditScoreAdvice = ''; // Store the credit score advice
+
 class CreditCardPage extends StatefulWidget {
   @override
   _CreditCardPageState createState() => _CreditCardPageState();
 }
 
 class _CreditCardPageState extends State<CreditCardPage> {
-  String creditScoreStatus = ''; // Store the credit score status
-  String creditScoreAdvice = ''; // Store the credit score advice
-
   // Function to update the credit score status based on the score
   void updateCreditScoreStatus(int creditScore) {
     if (creditScore < 560) {
@@ -79,11 +79,6 @@ class _CreditCardPageState extends State<CreditCardPage> {
               },
               child: Text('Tips'),
             ),
-            SizedBox(height: 20),
-            Text(
-                'Credit Score: $creditScoreStatus'), // Display credit score status
-            SizedBox(height: 10),
-            Text(creditScoreAdvice), // Display credit score advice
           ],
         ),
       ),
@@ -179,6 +174,14 @@ class _CreditScoreInputDialogState extends State<CreditScoreInputDialog> {
             final creditScore = int.tryParse(creditScoreController.text) ?? 0;
             widget.onCreditScoreSaved(creditScore);
             Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Credit Score: $creditScoreStatus - $creditScoreAdvice'),
+                backgroundColor: Color.fromARGB(255, 59, 139, 61),
+                duration: Duration(seconds: 100),
+              ),
+            );
           },
           child: Text('Save'),
         ),
