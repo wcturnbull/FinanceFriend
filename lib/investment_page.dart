@@ -1,3 +1,4 @@
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
@@ -913,14 +914,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     investmentsTableRows.add(totalRow);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        leading: IconButton(
-          icon: Image.asset('images/FFLogo.png'),
-          onPressed: () => {Navigator.pushNamed(context, '/home')},
-        ),
-        title: Text('Investment Page', style: TextStyle(color: Colors.white)),
-      ),
+      appBar: FFAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(

@@ -26,7 +26,7 @@ class _ProfileState extends State<Profile> {
     final url = currentUser?.photoURL as String;
 
     return Scaffold(
-        appBar: const FFAppBar(),
+        appBar: FFAppBar(),
         body: Center(
           child: SingleChildScrollView(
               child: Column(

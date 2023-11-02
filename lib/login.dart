@@ -1,6 +1,6 @@
 import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
-import 'ff_appbar.dart';
+import 'login_appbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,6 +42,96 @@ class Login extends StatelessWidget {
     }
   }
 
+  void _resetPassword(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailControl.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Reset email sent successfully!'),
+        ),
+      );
+    } catch (e) {
+      print('Password reset error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Password reset failed. Please verify that your email was entered correctly.'),
+        ),
+      );
+    }
+  }
+
+  void _openPasswordResetter(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Stack(children: <Widget>[
+          Positioned(
+            right: -40,
+            top: -40,
+            child: InkResponse(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: const CircleAvatar(
+                backgroundColor: Colors.red,
+                child: Icon(Icons.close),
+              ),
+            ),
+          ),
+          Form(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text(
+                        'Password Reset',
+                        textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                    )),
+                    const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                            'Enter your email',
+                            style: TextStyle(fontSize: 20)
+                    )),
+                    Padding(
+                        padding: EdgeInsets.all(8),
+                        child: TextField(
+                          controller: emailControl,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                          ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            child: const Text('Submit'),
+                            onPressed: () {
+                              _resetPassword(context);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          ElevatedButton(
+                            child: const Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                    )),
+              ]))
+        ]),
+      ));
   void _writeBillNotif(String billTitle, String dueDate) {
     String title = billTitle + ' is due soon!';
     String note = 'This bill is due on ' + dueDate;
@@ -108,7 +198,7 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(),
+      appBar: const LoginAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -178,6 +268,17 @@ class Login extends StatelessWidget {
                     },
                     child: const Text(
                         "New here? Click here to create an account!",
+                        style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white)),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _openPasswordResetter(context);
+                    },
+                    child: const Text(
+                        "Forgot your password? Click here to reset it!",
                         style: TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.underline,
