@@ -1,12 +1,14 @@
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'budget_colors.dart';
 
 class BudgetCreationPopup extends StatefulWidget {
-  final void Function(Map<String, double>, String) onBudgetCreated;
+  final void Function(Map<String, double>, String, List<Color>) onBudgetCreated;
 
   BudgetCreationPopup({required this.onBudgetCreated});
 
@@ -25,6 +27,19 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
   TextEditingController budgetNameController = TextEditingController();
   String budgetNameError = '';
   String budgetAmountError = '';
+
+  String colorChoice = "Green";
+
+  final Map<String, List<Color>> colorMap = {
+    "Green": greenColorList,
+    "Blue": blueColorList,
+    "Orange": orangeColorList,
+    "Purple": purpleColorList,
+    "Black": blackColorList,
+  };
+
+  List<String> colorOptions = ["Green", "Blue", "Orange", "Purple", "Black"];
+
   @override
   void dispose() {
     budgetAmountController
@@ -58,6 +73,19 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
                 labelText: "Enter Budget Amount",
                 errorText: budgetAmountError, // Display error message
               ),
+            ),
+            Text("Color Scheme:"),
+            DropdownButtonFormField<String>(
+              value: colorChoice,
+              items: colorOptions.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                colorChoice = newValue!;
+              },
             ),
             const Divider(),
             Expanded(
@@ -117,8 +145,10 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
                             .toStringAsFixed(2));
                   }
 
+                  //colorChoice;
                   print(budgetMap);
-                  widget.onBudgetCreated(budgetMap, budgetNameController.text);
+                  widget.onBudgetCreated(budgetMap, budgetNameController.text,
+                      colorMap[colorChoice]!);
                 }
               },
               child: const Text("Make Budget"),

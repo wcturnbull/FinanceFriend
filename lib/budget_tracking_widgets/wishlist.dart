@@ -48,24 +48,27 @@ class _WishListState extends State<WishList> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        decoration: BoxDecoration(
-          color: Colors.green,
-          borderRadius: BorderRadius.circular(12),
-        ),
+    return Card(
+        elevation: 20,
+        color: Colors.green,
+        margin: const EdgeInsets.all(30),
         child: Column(children: [
-          SizedBox(height: 20),
+          const SizedBox(height: 10),
           const Text("Wishlist",
               style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 20)),
-          SizedBox(height: 20),
-          ElevatedButton(
-              onPressed: () {
-                _openAddWishListItem(context);
-              },
-              child: Text("Add Wishlist Item")),
+          const SizedBox(height: 10),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const SizedBox(width: 10),
+            ElevatedButton(
+                onPressed: () {
+                  _openAddWishListItem(context);
+                },
+                child: const Text("Add Wishlist Item")),
+            const SizedBox(width: 10),
+          ]),
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15.0),
@@ -166,18 +169,14 @@ class _WishListState extends State<WishList> {
     itemController.clear();
     priceController.clear();
 
-    // Create a filtered list of dropdown items without "Custom"
-    List<String> catNames = widget.budget.budgetMap.keys.toList();
-    catNames.insert(0, "Select Category");
-
     await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Add Wishlist Item"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Text("Wishlist"),
               TextFormField(
                 controller: itemController,
                 decoration: const InputDecoration(labelText: 'Item'),

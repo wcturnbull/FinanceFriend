@@ -199,13 +199,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
       widget.budget.expenses.add(newExpense);
       saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
 
-      // Print the updated expensesList
-      print("Expenses List:");
-      for (Expense expense in widget.budget.expenses) {
-        print(
-            "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-      }
-
       // Clear text fields and selectedCategory
       itemController.clear();
       priceController.clear();
@@ -297,13 +290,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
                   saveExpensesToFirebase(
                       widget.budget.budgetName, widget.budget.expenses);
 
-                  // Print the updated expensesList
-                  print("Expenses List after editing:");
-                  for (Expense expense in widget.budget.expenses) {
-                    print(
-                        "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-                  }
-
                   // Clear text fields and selectedCategory
                   editedItemController.clear();
                   editedPriceController.clear();
@@ -328,12 +314,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
     // Remove the expense from the expensesList
     widget.budget.expenses.remove(expenseToDelete);
 
-    // Print the updated expensesList
-    print("Expenses List after deleting:");
-    for (Expense expense in widget.budget.expenses) {
-      print(
-          "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-    }
     widget.onExpensesListChanged(widget.budget.expenses);
     saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
 

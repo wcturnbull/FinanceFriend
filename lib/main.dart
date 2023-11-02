@@ -37,9 +37,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.green,
-              primary: const Color.fromRGBO(102, 203, 19, 1),
-              secondary: const Color.fromRGBO(16, 178, 76, 1)),
+              seedColor: Colors.white,
+              primary: Colors.green,
+              secondary: Color(int.parse("#1c6c0e".substring(1, 7), radix: 16) +
+                  0xFF0000000)),
           useMaterial3: true,
         ),
         initialRoute: startRoute,

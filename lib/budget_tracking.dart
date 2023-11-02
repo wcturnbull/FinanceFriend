@@ -32,8 +32,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   bool budgetCreated = false;
 
   List<Expense> expenseList = <Expense>[];
+  List<Color> colorList = <Color>[];
 
   Map<String, double> budgetMap = {};
+
   double budgetAmount = 0;
   String budgetName = "";
 
@@ -97,16 +99,20 @@ class _BudgetTrackingState extends State<BudgetTracking> {
       budgetName = selectedBudgetName;
       budgetMap = {}; // Clear the current budget map
       budgetCreated = false; // Reset budgetCreated to indicate loading
+      colorList = greenColorList;
     });
 
     // Fetch the selected budget data and update your UI
     getBudgetFromFirebaseByName(selectedBudgetName).then((selectedBudget) {
       if (selectedBudget != null) {
         print(selectedBudget.expenses);
+        print("ColorList:");
+        print(selectedBudget.colorList);
         setState(() {
           budgetMap = selectedBudget.budgetMap;
           expenseList = selectedBudget.expenses;
           budgetName = selectedBudget.budgetName;
+          colorList = selectedBudget.colorList;
           budgetCreated = true; // Set budgetCreated to true when data is loaded
           // Load other budget-related data as needed
         });
@@ -205,8 +211,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   final Color color =
       Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000);
 
-  List<Color> colorList = greenColorList;
-
   List<String> dropdownItems = [
     "Select Category",
     "Housing",
@@ -257,13 +261,16 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                             builder: (context) {
                               return BudgetCreationPopup(onBudgetCreated:
                                   (Map<String, double> budgetMap,
-                                      String budgetName) {
+                                      String budgetName,
+                                      List<Color> colorListRecieved) {
                                 // Step 1: Create the budget in Firebase
 
                                 createBudgetInFirebase(Budget(
-                                    budgetName: budgetName,
-                                    budgetMap: budgetMap,
-                                    expenses: [])).then((result) {
+                                        budgetName: budgetName,
+                                        budgetMap: budgetMap,
+                                        expenses: [],
+                                        colorList: colorListRecieved))
+                                    .then((result) {
                                   if (result == true) {
                                     // Step 2: Update local state after Firebase operation is successful
                                     setState(() {
@@ -271,6 +278,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                       this.budgetName = budgetName;
                                       budgetCreated = true;
                                       this.budgetList.add(budgetName);
+                                      this.colorList = colorListRecieved;
                                     });
                                   } else {
                                     // Handle error or show an error message
@@ -386,12 +394,14 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                             children: <Widget>[
                                               const SizedBox(height: 35),
                                               BudgetPieChart(
-                                                budgetMap: budgetMap,
-                                                valuesAdded:
-                                                    budgetMap.isNotEmpty,
-                                                colorList: colorList,
-                                                color: colorList[0],
-                                              ),
+                                                  budgetMap: budgetMap,
+                                                  valuesAdded:
+                                                      budgetMap.isNotEmpty,
+                                                  colorList: colorList,
+                                                  color: colorList.isNotEmpty &&
+                                                          colorList[0] != null
+                                                      ? colorList[0]
+                                                      : Colors.black),
                                             ],
                                           ),
                                           const SizedBox(
@@ -411,7 +421,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                                 budget: Budget(
                                                     budgetMap: budgetMap,
                                                     budgetName: budgetName,
-                                                    expenses: expenseList),
+                                                    expenses: expenseList,
+                                                    colorList: colorList),
                                                 expensesList: expenseList,
                                               )
                                             ],
@@ -457,7 +468,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                         budget: Budget(
                                             budgetMap: budgetMap,
                                             expenses: expenseList,
-                                            budgetName: budgetName),
+                                            budgetName: budgetName,
+                                            colorList: colorList),
                                         dropdownItems: dropdownItems,
                                         onExpensesListChanged:
                                             (updatedExpensesList) {
@@ -479,7 +491,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               budget: Budget(
                                   budgetMap: budgetMap,
                                   budgetName: budgetName,
-                                  expenses: expenseList),
+                                  expenses: expenseList,
+                                  colorList: colorList),
                               wishlist: wishlistLoaded,
                             ),
                             SizedBox(
@@ -677,7 +690,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
               budget: Budget(
                   budgetMap: budgetMap,
                   budgetName: budgetName,
-                  expenses: expenseList),
+                  expenses: expenseList,
+                  colorList: colorList),
               onBudgetUpdate: (updatedBudgetMap) async {
                 bool updateResult =
                     await updateBudgetInFirebase(budgetName, updatedBudgetMap);
@@ -697,16 +711,58 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     );
   }
 
+  String colorChoice = "Green";
+
+  final Map<String, List<Color>> colorMap = {
+    "Green": greenColorList,
+    "Blue": blueColorList,
+    "Orange": orangeColorList,
+    "Purple": purpleColorList,
+    "Black": blackColorList,
+  };
+
+  List<String> colorOptions = ["Green", "Blue", "Orange", "Purple", "Black"];
+
   openColorChoice() {
-    showDialog(
+    return showDialog(
         context: context,
         builder: (context) {
-          return Card(
-              child: DropdownMenu(
-            dropdownMenuEntries: [
-              DropdownMenuEntry(label: "color 1", value: "two")
+          return AlertDialog(
+            title: const Text("Choose A Color Scheme"),
+            content: Column(children: [
+              DropdownButtonFormField<String>(
+                value: colorChoice,
+                items: colorOptions.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  colorChoice = newValue!;
+                },
+              ),
+            ]),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    colorList = colorMap[colorChoice] ??
+                        []; // Set colorList based on the chosen color
+                    saveColorListToFirebase(budgetName, colorList);
+                  });
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text("Submit"),
+              ),
             ],
-          ));
+          );
         });
   }
 

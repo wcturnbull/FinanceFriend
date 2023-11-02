@@ -48,17 +48,6 @@ final purpleColorList = <Color>[
   Color(int.parse("#FFF9FF".substring(1, 7), radix: 16) + 0xFF000000),
 ];
 
-final whiteColorList = <Color>[
-  Color(int.parse("#FFFFFF".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#F0F0F0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#E0E0E0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#D0D0D0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#C0C0C0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#B0B0B0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#A0A0A0".substring(1, 7), radix: 16) + 0xFF000000),
-  Color(int.parse("#909090".substring(1, 7), radix: 16) + 0xFF000000),
-];
-
 final blackColorList = <Color>[
   Color(int.parse("#000000".substring(1, 7), radix: 16) + 0xFF000000),
   Color(int.parse("#111111".substring(1, 7), radix: 16) + 0xFF000000),
