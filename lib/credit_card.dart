@@ -1,4 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
+
+String creditScoreStatus = ''; // Store the credit score status
+String creditScoreAdvice = ''; // Store the credit score advice
+
+//Method For Expense Retrieval
 
 class CreditCardPage extends StatefulWidget {
   @override
@@ -6,9 +21,6 @@ class CreditCardPage extends StatefulWidget {
 }
 
 class _CreditCardPageState extends State<CreditCardPage> {
-  String creditScoreStatus = ''; // Store the credit score status
-  String creditScoreAdvice = ''; // Store the credit score advice
-
   // Function to update the credit score status based on the score
   void updateCreditScoreStatus(int creditScore) {
     if (creditScore < 560) {
@@ -79,11 +91,6 @@ class _CreditCardPageState extends State<CreditCardPage> {
               },
               child: Text('Tips'),
             ),
-            SizedBox(height: 20),
-            Text(
-                'Credit Score: $creditScoreStatus'), // Display credit score status
-            SizedBox(height: 10),
-            Text(creditScoreAdvice), // Display credit score advice
           ],
         ),
       ),
@@ -179,6 +186,14 @@ class _CreditScoreInputDialogState extends State<CreditScoreInputDialog> {
             final creditScore = int.tryParse(creditScoreController.text) ?? 0;
             widget.onCreditScoreSaved(creditScore);
             Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Credit Score: $creditScoreStatus - $creditScoreAdvice'),
+                backgroundColor: Color.fromARGB(255, 59, 139, 61),
+                duration: Duration(seconds: 100),
+              ),
+            );
           },
           child: Text('Save'),
         ),
