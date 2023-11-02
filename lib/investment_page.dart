@@ -4,6 +4,16 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
 
 class InvestmentPage extends StatefulWidget {
   @override
@@ -28,6 +38,46 @@ class _InvestmentPageState extends State<InvestmentPage> {
   String selectedRecommendation2 = '';
 
   List<DataRow> investmentsTableRows = [];
+
+  //Methods To Fetch And Display FireBase Data For the DataTable
+  @override
+  void initState() {
+    super.initState();
+    // Fetch data from Firebase when the page is initialized
+    fetchDataFromFirebase();
+  }
+
+  Future<void> fetchDataFromFirebase() async {
+    final userRef = reference.child('users/${currentUser?.uid}');
+    final investmentsRef = reference.child('investments');
+
+    DataSnapshot investmentsData = await investmentsRef.get();
+
+    if (investmentsData.exists) {
+      Map<String, dynamic> investmentsMap =
+          investmentsData.value as Map<String, dynamic>;
+      final List<Map<String, dynamic>> firebaseInvestments = [];
+
+      investmentsMap.forEach((key, value) {
+        firebaseInvestments.add(Map<String, dynamic>.from(value));
+      });
+
+      setState(() {
+        investments = firebaseInvestments;
+      });
+    } else {
+      setState(() {
+        investments = [
+          {
+            'Stock Name': 'HIasdfl',
+            'Date Purchased': '2023-10-01',
+            'Amount': '10',
+            'Price': '1500.00',
+          },
+        ];
+      });
+    }
+  }
 
   DataTable investmentsDataTable = DataTable(
     columns: [
@@ -118,6 +168,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     }
   }
 
+  //Code For The Add Investments Button
   void showAddInvestmentsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -178,14 +229,22 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   double price = double.parse(formData['price']);
                   double amount = double.parse(formData['amount']);
 
+                  // Create a Map for the new investment
+                  final newInvestment = {
+                    'Stock Name': formData['stockOption'],
+                    'Date Purchased': currentDate,
+                    'Amount': amount.toString(),
+                    'Price': (price * amount).toStringAsFixed(2),
+                  };
+
+                  // Add the new investment to the local list (for UI)
                   setState(() {
-                    investments.add({
-                      'Stock Name': formData['stockOption'],
-                      'Date Purchased': currentDate,
-                      'Amount': amount.toString(),
-                      'Price': (price * amount).toStringAsFixed(2),
-                    });
+                    investments.add(newInvestment);
                   });
+
+                  // Save the new investment to Firebase
+                  reference.child('investments').push().set(newInvestment);
+
                   Navigator.of(context).pop();
                 }
               },
@@ -641,7 +700,6 @@ class _InvestmentPageState extends State<InvestmentPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Original Price: \$$originalPrice'),
-                              Text('Historical: $historicalPrice'),
                               Text(
                                   'Current Price: \$${(double.parse(historicalPrice) * double.parse(investments.firstWhere((investment) => investment['Stock Name'] == selectedStockName)['Amount'])).toStringAsFixed(2)}'),
                               Text(
