@@ -1,4 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
+
+String creditScoreStatus = ''; // Store the credit score status
+String creditScoreAdvice = ''; // Store the credit score advice
+//List Of Cards Spending Values
+String wFargo = '\$315.56';
+String boa = '\$318.78';
+String chase = '\$315.56';
+String discover = '\$318.78';
+String cOne = '\$317.17';
 
 class CreditCardPage extends StatefulWidget {
   @override
@@ -6,9 +25,6 @@ class CreditCardPage extends StatefulWidget {
 }
 
 class _CreditCardPageState extends State<CreditCardPage> {
-  String creditScoreStatus = ''; // Store the credit score status
-  String creditScoreAdvice = ''; // Store the credit score advice
-
   // Function to update the credit score status based on the score
   void updateCreditScoreStatus(int creditScore) {
     if (creditScore < 560) {
@@ -79,11 +95,6 @@ class _CreditCardPageState extends State<CreditCardPage> {
               },
               child: Text('Tips'),
             ),
-            SizedBox(height: 20),
-            Text(
-                'Credit Score: $creditScoreStatus'), // Display credit score status
-            SizedBox(height: 10),
-            Text(creditScoreAdvice), // Display credit score advice
           ],
         ),
       ),
@@ -126,6 +137,27 @@ class _CardSelectionDialogState extends State<CardSelectionDialog> {
               });
             },
           ),
+          if (selectedCard.isNotEmpty) Text('Original Spending Total: \$322'),
+          if (selectedCard == 'Wells Fargo Active Cash')
+            Text('Spending With $selectedCard: $wFargo'),
+          if (selectedCard == 'Wells Fargo Active Cash')
+            Text('Money Saved: \$6.44'),
+          if (selectedCard == 'Bank of America Travel Rewards')
+            Text('Spending With $selectedCard: $boa'),
+          if (selectedCard == 'Bank of America Travel Rewards')
+            Text('Money Saved: \$3.22'),
+          if (selectedCard == 'Chase Freedom Unlimited')
+            Text('Spending With $selectedCard: $chase'),
+          if (selectedCard == 'Chase Freedom Unlimited')
+            Text('Money Saved: \$6.44'),
+          if (selectedCard == 'Discover it Cash Back')
+            Text('Spending With $selectedCard: $discover'),
+          if (selectedCard == 'Discover it Cash Back')
+            Text('Money Saved: \$3.22'),
+          if (selectedCard == 'Capital One QuickSilver')
+            Text('Spending With $selectedCard: $cOne'),
+          if (selectedCard == 'Capital One QuickSilver')
+            Text('Money Saved: \$4.83'),
         ],
       ),
       actions: <Widget>[
@@ -179,6 +211,14 @@ class _CreditScoreInputDialogState extends State<CreditScoreInputDialog> {
             final creditScore = int.tryParse(creditScoreController.text) ?? 0;
             widget.onCreditScoreSaved(creditScore);
             Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Credit Score: $creditScoreStatus - $creditScoreAdvice'),
+                backgroundColor: Color.fromARGB(255, 59, 139, 61),
+                duration: Duration(seconds: 100),
+              ),
+            );
           },
           child: Text('Save'),
         ),
