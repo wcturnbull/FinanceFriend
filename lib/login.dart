@@ -132,6 +132,8 @@ class Login extends StatelessWidget {
               ]))
         ]),
       ));
+  }
+
   void _writeBillNotif(String billTitle, String dueDate) {
     String title = billTitle + ' is due soon!';
     String note = 'This bill is due on ' + dueDate;

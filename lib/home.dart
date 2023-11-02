@@ -81,7 +81,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FFAppBar(),
+      appBar: const FFAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -153,7 +153,6 @@ class HomePage extends StatelessWidget {
                   child: const Text('Go to Credit Card Page'),
                 ),
               ],
-              mainAxisAlignment: MainAxisAlignment.center,
             ),
             const SizedBox(height: 16), //spacing
             Row(
