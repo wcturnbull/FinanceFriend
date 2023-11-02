@@ -84,6 +84,8 @@ class _LocationCardState extends State<LocationCard> {
               category: category,
               date: widget.date)
         ];
+        List<Expense> currentExpenses = await getExpensesFromDB(budget);
+        expense.addAll(currentExpenses);
         if (await saveExpensesToFirebase(budget, expense)) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Expense submitted successfully')));
@@ -92,6 +94,7 @@ class _LocationCardState extends State<LocationCard> {
           locationsRef.child('${widget.locationName}:${widget.date}').remove();
         }
       } catch (e1) {
+        print('Error: $e1');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Input value must be a number')),
         );

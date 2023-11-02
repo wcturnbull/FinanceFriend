@@ -56,8 +56,8 @@ class MyApp extends StatelessWidget {
           '/credit_card': (context) => CreditCardPage(),
           '/home': (context) => const HomePage(),
           '/dashboard': (context) => BudgetTracking(),
-          '/profile': (context) => Profile(),
-          '/locations': (context) => LocationPage(),
+          '/profile': (context) => const Profile(),
+          '/locations': (context) => const LocationPage(),
           '/notifications': (context) => const NotificationsPage(),
         });
   }
