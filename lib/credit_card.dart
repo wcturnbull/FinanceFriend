@@ -12,8 +12,12 @@ final currentUser = FirebaseAuth.instance.currentUser;
 
 String creditScoreStatus = ''; // Store the credit score status
 String creditScoreAdvice = ''; // Store the credit score advice
-
-//Method For Expense Retrieval
+//List Of Cards Spending Values
+String wFargo = '\$315.56';
+String boa = '\$318.78';
+String chase = '\$315.56';
+String discover = '\$318.78';
+String cOne = '\$317.17';
 
 class CreditCardPage extends StatefulWidget {
   @override
@@ -133,6 +137,27 @@ class _CardSelectionDialogState extends State<CardSelectionDialog> {
               });
             },
           ),
+          if (selectedCard.isNotEmpty) Text('Original Spending Total: \$322'),
+          if (selectedCard == 'Wells Fargo Active Cash')
+            Text('Spending With $selectedCard: $wFargo'),
+          if (selectedCard == 'Wells Fargo Active Cash')
+            Text('Money Saved: \$6.44'),
+          if (selectedCard == 'Bank of America Travel Rewards')
+            Text('Spending With $selectedCard: $boa'),
+          if (selectedCard == 'Bank of America Travel Rewards')
+            Text('Money Saved: \$3.22'),
+          if (selectedCard == 'Chase Freedom Unlimited')
+            Text('Spending With $selectedCard: $chase'),
+          if (selectedCard == 'Chase Freedom Unlimited')
+            Text('Money Saved: \$6.44'),
+          if (selectedCard == 'Discover it Cash Back')
+            Text('Spending With $selectedCard: $discover'),
+          if (selectedCard == 'Discover it Cash Back')
+            Text('Money Saved: \$3.22'),
+          if (selectedCard == 'Capital One QuickSilver')
+            Text('Spending With $selectedCard: $cOne'),
+          if (selectedCard == 'Capital One QuickSilver')
+            Text('Money Saved: \$4.83'),
         ],
       ),
       actions: <Widget>[
