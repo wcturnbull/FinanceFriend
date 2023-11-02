@@ -1,6 +1,7 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:financefriend/budget_tracking_widgets/wishlist.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -107,7 +108,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
       if (selectedBudget != null) {
         print(selectedBudget.expenses);
         print("ColorList:");
-        print(selectedBudget.colorList);
         setState(() {
           budgetMap = selectedBudget.budgetMap;
           expenseList = selectedBudget.expenses;
@@ -394,14 +394,11 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                             children: <Widget>[
                                               const SizedBox(height: 35),
                                               BudgetPieChart(
-                                                  budgetMap: budgetMap,
-                                                  valuesAdded:
-                                                      budgetMap.isNotEmpty,
-                                                  colorList: colorList,
-                                                  color: colorList.isNotEmpty &&
-                                                          colorList[0] != null
-                                                      ? colorList[0]
-                                                      : Colors.black),
+                                                budgetMap: budgetMap,
+                                                valuesAdded:
+                                                    budgetMap.isNotEmpty,
+                                                colorList: colorList,
+                                              ),
                                             ],
                                           ),
                                           const SizedBox(
@@ -437,9 +434,16 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                               MainAxisAlignment.center,
                                           children: [
                                             ElevatedButton(
-                                                onPressed: openColorChoice,
-                                                child: Text(
-                                                    "Change Chart Colors")),
+                                              onPressed: () {
+                                                openColorChoice((newColorList) {
+                                                  setState(() {
+                                                    colorList = newColorList;
+                                                  });
+                                                });
+                                              },
+                                              child:
+                                                  Text("Change Chart Colors"),
+                                            ),
                                             SizedBox(
                                               width: 10,
                                             ),
@@ -616,6 +620,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   Future<String?> openAddToBudget() => showDialog<String>(
         context: scaffoldKey.currentContext!,
         builder: (context) {
+          bool isCustomColorSelected =
+              false; // Track if custom color is selected
+          Color customColor = Colors.green; // Initialize with a default color
+
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -656,9 +664,71 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                     TextField(
                       autofocus: true,
                       decoration: const InputDecoration(
-                          hintText: 'Enter your expense amount (i.e. \$25)',
-                          hintStyle: TextStyle()),
+                        hintText: 'Enter your expense amount (i.e. \$25)',
+                        hintStyle: TextStyle(),
+                      ),
                       controller: controller,
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isCustomColorSelected,
+                          onChanged: (bool? newValue) {
+                            setState(() {
+                              isCustomColorSelected = newValue ?? false;
+                            });
+                          },
+                        ),
+                        Text("Custom Color"),
+                        SizedBox(width: 10),
+                        if (isCustomColorSelected)
+                          ElevatedButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  Color selectedColor = customColor;
+                                  return AlertDialog(
+                                    title: Text("Select Custom Color"),
+                                    content: SingleChildScrollView(
+                                      child: ColorPicker(
+                                        pickerColor: selectedColor,
+                                        onColorChanged: (color) {
+                                          selectedColor = color;
+                                        },
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: Text("Cancel"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text("Apply"),
+                                        onPressed: () {
+                                          setState(() {
+                                            customColor = selectedColor;
+                                          });
+                                          colorList.insert(
+                                              budgetMap.length, selectedColor);
+                                          saveColorListToFirebase(
+                                              budgetName, colorList);
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            child: Text("Pick Color"),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -669,7 +739,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                       setState(() {
                         values_added = true;
                       });
-                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pop();
                     },
                     child: const Text("Submit", style: TextStyle()),
                   ),
@@ -711,9 +781,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     );
   }
 
-  String colorChoice = "Green";
+  String colorChoice = "Custom";
 
   final Map<String, List<Color>> colorMap = {
+    "Custom": customColorList,
     "Green": greenColorList,
     "Blue": blueColorList,
     "Orange": orangeColorList,
@@ -721,28 +792,52 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     "Black": blackColorList,
   };
 
-  List<String> colorOptions = ["Green", "Blue", "Orange", "Purple", "Black"];
+  List<String> colorOptions = [
+    "Custom",
+    "Green",
+    "Blue",
+    "Orange",
+    "Purple",
+    "Black"
+  ];
 
-  openColorChoice() {
-    return showDialog(
-        context: context,
-        builder: (context) {
+  void openColorChoice(void Function(List<Color>) updateColorList) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             title: const Text("Choose A Color Scheme"),
-            content: Column(children: [
-              DropdownButtonFormField<String>(
-                value: colorChoice,
-                items: colorOptions.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  colorChoice = newValue!;
-                },
-              ),
-            ]),
+            content: Column(
+              children: [
+                SizedBox(height: 10),
+                Column(
+                  children: budgetMap.keys.map((category) {
+                    final colorIndex =
+                        budgetMap.keys.toList().indexOf(category);
+                    final color = colorIndex != -1
+                        ? colorList[colorIndex]
+                        : Colors
+                            .black; // Replace 'defaultColor' with your default color
+                    return Column(
+                      children: <Widget>[
+                        CategoryColorWidget(
+                          budgetName: budgetName,
+                          category: category,
+                          colorList: colorList,
+                          index: colorIndex,
+                          color: color,
+                          onSelect: () {},
+                        ),
+                        SizedBox(
+                            height:
+                                10), // Adds spacing between CategoryColorWidgets
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
@@ -751,19 +846,24 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                 child: const Text("Cancel"),
               ),
               ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    colorList = colorMap[colorChoice] ??
-                        []; // Set colorList based on the chosen color
-                    saveColorListToFirebase(budgetName, colorList);
-                  });
+                onPressed: () async {
+                  // Perform actions based on the selected category and colorChoice
                   Navigator.of(context).pop(); // Close the dialog
+                  List<Color> currList =
+                      await getColorListFromFirebase(budgetName);
+                  print("current color list:");
+                  print(currList);
+                  setState(() {
+                    updateColorList(currList);
+                  });
                 },
                 child: const Text("Submit"),
               ),
             ],
           );
         });
+      },
+    );
   }
 
   void submit() {
@@ -805,13 +905,11 @@ class BudgetPieChart extends StatelessWidget {
   final Map<String, double> budgetMap;
   final bool valuesAdded;
   final List<Color> colorList;
-  final Color color;
 
   BudgetPieChart({
     required this.budgetMap,
     required this.valuesAdded,
     required this.colorList,
-    required this.color,
   });
 
   @override
@@ -838,7 +936,7 @@ class BudgetPieChart extends StatelessWidget {
       ringStrokeWidth: 35,
       centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-        color: color,
+        color: Colors.black,
         fontSize: 40,
       ),
       chartValuesOptions: ChartValuesOptions(
@@ -872,5 +970,81 @@ class BudgetPieChart extends StatelessWidget {
     });
 
     return double.parse(total.toStringAsFixed(2));
+  }
+}
+
+class CategoryColorWidget extends StatefulWidget {
+  final String category;
+  Color color;
+  final VoidCallback onSelect;
+  int index;
+  List<Color> colorList;
+  String budgetName;
+
+  CategoryColorWidget({
+    required this.category,
+    required this.color,
+    required this.onSelect,
+    required this.index,
+    required this.colorList,
+    required this.budgetName,
+  });
+
+  @override
+  _CategoryColorWidgetState createState() => _CategoryColorWidgetState();
+}
+
+class _CategoryColorWidgetState extends State<CategoryColorWidget> {
+  void changeColor(Color newColor) {
+    setState(() {
+      widget.color = newColor;
+      widget.colorList[widget.index] = newColor;
+      saveColorListToFirebase(widget.budgetName, widget.colorList);
+      widget.onSelect;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Pick a color'),
+              content: SingleChildScrollView(
+                child: ColorPicker(
+                  pickerColor: widget.color,
+                  onColorChanged: changeColor,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(widget.category),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

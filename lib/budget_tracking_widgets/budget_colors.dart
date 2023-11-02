@@ -15,6 +15,17 @@ final greenColorList = <Color>[
   getColorFromHex("#d3e7cf"),
 ];
 
+final customColorList = <Color>[
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+  getColorFromHex("#FFFFFF"),
+];
+
 final blueColorList = <Color>[
   getColorFromHex("#0099FF"),
   getColorFromHex("#33A1FF"),

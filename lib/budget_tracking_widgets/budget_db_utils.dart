@@ -378,6 +378,7 @@ Future<bool> deleteBudgetFromFirebase(String budgetName) async {
     await budgetReference.child("budgetMap").remove();
     await budgetReference.child('budgetName').remove();
     await budgetReference.child("expenses").remove();
+    await budgetReference.child("colorList").remove();
 
     return true; // Operation successful
   } catch (error) {
@@ -437,7 +438,6 @@ Future<bool> saveColorListToFirebase(
 
 Future<List<Color>> getColorListFromFirebase(String budgetName) async {
   if (currentUser == null) {
-    // You can choose to handle this case differently, such as throwing an error
     return [];
   }
 
@@ -459,7 +459,13 @@ Future<List<Color>> getColorListFromFirebase(String budgetName) async {
         List<Color> colorStrings =
             (dataMap['colorList'] as List<dynamic>).map((colorStr) {
           if (colorStr is String) {
-            return Color(int.parse(colorStr)); // Convert color string to Color
+            String hex = colorStr.substring(
+                8, colorStr.length - 1); // Remove the "0x" prefix
+            int? colorValue = int.tryParse(hex, radix: 16);
+
+            if (colorValue != null) {
+              return Color(colorValue);
+            }
           }
           return Colors.black; // Default color if parsing fails
         }).toList();
