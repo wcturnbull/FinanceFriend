@@ -56,6 +56,15 @@ class HomePage extends StatelessWidget {
     return title + ' is due on ' + duedate;
   }
 
+  Future<String> _getNotifPreview() async {
+    DataSnapshot notifState = await reference.child('users/${currentUser?.uid}/notifications/state').get();
+    if (notifState.value == 1) {
+      return 'You have new notifications!';
+    } else {
+      return 'You can view notifications here.';
+    }
+  }
+
   Future<String> _getProfilePreview() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
@@ -149,6 +158,12 @@ class HomePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                FutureBuilder(
+                    future: _getNotifPreview(),
+                    builder: ((context, snapshot) {
+                      String text = snapshot.data ?? '';
+                      return Text(text);
+                })),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/notifications');
