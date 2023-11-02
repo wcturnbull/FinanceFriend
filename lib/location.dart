@@ -37,10 +37,14 @@ class _LocationPageState extends State<LocationPage> {
 
   //Get current location using browser's geolocator
   void getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    getPlaceId(position.latitude, position.longitude);
-    print("position: ${position.toString()}");
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      getPlaceId(position.latitude, position.longitude);
+      print("position: ${position.toString()}");
+    } catch (e) {
+      print(e);
+    }
   }
 
   //Use Google Place API to get the place id of location
