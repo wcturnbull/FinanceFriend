@@ -3,9 +3,11 @@ import 'package:financefriend/create_account.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
 import 'package:financefriend/profile.dart';
+import 'package:financefriend/notifications.dart';
 import 'package:flutter/material.dart';
 import 'investment_page.dart'; // Import the InvestmentPage
 import 'tracking.dart'; // Import the TrackingPage
+import 'credit_card.dart'; // Import the CreditCardPage
 import 'login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -49,9 +51,11 @@ class MyApp extends StatelessWidget {
           '/create_account': (context) => CreateAccount(appState: appState),
           '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
-          '/home': (context) => const HomePage(),
+          '/credit_card': (context) => CreditCardPage(),
+          '/home': (context) => HomePage(),
           '/dashboard': (context) => BudgetTracking(),
           '/profile': (context) => Profile(),
+          '/notifications': (context) => const NotificationsPage(),
         });
   }
 }

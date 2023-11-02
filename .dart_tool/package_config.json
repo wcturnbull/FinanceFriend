@@ -80,6 +80,12 @@
       "languageVersion": "2.19"
     },
     {
+      "name": "data_table_2",
+      "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/data_table_2-2.5.8",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "desktop_webview_auth",
       "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/desktop_webview_auth-0.0.13",
       "packageUri": "lib/",
@@ -554,7 +560,7 @@
       "languageVersion": "3.1"
     }
   ],
-  "generated": "2023-10-05T18:11:06.608161Z",
+  "generated": "2023-10-28T18:30:13.299119Z",
   "generator": "pub",
   "generatorVersion": "3.1.1"
 }
