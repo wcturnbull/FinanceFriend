@@ -116,15 +116,18 @@ class _FFAppBarState extends State<FFAppBar> {
                       SwitchWidget(
                           label: 'All Notifications',
                           dbLocation: 'allNotifs',
-                          switched: _allNotifs),
+                          switched: _allNotifs,
+                          all: false),
                       SwitchWidget(
                           label: 'Bill Notifications',
                           dbLocation: 'billNotifs',
-                          switched: _billNotifs),
+                          switched: _billNotifs,
+                          all: _allNotifs),
                       SwitchWidget(
                           label: 'Location History Notifications',
                           dbLocation: 'locHistNotifs',
-                          switched: _locHistNotifs)
+                          switched: _locHistNotifs,
+                          all: _allNotifs)
                     ])),
               ]),
             ));
@@ -301,11 +304,11 @@ class _FFAppBarState extends State<FFAppBar> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Padding(
-                          padding: const EdgeInsets.all(8),
+                      const Padding(
+                          padding: EdgeInsets.all(8),
                           child: Text('Settings',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 32,
                               ))),
@@ -377,33 +380,60 @@ class SwitchWidget extends StatefulWidget {
   final String label;
   final String dbLocation;
   bool switched;
+  bool all;
 
   SwitchWidget(
-      {required this.label, required this.dbLocation, required this.switched});
+      {super.key,
+      required this.label,
+      required this.dbLocation,
+      required this.switched,
+      required this.all});
 
   @override
   _SwitchWidgetState createState() => _SwitchWidgetState();
 }
 
 class _SwitchWidgetState extends State<SwitchWidget> {
+  TimeOfDay selectedTime = TimeOfDay.now();
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
         padding: const EdgeInsets.all(8),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(widget.label),
-          Switch(
-            value: widget.switched,
-            onChanged: (bool value) {
-              setState(() {
-                widget.switched = value;
-                reference
-                    .child(
-                        'users/${currentUser?.uid}/settings/${widget.dbLocation}')
-                    .set(value);
-              });
-            },
-          )
+        child: Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(widget.label),
+            Switch(
+              value: widget.switched,
+              onChanged: (bool value) {
+                setState(() {
+                  widget.switched = value;
+                  reference
+                      .child(
+                          'users/${currentUser?.uid}/settings/${widget.dbLocation}')
+                      .set(value);
+                });
+              },
+            )
+          ]),
+          if (widget.dbLocation == 'locHistNotifs')
+            if (widget.switched)
+              ElevatedButton(
+                onPressed: () => _selectTime(context),
+                child: Text('Selected time: ${selectedTime.format(context)}'),
+              ),
         ]));
   }
 }

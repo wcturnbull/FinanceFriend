@@ -18,7 +18,7 @@ final userBudgetsReference =
     reference.child('users/${currentUser?.uid}/budgets');
 final currentUser = FirebaseAuth.instance.currentUser;
 
-class LocationCard extends StatefulWidget {
+class LocationCard extends StatelessWidget {
   final String locationName;
   final String locationAddress;
   final String date;
@@ -28,12 +28,57 @@ class LocationCard extends StatefulWidget {
       required this.locationName,
       required this.locationAddress});
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
-  _LocationCardState createState() => _LocationCardState();
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              locationName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              locationAddress,
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              date,
+              style: const TextStyle(fontSize: 16),
+            ),
+            Form(
+              key: _formKey,
+              child: LocationInput(
+                locationAddress: locationAddress,
+                locationName: locationName,
+                date: date,)
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _LocationCardState extends State<LocationCard> {
-  final _formKey = GlobalKey<FormState>();
+class LocationInput extends StatefulWidget {
+  final String locationName;
+  final String locationAddress;
+  final String date;
+
+  LocationInput(
+      {required this.date,
+      required this.locationName,
+      required this.locationAddress});
+
+  @override
+  _LocationInputState createState() => _LocationInputState();
+}
+
+class _LocationInputState extends State<LocationInput> {
   String selectedBudget = 'Select a Budget';
   String selectedCategory = 'Select a Category';
   TextEditingController expenseController = TextEditingController();
@@ -104,100 +149,71 @@ class _LocationCardState extends State<LocationCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              widget.locationName,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              widget.locationAddress,
-              style: const TextStyle(fontSize: 16),
-            ),
-            Text(
-              widget.date,
-              style: const TextStyle(fontSize: 16),
-            ),
-            Form(
-              key: _formKey,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextFormField(
-                      controller: expenseController,
-                      decoration:
-                          const InputDecoration(labelText: 'Enter a number'),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  Expanded(
-                    child: FutureBuilder<List<dynamic>>(
-                      future: getUserBudgets(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else {
-                          return DropdownButton<String>(
-                            value: selectedBudget,
-                            items: snapshot.data!
-                                .map<DropdownMenuItem<String>>((budget) {
-                              return DropdownMenuItem<String>(
-                                value: budget,
-                                child: Text(budget),
-                              );
-                            }).toList(),
-                            onChanged: (String? value) {
-                              setState(() {
-                                selectedBudget = value!;
-                              });
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: FutureBuilder<List<dynamic>>(
-                      future: getBudgetCategories(selectedBudget),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else {
-                          return DropdownButton<String>(
-                            value: selectedCategory,
-                            items: snapshot.data!
-                                .map<DropdownMenuItem<String>>((category) {
-                              return DropdownMenuItem<String>(
-                                value: category,
-                                child: Text(category),
-                              );
-                            }).toList(),
-                            onChanged: (String? value) {
-                              setState(() {
-                                selectedCategory = value!;
-                              });
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  ElevatedButton(
-                      onPressed: () => submitExpense(expenseController.text,
-                          selectedBudget, selectedCategory, context),
-                      child: const Text('Submit'))
-                ],
-              ),
-            ),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: expenseController,
+            decoration: const InputDecoration(labelText: 'Enter a number'),
+            keyboardType: TextInputType.number,
+          ),
         ),
-      ),
+        Expanded(
+          child: FutureBuilder<List<dynamic>>(
+            future: getUserBudgets(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else {
+                return DropdownButton<String>(
+                  value: selectedBudget,
+                  items: snapshot.data!.map<DropdownMenuItem<String>>((budget) {
+                    return DropdownMenuItem<String>(
+                      value: budget,
+                      child: Text(budget),
+                    );
+                  }).toList(),
+                  onChanged: (String? value) {
+                    setState(() {
+                      selectedBudget = value!;
+                    });
+                  },
+                );
+              }
+            },
+          ),
+        ),
+        Expanded(
+          child: FutureBuilder<List<dynamic>>(
+            future: getBudgetCategories(selectedBudget),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else {
+                return DropdownButton<String>(
+                  value: selectedCategory,
+                  items:
+                      snapshot.data!.map<DropdownMenuItem<String>>((category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (String? value) {
+                    setState(() {
+                      selectedCategory = value!;
+                    });
+                  },
+                );
+              }
+            },
+          ),
+        ),
+        ElevatedButton(
+            onPressed: () => submitExpense(expenseController.text,
+                selectedBudget, selectedCategory, context),
+            child: const Text('Submit'))
+      ],
     );
   }
 }
