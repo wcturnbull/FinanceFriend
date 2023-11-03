@@ -162,9 +162,25 @@ class _HomePageState extends State<HomePage> {
     }
 
     // If there are no budgets or any other condition that prevents showing them
-    return const Column(
-      children: [],
-    );
+    return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.black,
+            width: 2.0, // Adjust the border width as needed
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        height: 400,
+        width: 350,
+        margin: const EdgeInsets.all(50),
+        child: SingleChildScrollView(
+            child: Column(children: [
+          SizedBox(height: 10),
+          Text("Budgets:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          SizedBox(height: 150),
+          Text("Click \"Go to Budget Dashboard\" to add Budgets"),
+        ])));
   }
 
   @override
