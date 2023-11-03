@@ -92,25 +92,28 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<BudgetPieChart> _getBudgetPreview() async {
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot user = await userRef.get();
+
     DatabaseReference budgetRef =
         reference.child('users/${currentUser?.uid}/budgets/Default/budgetMap');
     DataSnapshot budget = await budgetRef.get();
     Map<String, dynamic> budgetData = budget.value as Map<String, dynamic>;
     Map<String, double> budgetMap = {};
-      budgetData.forEach((key, value) {
-        if (value is double) {
-          budgetMap[key] = value;
-        } else if (value is int) {
-          budgetMap[key] = value.toDouble();
-        } else if (value is String) {
-          budgetMap[key] = double.tryParse(value) ?? 0.0;
-        }
-      });
+    budgetData.forEach((key, value) {
+      if (value is double) {
+        budgetMap[key] = value;
+      } else if (value is int) {
+        budgetMap[key] = value.toDouble();
+      } else if (value is String) {
+        budgetMap[key] = double.tryParse(value) ?? 0.0;
+      }
+    });
     return BudgetPieChart(
-        budgetMap: budgetMap,
-        valuesAdded: budgetMap.isNotEmpty,
-        colorList: greenColorList,
-        );
+      budgetMap: budgetMap,
+      valuesAdded: budgetMap.isNotEmpty,
+      colorList: greenColorList,
+    );
   }
 
   @override
@@ -118,110 +121,129 @@ class _HomePageState extends State<HomePage> {
     final String? url = currentUser!.photoURL;
     return Scaffold(
         appBar: const FFAppBar(),
-        body: Column(
-          children: [
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
+        body: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
               children: [
-                ProfilePictureUpload(profileUrl: url as String, dash: true),
-                Text(
-                  'Welcome, ${currentUser?.displayName}!',
-                  style: const TextStyle(
-                      fontSize: 48, fontWeight: FontWeight.bold),
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ProfilePictureUpload(profileUrl: url as String, dash: true),
+                    Text(
+                      'Welcome, ${currentUser?.displayName}!',
+                      style: const TextStyle(
+                          fontSize: 48, fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    FutureBuilder(
+                        future: _getBudgetPreview(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            print('error: ${snapshot.error}');
+                          }
+                          return Container(
+                            child: snapshot.data,
+                          );
+                        }),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/investments');
+                          },
+                          child: const Text('Go to Investment Page'),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/dashboard');
+                          },
+                          child: const Text('Go to Budget Dashboard Page'),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/tracking');
+                          },
+                          child: const Text('Go to Bill Tracking Page'),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/credit_card');
+                          },
+                          child: const Text('Go to Credit Card Page'),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/notifications');
+                          },
+                          child: const Text("Go to Notification Page"),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/profile');
+                          },
+                          child: const Text("Go to Profile Page"),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/locations');
+                          },
+                          child: const Text("Go to Locations Page"),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/login');
+                          },
+                          child: const Text("Sign Out"),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                      ],
+                    ),
+                  ],
                 )
               ],
-            ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                FutureBuilder(
-                    future: _getBudgetPreview(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        print('error: ${snapshot.error}');
-                      }
-                      return Container(
-                        child: snapshot.data,
-                      );
-                    }),
-                Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/investments');
-                    },
-                    child: const Text('Go to Investment Page'),
-                  ),
-              const SizedBox(height: 16), //spacing
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/dashboard');
-                    },
-                    child: const Text('Go to Budget Dashboard Page'),
-                  ),
-              const SizedBox(height: 16), //spacing
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/tracking');
-                    },
-                    child: const Text('Go to Bill Tracking Page'),
-                  ),
-              const SizedBox(height: 16), //spacing
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/credit_card');
-                    },
-                    child: const Text('Go to Credit Card Page'),
-                  ),
-              const SizedBox(height: 16), //spacing
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/notifications');
-                    },
-                    child: const Text("Go to Notification Page"),
-                  ),
-              const SizedBox(height: 16), //spacing
-                  ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/profile');
-                    },
-                    child: const Text("Go to Profile Page"),
-                  ),
-              const SizedBox(height: 16), //spacing
-              ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/locations');
-                    },
-                    child: const Text("Go to Locations Page"),
-                  ),
-              const SizedBox(height: 16), //spacing
-              ElevatedButton(
-                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    child: const Text("Sign Out"),
-                  ),
-              const SizedBox(height: 16), //spacing
-            ],
-          ),
-          ],
-        )
-      ],
-    ));
+            )));
   }
 }
