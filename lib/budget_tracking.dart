@@ -683,7 +683,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                           },
                         ),
                         Text("Custom Color"),
-                        SizedBox(width: 10),
+                        SizedBox(width: 28),
                         if (isCustomColorSelected)
                           ElevatedButton(
                             onPressed: () {

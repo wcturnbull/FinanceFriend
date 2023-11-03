@@ -317,18 +317,9 @@ class _BudgetItemInputState extends State<BudgetItemInput> {
               visible: widget.customColors,
               child: Row(
                 children: [
-                  Container(
-                    width: 30, // Adjust the size as needed
-                    height: 30, // Adjust the size as needed
-                    decoration: BoxDecoration(
-                      color: selectedColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
                   SizedBox(width: 10),
-                  ElevatedButton(
-                    child: Text("Select Color"),
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -372,7 +363,15 @@ class _BudgetItemInputState extends State<BudgetItemInput> {
                         },
                       );
                     },
-                  ),
+                    child: Container(
+                      width: 40, // Set the desired size
+                      height: 40, // Set the desired size
+                      decoration: BoxDecoration(
+                        color: selectedColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  )
                 ],
               ),
             )
