@@ -33,7 +33,7 @@ class Login extends StatelessWidget {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    if(!user.hasChild('landing_page')) {
+    if (!user.hasChild('landing_page')) {
       return '/home';
     } else {
       DataSnapshot snapshot = await userRef.child('landing_page').get();
@@ -44,19 +44,19 @@ class Login extends StatelessWidget {
 
   void _resetPassword(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailControl.text.trim());
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: emailControl.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Reset email sent successfully!'),
+          content: Text('Reset email sent successfully!'),
         ),
       );
     } catch (e) {
       print('Password reset error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Password reset failed. Please verify that your email was entered correctly.'),
+          content: Text(
+              'Password reset failed. Please verify that your email was entered correctly.'),
         ),
       );
     }
@@ -64,81 +64,80 @@ class Login extends StatelessWidget {
 
   void _openPasswordResetter(BuildContext context) async {
     await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Stack(children: <Widget>[
-          Positioned(
-            right: -40,
-            top: -40,
-            child: InkResponse(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-              child: const CircleAvatar(
-                backgroundColor: Colors.red,
-                child: Icon(Icons.close),
-              ),
-            ),
-          ),
-          Form(
-              child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text(
-                        'Password Reset',
-                        textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                          ),
-                    )),
-                    const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(
-                            'Enter your email',
-                            style: TextStyle(fontSize: 20)
-                    )),
-                    Padding(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Stack(children: <Widget>[
+                Positioned(
+                  right: -40,
+                  top: -40,
+                  child: InkResponse(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close),
+                    ),
+                  ),
+                ),
+                Form(
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                      const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Password Reset',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                          )),
+                      const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Enter your email',
+                              style: TextStyle(fontSize: 20))),
+                      Padding(
                         padding: const EdgeInsets.all(8),
                         child: TextField(
                           controller: emailControl,
                           decoration: const InputDecoration(
                             labelText: 'Email',
                           ),
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            child: const Text('Submit'),
-                            onPressed: () {
-                              _resetPassword(context);
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          ElevatedButton(
-                            child: const Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                    )),
-              ]))
-        ]),
-      ));
+                      Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                child: const Text('Submit'),
+                                onPressed: () {
+                                  _resetPassword(context);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              ElevatedButton(
+                                child: const Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          )),
+                    ]))
+              ]),
+            ));
   }
 
   void _writeBillNotif(String billTitle, String dueDate) {
     String title = billTitle + ' is due soon!';
     String note = 'This bill is due on ' + dueDate;
     try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
       DatabaseReference newNotif = notifRef.push();
       newNotif.set({
         'title': title,
@@ -156,22 +155,27 @@ class Login extends StatelessWidget {
     //Check if user has notifications enabled
     if (hasAllNotifs.value == null) {
       userRef.child('settings/allNotifs').set(true);
-    }else if (!(hasAllNotifs.value as bool)) { 
+    } else if (!(hasAllNotifs.value as bool)) {
       return true;
     }
-    DataSnapshot hasBillNotifs = await userRef.child('settings/billNotifs').get();
+    DataSnapshot hasBillNotifs =
+        await userRef.child('settings/billNotifs').get();
     //Check if user has bill tracking notifications enabled
     if (hasBillNotifs.value == null) {
       userRef.child('settings/billNotifs').set(true);
-    }else if (hasBillNotifs.value as bool) { 
+    } else if (hasBillNotifs.value as bool) {
       DataSnapshot bills = await userRef.child('bills').get();
-      Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
-      billsMap.forEach((key, value) {
-        DateTime billDate = _parseDate(value['duedate'].toString());
-        if (billDate.isAfter(DateTime.now()) && billDate.difference(DateTime.now()).inDays <= 7) {
-          _writeBillNotif(value['title'].toString(), value['duedate'].toString());
-        }
-      });
+      if (bills.value != null) {
+        Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
+        billsMap.forEach((key, value) {
+          DateTime billDate = _parseDate(value['duedate'].toString());
+          if (billDate.isAfter(DateTime.now()) &&
+              billDate.difference(DateTime.now()).inDays <= 7) {
+            _writeBillNotif(
+                value['title'].toString(), value['duedate'].toString());
+          }
+        });
+      }
     }
     return true;
   }
