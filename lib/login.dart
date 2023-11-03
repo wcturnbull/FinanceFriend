@@ -155,15 +155,15 @@ class Login extends StatelessWidget {
     DataSnapshot hasAllNotifs = await userRef.child('settings/allNotifs').get();
     //Check if user has notifications enabled
     if (hasAllNotifs.value == null) {
-      userRef.child('settings/allNotifs').set(1);
-    }else if (hasAllNotifs.value == 0) { 
+      userRef.child('settings/allNotifs').set(true);
+    }else if (!(hasAllNotifs.value as bool)) { 
       return true;
     }
     DataSnapshot hasBillNotifs = await userRef.child('settings/billNotifs').get();
     //Check if user has bill tracking notifications enabled
     if (hasBillNotifs.value == null) {
-      userRef.child('settings/billNotifs').set(1);
-    }else if (hasBillNotifs.value == 1) { 
+      userRef.child('settings/billNotifs').set(true);
+    }else if (hasBillNotifs.value as bool) { 
       DataSnapshot bills = await userRef.child('bills').get();
       Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
       billsMap.forEach((key, value) {

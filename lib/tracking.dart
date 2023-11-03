@@ -47,15 +47,15 @@ class _TrackingPageState extends State<TrackingPage> {
     DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
     DataSnapshot settings = await settingsRef.get();
     if (!settings.hasChild('allNotifs')) {
-      settingsRef.child('allNotifs').set(1);
-    } else if (settings.child('allNotifs').value == 0) {
+      settingsRef.child('allNotifs').set(true);
+    } else if (!(settings.child('allNotifs').value as bool)) {
       return false;
     }
     if (!settings.hasChild('billNotifs')) {
-      settingsRef.child('billNotifs').set(1);
+      settingsRef.child('billNotifs').set(true);
       return true;
     } else {
-      return (settings.child('billNotifs').value == 1);
+      return (settings.child('billNotifs').value as bool);
     }
   }
 
@@ -167,9 +167,7 @@ class _TrackingPageState extends State<TrackingPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('bills')) {
-      return [
-        {'title': '', 'note': '', 'duedate': ''}
-      ];
+      return;
     }
 
     DataSnapshot bills = await userRef.child('bills').get();
@@ -434,105 +432,95 @@ class _TrackingPageState extends State<TrackingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: FFAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Calendar Start
-              Container(
-                child: TableCalendar(
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: _onDaySelected,
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2025),
-                  eventLoader: _getEventsForDay,
+    return Scaffold(
+      appBar: const FFAppBar(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Calendar Start
+            Container(
+              child: TableCalendar(
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
                 ),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2025),
+                eventLoader: _getEventsForDay,
               ),
+            ),
 
-              // Calendar End
-              Text('Bills', style: TextStyle(fontSize: 32)),
-              RefreshIndicator(
-                onRefresh: () async {
-                  return await _fetchBills();
-                },
-                child: FutureBuilder(
-                  future: _fetchBills(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      results = snapshot.data;
-                      if (snapshot.data.length != 0) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
+            // Calendar End
+            Text('Bills', style: TextStyle(fontSize: 32)),
+            RefreshIndicator(
+              onRefresh: () async {
+                return await _fetchBills();
+              },
+              child: FutureBuilder(
+                future: _fetchBills(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    results = snapshot.data;
+                    if (snapshot.data.length != 0) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: DataTable(
+                          headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.green,
                           ),
-                          child: DataTable(
-                            headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.green,
-                            ),
-                            columnSpacing: 30,
-                            columns: [
-                              DataColumn(label: Text('Title')),
-                              DataColumn(label: Text('Note')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(label: Text('Delete')),
-                            ],
-                            rows: List.generate(
-                              results.length,
-                              (index) => _getDataRow(
-                                index,
-                                results[index],
-                              ),
-                            ),
-                            showBottomBorder: true,
-                          ),
-                        );
-                      } else {
-                        return const Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: CircularProgressIndicator(),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.all(40),
-                              child: Text('No Data Found...'),
-                            ),
+                          columnSpacing: 30,
+                          columns: [
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Note')),
+                            DataColumn(label: Text('Due Date')),
+                            DataColumn(label: Text('Delete')),
                           ],
-                        );
-                      }
+                          rows: List.generate(
+                            results.length,
+                            (index) => _getDataRow(
+                              index,
+                              results[index],
+                            ),
+                          ),
+                          showBottomBorder: true,
+                        ),
+                      );
                     } else {
                       return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
                           Padding(
                             padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
+                            child: Text('You have no saved bills. Try adding one!'),
                           ),
                         ],
                       );
                     }
-                  },
-                ),
+                  } else {
+                    return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text('You have no saved bills. Try adding one!'),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
-              ElevatedButton(
-                onPressed: _openAddBillDialog,
-                child: const Text('Add Bill'),
-              )
-            ],
-          ),
+            ),
+            ElevatedButton(
+              onPressed: _openAddBillDialog,
+              child: const Text('Add Bill'),
+            )
+          ],
         ),
       ),
     );

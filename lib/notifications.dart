@@ -121,14 +121,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
+    return Scaffold(
       appBar: const FFAppBar(),
       body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Text('Notifications', style: TextStyle(fontSize: 32)),
-          FutureBuilder(
-              future: _fetchNotifs(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Notifications', style: TextStyle(fontSize: 32)),
+            FutureBuilder(
+              future: _fetchNotifs(), 
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   results = snapshot.data;
@@ -142,7 +143,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           (states) => Colors.green,
                         ),
                         columnSpacing: 30,
-                        columns: const [
+                        columns: [
                           DataColumn(label: Text('Title')),
                           DataColumn(label: Text('Note')),
                           DataColumn(label: Text('Delete')),
@@ -159,21 +160,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     );
                   } else {
                     return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
                         Padding(
                           padding: EdgeInsets.all(40),
-                          child: Text('No Data Found...'),
+                          child: Text('You have no notifications'),
                         ),
                       ],
                     );
                   }
                 } else {
                   return const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       SizedBox(
                         width: 30,
@@ -187,13 +185,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     ],
                   );
                 }
-              }),
-          ElevatedButton(
-            onPressed: _silenceNotifs,
-            child: const Text('Mark Notifications As Read'),
-          ),
-        ]),
+              }
+            ),
+            ElevatedButton(
+              onPressed: _silenceNotifs,
+              child: const Text('Mark Notifications As Read'),
+            ),
+          ]),
       ),
-    ));
+    );
   }
 }

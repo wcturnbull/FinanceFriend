@@ -70,13 +70,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
           const SizedBox(
             height: 10,
           ),
-          ElevatedButton(
-              onPressed: () {
-                addDefaultExpenses(context);
-                setState(() {});
-              },
-              child: const Text("[TESTING] auto populate transactions")),
-          const SizedBox(height: 10),
           Row(
             children: [
               const SizedBox(
@@ -118,52 +111,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
         ],
       ),
     );
-  }
-
-  void addDefaultExpenses(BuildContext context) {
-    widget.budget.expenses.add(Expense(
-        item: "McDonalds",
-        price: 10,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Panda Express",
-        price: 12,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "CFA Catering",
-        price: 120,
-        category: "Food",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Water Bill",
-        price: 40,
-        category: "Utilities",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Gas",
-        price: 30,
-        category: "Transportation",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Movie Tickets",
-        price: 25,
-        category: "Entertainment",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Stock Investment",
-        price: 50,
-        category: "Investments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-    widget.budget.expenses.add(Expense(
-        item: "Credit Card Payment",
-        price: 35,
-        category: "Debt Payments",
-        date: DateFormat('MM/dd/yyyy').format(DateTime.now())));
-
-    widget.onExpensesListChanged(widget.budget.expenses);
-    saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
   }
 
   Future<void> _openAddExpenseDialog(BuildContext context) async {
@@ -251,13 +198,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
       // Add the newExpense to the expensesList
       widget.budget.expenses.add(newExpense);
       saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
-
-      // Print the updated expensesList
-      print("Expenses List:");
-      for (Expense expense in widget.budget.expenses) {
-        print(
-            "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-      }
 
       // Clear text fields and selectedCategory
       itemController.clear();
@@ -350,13 +290,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
                   saveExpensesToFirebase(
                       widget.budget.budgetName, widget.budget.expenses);
 
-                  // Print the updated expensesList
-                  print("Expenses List after editing:");
-                  for (Expense expense in widget.budget.expenses) {
-                    print(
-                        "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-                  }
-
                   // Clear text fields and selectedCategory
                   editedItemController.clear();
                   editedPriceController.clear();
@@ -381,12 +314,6 @@ class _ExpenseTrackingState extends State<ExpenseTracking> {
     // Remove the expense from the expensesList
     widget.budget.expenses.remove(expenseToDelete);
 
-    // Print the updated expensesList
-    print("Expenses List after deleting:");
-    for (Expense expense in widget.budget.expenses) {
-      print(
-          "Item: ${expense.item}, Price: ${expense.price}, Category: ${expense.category}");
-    }
     widget.onExpensesListChanged(widget.budget.expenses);
     saveExpensesToFirebase(widget.budget.budgetName, widget.budget.expenses);
 
