@@ -434,81 +434,65 @@ class _TrackingPageState extends State<TrackingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: FFAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Calendar Start
-              Container(
-                child: TableCalendar(
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: _onDaySelected,
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2025),
-                  eventLoader: _getEventsForDay,
+    return Scaffold(
+      appBar: const FFAppBar(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Calendar Start
+            Container(
+              child: TableCalendar(
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
                 ),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2025),
+                eventLoader: _getEventsForDay,
               ),
+            ),
 
-              // Calendar End
-              Text('Bills', style: TextStyle(fontSize: 32)),
-              RefreshIndicator(
-                onRefresh: () async {
-                  return await _fetchBills();
-                },
-                child: FutureBuilder(
-                  future: _fetchBills(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      results = snapshot.data;
-                      if (snapshot.data.length != 0) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
+            // Calendar End
+            Text('Bills', style: TextStyle(fontSize: 32)),
+            RefreshIndicator(
+              onRefresh: () async {
+                return await _fetchBills();
+              },
+              child: FutureBuilder(
+                future: _fetchBills(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    results = snapshot.data;
+                    if (snapshot.data.length != 0) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: DataTable(
+                          headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.green,
                           ),
-                          child: DataTable(
-                            headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.green,
-                            ),
-                            columnSpacing: 30,
-                            columns: [
-                              DataColumn(label: Text('Title')),
-                              DataColumn(label: Text('Note')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(label: Text('Delete')),
-                            ],
-                            rows: List.generate(
-                              results.length,
-                              (index) => _getDataRow(
-                                index,
-                                results[index],
-                              ),
-                            ),
-                            showBottomBorder: true,
-                          ),
-                        );
-                      } else {
-                        return const Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: CircularProgressIndicator(),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.all(40),
-                              child: Text('No Data Found...'),
-                            ),
+                          columnSpacing: 30,
+                          columns: [
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Note')),
+                            DataColumn(label: Text('Due Date')),
+                            DataColumn(label: Text('Delete')),
                           ],
-                        );
-                      }
+                          rows: List.generate(
+                            results.length,
+                            (index) => _getDataRow(
+                              index,
+                              results[index],
+                            ),
+                          ),
+                          showBottomBorder: true,
+                        ),
+                      );
                     } else {
                       return const Row(
                         children: <Widget>[
@@ -524,15 +508,29 @@ class _TrackingPageState extends State<TrackingPage> {
                         ],
                       );
                     }
-                  },
-                ),
+                  } else {
+                    return const Row(
+                      children: <Widget>[
+                        SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text('No Data Found...'),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
-              ElevatedButton(
-                onPressed: _openAddBillDialog,
-                child: const Text('Add Bill'),
-              )
-            ],
-          ),
+            ),
+            ElevatedButton(
+              onPressed: _openAddBillDialog,
+              child: const Text('Add Bill'),
+            )
+          ],
         ),
       ),
     );

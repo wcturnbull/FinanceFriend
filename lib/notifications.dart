@@ -63,7 +63,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('notifications')) {
-      return;
+      return [
+        {'title': '', 'note': ''}
+      ];
     }
 
     DataSnapshot notifs = await userRef.child('notifications').get();
@@ -97,59 +99,43 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: FFAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Notifications', style: TextStyle(fontSize: 32)),
-              FutureBuilder(
-                future: _fetchNotifs(), 
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    results = snapshot.data;
-                    if (snapshot.data.length != 0) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+    return Scaffold(
+      appBar: const FFAppBar(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Notifications', style: TextStyle(fontSize: 32)),
+            FutureBuilder(
+              future: _fetchNotifs(), 
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  results = snapshot.data;
+                  if (snapshot.data.length != 0) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.green,
                         ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
-                          ),
-                          columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Delete')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
-                            ),
-                          ),
-                          showBottomBorder: true,
-                        ),
-                      );
-                    } else {
-                      return const Row(
-                        children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
-                          ),
+                        columnSpacing: 30,
+                        columns: [
+                          DataColumn(label: Text('Title')),
+                          DataColumn(label: Text('Note')),
+                          DataColumn(label: Text('Delete')),
                         ],
-                      );
-                    }
+                        rows: List.generate(
+                          results.length,
+                          (index) => _getDataRow(
+                            index,
+                            results[index],
+                          ),
+                        ),
+                        showBottomBorder: true,
+                      ),
+                    );
                   } else {
                     return const Row(
                       children: <Widget>[
@@ -165,15 +151,29 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       ],
                     );
                   }
+                } else {
+                  return const Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text('No Data Found...'),
+                      ),
+                    ],
+                  );
                 }
-              ),
-              ElevatedButton(
-                onPressed: _silenceNotifs,
-                child: const Text('Mark Notifications As Read'),
-              ),
-            ]),
-        ),
-      )
+              }
+            ),
+            ElevatedButton(
+              onPressed: _silenceNotifs,
+              child: const Text('Mark Notifications As Read'),
+            ),
+          ]),
+      ),
     );
   }
 }
