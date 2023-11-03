@@ -111,7 +111,7 @@ class CreateAccount extends StatelessWidget {
                         controller: confirmPasswordController),
                     Field(label: 'Name', controller: nameController),
                     Field(label: 'Bio', controller: bioController),
-                    ProfilePictureUpload(profileUrl: profileUrl),
+                    ProfilePictureUpload(profileUrl: profileUrl, dash: false),
                     GoalsList(goalChips: goalChips),
                     const SizedBox(height: 16.0),
                     ElevatedButton(

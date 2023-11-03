@@ -17,8 +17,11 @@ final DatabaseReference reference = database.ref();
 final userBudgetsReference =
     reference.child('users/${currentUser?.uid}/budgets');
 final currentUser = FirebaseAuth.instance.currentUser;
+String selectedBudget = 'Select a Budget';
+String selectedCategory = 'Select a Category';
+TextEditingController expenseController = TextEditingController();
 
-class LocationCard extends StatelessWidget {
+class LocationCard extends StatefulWidget {
   final String locationName;
   final String locationAddress;
   final String date;
@@ -28,87 +31,12 @@ class LocationCard extends StatelessWidget {
       required this.locationName,
       required this.locationAddress});
 
+  @override
+  State<LocationCard> createState() => _LocationCardState();
+}
+
+class _LocationCardState extends State<LocationCard> {
   final _formKey = GlobalKey<FormState>();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              locationName,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              locationAddress,
-              style: const TextStyle(fontSize: 16),
-            ),
-            Text(
-              date,
-              style: const TextStyle(fontSize: 16),
-            ),
-            Form(
-              key: _formKey,
-              child: LocationInput(
-                locationAddress: locationAddress,
-                locationName: locationName,
-                date: date,)
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class LocationInput extends StatefulWidget {
-  final String locationName;
-  final String locationAddress;
-  final String date;
-
-  LocationInput(
-      {required this.date,
-      required this.locationName,
-      required this.locationAddress});
-
-  @override
-  _LocationInputState createState() => _LocationInputState();
-}
-
-class _LocationInputState extends State<LocationInput> {
-  String selectedBudget = 'Select a Budget';
-  String selectedCategory = 'Select a Category';
-  TextEditingController expenseController = TextEditingController();
-
-  Future<List> getUserBudgets() async {
-    DataSnapshot budgetsSnapshot = await userBudgetsReference.get();
-    List<dynamic> budgets = ['Select a Budget'];
-
-    if (budgetsSnapshot.exists) {
-      Map<dynamic, dynamic> budgetMap = budgetsSnapshot.value as Map;
-      budgets.addAll(budgetMap.keys);
-    }
-    print(budgets);
-
-    return budgets;
-  }
-
-  Future<List> getBudgetCategories(String budget) async {
-    DataSnapshot categoriesSnapshot =
-        await userBudgetsReference.child('$budget/budgetMap').get();
-    List<dynamic> categories = ['Select a Category'];
-
-    if (categoriesSnapshot.exists) {
-      Map<dynamic, dynamic> categoryMap = categoriesSnapshot.value as Map;
-      categories.addAll(categoryMap.keys);
-    }
-    print(categories);
-
-    return categories;
-  }
 
   Future<void> submitExpense(final amount, String budget, String category,
       BuildContext context) async {
@@ -138,6 +66,26 @@ class _LocationInputState extends State<LocationInput> {
               reference.child('users/${currentUser?.uid}/locations');
           locationsRef.child('${widget.locationName}:${widget.date}').remove();
         }
+        DatabaseReference notifRef =
+            reference.child('users/${currentUser?.uid}/notifications');
+        DataSnapshot notifSnap = await notifRef.get();
+        Map<String, dynamic> notifsMap =
+            notifSnap.value as Map<String, dynamic>;
+
+        bool delete = false;
+        String mapKey = '';
+        notifsMap.forEach((key, value) {
+          if (key != 'state' && key != 'notifTime') {
+            if (value['note'].toString() ==
+                '${widget.date}: ${widget.locationAddress}') {
+              delete = true;
+              mapKey = key.toString();
+            }
+          }
+        });
+        if (delete) {
+          notifRef.child(mapKey).remove();
+        }
       } catch (e1) {
         print('Error: $e1');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -145,6 +93,86 @@ class _LocationInputState extends State<LocationInput> {
         );
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              widget.locationName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.locationAddress,
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              widget.date,
+              style: const TextStyle(fontSize: 16),
+            ),
+            Form(
+                key: _formKey,
+                child: LocationInput(
+                  locationAddress: widget.locationAddress,
+                  locationName: widget.locationName,
+                  date: widget.date,
+                  deleteNotif: () => submitExpense(expenseController.text,
+                      selectedBudget, selectedCategory, context),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LocationInput extends StatefulWidget {
+  final String locationName;
+  final String locationAddress;
+  final String date;
+  final VoidCallback deleteNotif;
+
+  LocationInput(
+      {required this.date,
+      required this.locationName,
+      required this.locationAddress,
+      required this.deleteNotif});
+
+  @override
+  _LocationInputState createState() => _LocationInputState();
+}
+
+class _LocationInputState extends State<LocationInput> {
+  Future<List> getUserBudgets() async {
+    DataSnapshot budgetsSnapshot = await userBudgetsReference.get();
+    List<dynamic> budgets = ['Select a Budget'];
+
+    if (budgetsSnapshot.exists) {
+      Map<dynamic, dynamic> budgetMap = budgetsSnapshot.value as Map;
+      budgets.addAll(budgetMap.keys);
+    }
+    print(budgets);
+
+    return budgets;
+  }
+
+  Future<List> getBudgetCategories(String budget) async {
+    DataSnapshot categoriesSnapshot =
+        await userBudgetsReference.child('$budget/budgetMap').get();
+    List<dynamic> categories = ['Select a Category'];
+
+    if (categoriesSnapshot.exists) {
+      Map<dynamic, dynamic> categoryMap = categoriesSnapshot.value as Map;
+      categories.addAll(categoryMap.keys);
+    }
+    print(categories);
+
+    return categories;
   }
 
   @override
@@ -210,9 +238,7 @@ class _LocationInputState extends State<LocationInput> {
           ),
         ),
         ElevatedButton(
-            onPressed: () => submitExpense(expenseController.text,
-                selectedBudget, selectedCategory, context),
-            child: const Text('Submit'))
+            onPressed: () => widget.deleteNotif(), child: const Text('Submit'))
       ],
     );
   }

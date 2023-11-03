@@ -11,6 +11,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'notifications.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -74,6 +75,41 @@ class _LocationPageState extends State<LocationPage> {
         userLocationReference
             .child(json['result']['name'] + ':${formatted.toString()}')
             .set(json['result']['formatted_address']);
+        try {
+          DatabaseReference notifRef =
+              reference.child('users/${currentUser?.uid}/notifications');
+          DatabaseReference settingsRef = reference
+              .child('users/${currentUser?.uid}/settings/locHistNotifs');
+
+          DataSnapshot snapshot = await settingsRef.get();
+          DataSnapshot notifSnap = await notifRef.get();
+
+          Map<String, dynamic> notifsMap =
+              notifSnap.value as Map<String, dynamic>;
+
+          bool result = true;
+          notifsMap.forEach((key, value) {
+            if (key != 'state' && key != 'notifTime') {
+              print(value['note'].toString());
+              if (value['note'].toString() ==
+                  '${formatted.toString()}: ${json['result']['formatted_address']}') {
+                result = false;
+              }
+            }
+          });
+
+          if (snapshot.value.toString() == 'true' && result == true) {
+            DatabaseReference newNotif = notifRef.push();
+            newNotif.set({
+              'title': 'Location: ${json['result']['name']}',
+              'note':
+                  '${formatted.toString()}: ${json['result']['formatted_address']}',
+            });
+          }
+        } catch (error) {
+          print(error);
+        }
+        break;
       }
     }
   }

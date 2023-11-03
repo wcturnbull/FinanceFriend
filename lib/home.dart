@@ -1,8 +1,14 @@
+import 'package:financefriend/budget_tracking_widgets/budget_colors.dart';
 import 'package:financefriend/ff_appbar.dart';
+import 'package:financefriend/profile_picture_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
+import 'package:financefriend/budget_tracking.dart';
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
+import 'dart:js' as js;
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -11,9 +17,14 @@ final database = FirebaseDatabase.instanceFor(
 final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   String _getInvestmentsPreview() {
     return 'Your investments can be found here!';
   }
@@ -57,7 +68,9 @@ class HomePage extends StatelessWidget {
   }
 
   Future<String> _getNotifPreview() async {
-    DataSnapshot notifState = await reference.child('users/${currentUser?.uid}/notifications/state').get();
+    DataSnapshot notifState = await reference
+        .child('users/${currentUser?.uid}/notifications/state')
+        .get();
     if (notifState.value == 1) {
       return 'You have new notifications!';
     } else {
@@ -78,130 +91,137 @@ class HomePage extends StatelessWidget {
     }
   }
 
+  Future<BudgetPieChart> _getBudgetPreview() async {
+    DatabaseReference budgetRef =
+        reference.child('users/${currentUser?.uid}/budgets/Default/budgetMap');
+    DataSnapshot budget = await budgetRef.get();
+    Map<String, dynamic> budgetData = budget.value as Map<String, dynamic>;
+    Map<String, double> budgetMap = {};
+      budgetData.forEach((key, value) {
+        if (value is double) {
+          budgetMap[key] = value;
+        } else if (value is int) {
+          budgetMap[key] = value.toDouble();
+        } else if (value is String) {
+          budgetMap[key] = double.tryParse(value) ?? 0.0;
+        }
+      });
+    return BudgetPieChart(
+        budgetMap: budgetMap,
+        valuesAdded: budgetMap.isNotEmpty,
+        colorList: greenColorList,
+        color: greenColorList[0]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final String? url = currentUser!.photoURL;
     return Scaffold(
-      appBar: const FFAppBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+        appBar: const FFAppBar(),
+        body: Column(
+          children: [
+            const SizedBox(height: 40),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(_getInvestmentsPreview()),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/investments');
-                  },
-                  child: const Text('Go to Investment Page'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FutureBuilder(
-                    future: _getBudgetsPreview(),
-                    builder: ((context, snapshot) {
-                      String text = snapshot.data ?? '';
-                      return Text(text);
-                    })),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/dashboard');
-                  },
-                  child: const Text('Go to Budget Dashboard Page'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FutureBuilder(
-                    future: _getTrackingPreview(),
-                    builder: ((context, snapshot) {
-                      String text = snapshot.data ?? '';
-                      return Text(text);
-                    })),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/tracking');
-                  },
-                  child: const Text('Go to Bill Tracking Page'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(''),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/credit_card');
-                  },
-                  child: const Text('Go to Credit Card Page'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FutureBuilder(
-                    future: _getNotifPreview(),
-                    builder: ((context, snapshot) {
-                      String text = snapshot.data ?? '';
-                      return Text(text);
-                })),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/notifications');
-                  },
-                  child: const Text("Go to Notification Page"),
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ProfilePictureUpload(profileUrl: url as String, dash: true),
+                Text(
+                  'Welcome, ${currentUser?.displayName}!',
+                  style: const TextStyle(
+                      fontSize: 48, fontWeight: FontWeight.bold),
                 )
               ],
             ),
-            const SizedBox(height: 16), //spacing
+            const SizedBox(height: 40),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
                 FutureBuilder(
-                    future: _getProfilePreview(),
-                    builder: ((context, snapshot) {
-                      String text = snapshot.data ?? '';
-                      return Text(text);
-                    })),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/profile');
-                  },
-                  child: const Text("Go to Profile Page"),
-                ),
-                
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/locations');
-                  },
-                  child: const Text("Go to Locations Page"),
-                ),
-            const SizedBox(height: 16), //spacing
-            ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: const Text("Sign Out"),
-                ),
-            const SizedBox(height: 16), //spacing
+                    future: _getBudgetPreview(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        print('error: ${snapshot.error}');
+                      }
+                      return Container(
+                        child: snapshot.data,
+                      );
+                    }),
+                Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/investments');
+                    },
+                    child: const Text('Go to Investment Page'),
+                  ),
+              const SizedBox(height: 16), //spacing
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/dashboard');
+                    },
+                    child: const Text('Go to Budget Dashboard Page'),
+                  ),
+              const SizedBox(height: 16), //spacing
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/tracking');
+                    },
+                    child: const Text('Go to Bill Tracking Page'),
+                  ),
+              const SizedBox(height: 16), //spacing
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/credit_card');
+                    },
+                    child: const Text('Go to Credit Card Page'),
+                  ),
+              const SizedBox(height: 16), //spacing
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/notifications');
+                    },
+                    child: const Text("Go to Notification Page"),
+                  ),
+              const SizedBox(height: 16), //spacing
+                  ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/profile');
+                    },
+                    child: const Text("Go to Profile Page"),
+                  ),
+              const SizedBox(height: 16), //spacing
+              ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/locations');
+                    },
+                    child: const Text("Go to Locations Page"),
+                  ),
+              const SizedBox(height: 16), //spacing
+              ElevatedButton(
+                    style: const ButtonStyle(fixedSize: MaterialStatePropertyAll(Size(300.0, 50.0))),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: const Text("Sign Out"),
+                  ),
+              const SizedBox(height: 16), //spacing
+            ],
+          ),
           ],
-        ),
-      ),
-    );
+        )
+      ],
+    ));
   }
 }

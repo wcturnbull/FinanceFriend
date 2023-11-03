@@ -23,7 +23,8 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   void _writeNotif(String title, String note) {
     try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
       DatabaseReference newNotif = notifRef.push();
       newNotif.set({
         'title': title,
@@ -37,7 +38,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   void _silenceNotifs() {
     try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
       notifRef.child('state').set(0);
     } catch (error) {
       print(error);
@@ -46,7 +48,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   void _deleteNotif(String id) async {
     try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
       notifRef.child(id).remove();
       DataSnapshot notifs = await notifRef.get();
       if (notifs.children.length <= 1) {
@@ -70,7 +73,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     Map<String, dynamic> notifsMap = notifs.value as Map<String, dynamic>;
     results = [];
     notifsMap.forEach((key, value) {
-      if (key != 'state') {
+      if (key != 'state' && key != 'notifTime') {
         results.add({
           'id': key.toString(),
           'title': value['title'].toString(),
@@ -83,73 +86,77 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   DataRow _getDataRow(index, data) {
-    return DataRow(
-      cells: <DataCell>[
-        DataCell(Text(data['title'])),
-        DataCell(Text(data['note'])),
-        DataCell(IconButton(
-          icon: Image.asset('images/DeleteButton.png'),
-          onPressed: () => _deleteNotif(data['id']),
-        )),
-      ],
-    );
+    if (data['title'].split(': ')[0] == "Location") {
+      return DataRow(
+        cells: <DataCell>[
+          DataCell(Text(data['title'])),
+          DataCell(Text(data['note'])),
+          DataCell(/*TextField(
+            decoration: const InputDecoration(labelText: 'Enter a number'),
+            onSubmitted: (value) {
+              
+            },
+          )*/
+          LocationInput(date: data['note'].split(': ')[0],
+          locationAddress: data['note'].split(': ')[1],
+          locationName: data['title'].split(': ')[1],
+          deleteNotif: () => _deleteNotif(data['id']),
+          )
+          ),
+        ],
+      );
+    } else {
+      return DataRow(
+        cells: <DataCell>[
+          DataCell(Text(data['title'])),
+          DataCell(Text(data['note'])),
+          DataCell(IconButton(
+            icon: Image.asset('images/DeleteButton.png'),
+            onPressed: () => _deleteNotif(data['id']),
+          )),
+        ],
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: FFAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Notifications', style: TextStyle(fontSize: 32)),
-              FutureBuilder(
-                future: _fetchNotifs(), 
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    results = snapshot.data;
-                    if (snapshot.data.length != 0) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+        home: Scaffold(
+      appBar: const FFAppBar(),
+      body: Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('Notifications', style: TextStyle(fontSize: 32)),
+          FutureBuilder(
+              future: _fetchNotifs(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  results = snapshot.data;
+                  if (snapshot.data.length != 0) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.green,
                         ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
-                          ),
-                          columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Delete')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
-                            ),
-                          ),
-                          showBottomBorder: true,
-                        ),
-                      );
-                    } else {
-                      return const Row(
-                        children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
-                          ),
+                        columnSpacing: 30,
+                        columns: const [
+                          DataColumn(label: Text('Title')),
+                          DataColumn(label: Text('Note')),
+                          DataColumn(label: Text('Delete')),
                         ],
-                      );
-                    }
+                        rows: List.generate(
+                          results.length,
+                          (index) => _getDataRow(
+                            index,
+                            results[index],
+                          ),
+                        ),
+                        showBottomBorder: true,
+                      ),
+                    );
                   } else {
                     return const Row(
                       children: <Widget>[
@@ -165,15 +172,28 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       ],
                     );
                   }
+                } else {
+                  return const Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text('No Data Found...'),
+                      ),
+                    ],
+                  );
                 }
-              ),
-              ElevatedButton(
-                onPressed: _silenceNotifs,
-                child: const Text('Mark Notifications As Read'),
-              ),
-            ]),
-        ),
-      )
-    );
+              }),
+          ElevatedButton(
+            onPressed: _silenceNotifs,
+            child: const Text('Mark Notifications As Read'),
+          ),
+        ]),
+      ),
+    ));
   }
 }

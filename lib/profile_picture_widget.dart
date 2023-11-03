@@ -7,11 +7,10 @@ import 'package:file_picker/file_picker.dart';
 
 class ProfilePictureUpload extends StatefulWidget {
   String profileUrl;
+  final bool dash;
 
-  ProfilePictureUpload({
-    super.key,
-    required this.profileUrl,
-  });
+  ProfilePictureUpload(
+      {super.key, required this.profileUrl, required this.dash});
 
   @override
   _ProfilePictureUploadState createState() => _ProfilePictureUploadState();
@@ -54,12 +53,14 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
 
   @override
   Widget build(BuildContext context) {
+    double radius = 50.0;
+    if (widget.dash) radius = 100.0;
     return Column(
       children: [
         const SizedBox(height: 16.0),
         _imageFile != null
             ? CircleAvatar(
-                radius: 50.0,
+                radius: radius,
                 backgroundImage: _imageFile!,
               )
             : const CircleAvatar(
@@ -72,6 +73,7 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
                 ),
               ),
         const SizedBox(height: 10.0),
+        if (!widget.dash) 
         ElevatedButton(
           onPressed: _getImage,
           child: const Text('Select Profile Picture'),

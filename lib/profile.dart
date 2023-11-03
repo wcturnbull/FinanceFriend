@@ -44,7 +44,7 @@ class _ProfileState extends State<Profile> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ProfilePictureUpload(profileUrl: url),
+                        ProfilePictureUpload(profileUrl: url, dash: false),
                         Text('${currentUser!.displayName}',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
