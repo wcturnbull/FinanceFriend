@@ -355,6 +355,8 @@ Future<bool> updateBudgetNameInFirebase(
 
     await newBudgetReference.child('budgetName').set(newBudgetName);
     await newBudgetReference.child('budgetMap').set(temp.budgetMap);
+
+    saveColorListToFirebase(newBudgetName, temp.colorList);
     saveExpensesToFirebase(newBudgetName, temp.expenses);
 
     return true; // Operation successful
