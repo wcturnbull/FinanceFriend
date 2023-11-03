@@ -1,3 +1,4 @@
+import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_colors.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/profile_picture_widget.dart';
@@ -9,6 +10,8 @@ import 'package:intl/intl.dart';
 import 'package:financefriend/budget_tracking.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 import 'dart:js' as js;
+
+import 'package:pie_chart/pie_chart.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -95,25 +98,26 @@ class _HomePageState extends State<HomePage> {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    DatabaseReference budgetRef =
-        reference.child('users/${currentUser?.uid}/budgets/Default/budgetMap');
-    DataSnapshot budget = await budgetRef.get();
-    Map<String, dynamic> budgetData = budget.value as Map<String, dynamic>;
-    Map<String, double> budgetMap = {};
-    budgetData.forEach((key, value) {
-      if (value is double) {
-        budgetMap[key] = value;
-      } else if (value is int) {
-        budgetMap[key] = value.toDouble();
-      } else if (value is String) {
-        budgetMap[key] = double.tryParse(value) ?? 0.0;
-      }
-    });
-    return BudgetPieChart(
-      budgetMap: budgetMap,
-      valuesAdded: budgetMap.isNotEmpty,
-      colorList: greenColorList,
-    );
+    final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
+
+    DatabaseEvent event = await budgetsRef.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<String, dynamic> budgetData1 = snapshot.value as Map<String, dynamic>;
+
+      List<String> budgetKeys = budgetData1.keys.toList();
+
+      Budget currBudge = await getBudgetFromFirebaseByName(budgetKeys[0]);
+
+      return BudgetPieChart(
+        budgetMap: currBudge.budgetMap,
+        valuesAdded: currBudge.budgetMap.isNotEmpty,
+        colorList: currBudge.colorList,
+      );
+    } else {
+      return PieChart(dataMap: {"": 0.0}) as BudgetPieChart;
+    }
   }
 
   @override
