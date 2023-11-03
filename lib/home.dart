@@ -81,7 +81,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FFAppBar(),
+      appBar: const FFAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -108,6 +108,12 @@ class HomePage extends StatelessWidget {
                       String text = snapshot.data ?? '';
                       return Text(text);
                     })),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/dashboard');
+                  },
+                  child: const Text('Go to Budget Dashboard Page'),
+                ),
               ],
             ),
             const SizedBox(height: 16), //spacing
@@ -125,19 +131,6 @@ class HomePage extends StatelessWidget {
                     Navigator.pushNamed(context, '/tracking');
                   },
                   child: const Text('Go to Bill Tracking Page'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16), //spacing
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text(''),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/dashboard');
-                  },
-                  child: const Text('Go to Graph Dashboard Page'),
                 ),
               ],
             ),
@@ -200,12 +193,12 @@ class HomePage extends StatelessWidget {
                 ),
             const SizedBox(height: 16), //spacing
             ElevatedButton(
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text('Sign Out'),
-            ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: const Text("Sign Out"),
+                ),
+            const SizedBox(height: 16), //spacing
           ],
         ),
       ),

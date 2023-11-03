@@ -42,48 +42,6 @@ class Login extends StatelessWidget {
     }
   }
 
-  void _writeBillNotif(String billTitle, String dueDate) {
-    String title = billTitle + ' is due soon!';
-    String note = 'This bill is due on ' + dueDate;
-    try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
-      DatabaseReference newNotif = notifRef.push();
-      newNotif.set({
-        'title': title,
-        'note': note,
-      });
-      notifRef.child('state').set(1);
-    } catch (error) {
-      print('Error writing bill notification: $error');
-    }
-  }
-
-  Future<bool> _checkNotifs() async {
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot hasAllNotifs = await userRef.child('settings/allNotifs').get();
-    //Check if user has notifications enabled
-    if (hasAllNotifs.value == null) {
-      userRef.child('settings/allNotifs').set(1);
-    }else if (hasAllNotifs.value == 0) { 
-      return true;
-    }
-    DataSnapshot hasBillNotifs = await userRef.child('settings/billNotifs').get();
-    //Check if user has bill tracking notifications enabled
-    if (hasBillNotifs.value == null) {
-      userRef.child('settings/billNotifs').set(1);
-    }else if (hasBillNotifs.value == 1) { 
-      DataSnapshot bills = await userRef.child('bills').get();
-      Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
-      billsMap.forEach((key, value) {
-        DateTime billDate = _parseDate(value['duedate'].toString());
-        if (billDate.isAfter(DateTime.now()) && billDate.difference(DateTime.now()).inDays <= 7) {
-          _writeBillNotif(value['title'].toString(), value['duedate'].toString());
-        }
-      });
-    }
-    return true;
-  }
-
   void _resetPassword(BuildContext context) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: emailControl.text.trim());
@@ -174,6 +132,48 @@ class Login extends StatelessWidget {
               ]))
         ]),
       ));
+  }
+
+  void _writeBillNotif(String billTitle, String dueDate) {
+    String title = billTitle + ' is due soon!';
+    String note = 'This bill is due on ' + dueDate;
+    try {
+      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference newNotif = notifRef.push();
+      newNotif.set({
+        'title': title,
+        'note': note,
+      });
+      notifRef.child('state').set(1);
+    } catch (error) {
+      print('Error writing bill notification: $error');
+    }
+  }
+
+  Future<bool> _checkNotifs() async {
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot hasAllNotifs = await userRef.child('settings/allNotifs').get();
+    //Check if user has notifications enabled
+    if (hasAllNotifs.value == null) {
+      userRef.child('settings/allNotifs').set(1);
+    }else if (hasAllNotifs.value == 0) { 
+      return true;
+    }
+    DataSnapshot hasBillNotifs = await userRef.child('settings/billNotifs').get();
+    //Check if user has bill tracking notifications enabled
+    if (hasBillNotifs.value == null) {
+      userRef.child('settings/billNotifs').set(1);
+    }else if (hasBillNotifs.value == 1) { 
+      DataSnapshot bills = await userRef.child('bills').get();
+      Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
+      billsMap.forEach((key, value) {
+        DateTime billDate = _parseDate(value['duedate'].toString());
+        if (billDate.isAfter(DateTime.now()) && billDate.difference(DateTime.now()).inDays <= 7) {
+          _writeBillNotif(value['title'].toString(), value['duedate'].toString());
+        }
+      });
+    }
+    return true;
   }
 
   Future<void> _handleLogin(BuildContext context) async {

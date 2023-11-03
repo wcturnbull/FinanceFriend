@@ -20,8 +20,6 @@ class FFAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _FFAppBarState extends State<FFAppBar> {
-  final _formKey = GlobalKey<FormState>();
-
   bool _allNotifs = true;
   bool _billNotifs = true;
   bool _locHistNotifs = true;
@@ -135,225 +133,243 @@ class _FFAppBarState extends State<FFAppBar> {
 
   void _openAccountSaver(BuildContext context) async {
     await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-              content: Stack(children: <Widget>[
-                Positioned(
-                  right: -40,
-                  top: -40,
-                  child: InkResponse(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.close),
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Stack(children: <Widget>[
+          Positioned(
+            right: -40,
+            top: -40,
+            child: InkResponse(
+              onTap: () => Navigator.of(context).pop(),
+              child: const CircleAvatar(
+                backgroundColor: Colors.red,
+                child: Icon(Icons.close),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+            const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                    'Are you sure that you would like to delete your account?',
+                    style: TextStyle(fontSize: 20)
+            )),
+            const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                    'This action is permanent and cannot be reversed.',
+                    style: TextStyle(fontSize: 20)
+            )),
+            Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      child: const Text(
+                          'Delete Account'),
+                      onPressed: () {
+                        _deleteUser();
+                        Navigator.of(context).pop();
+                        Navigator.pushNamed(context,'/login');
+                      },
                     ),
-                  ),
-                ),
-                Form(
-                    child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                      const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                              'Are you sure that you would like to delete your account?',
-                              style: TextStyle(fontSize: 20))),
-                      const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                              'This action is permanent and cannot be reversed.',
-                              style: TextStyle(fontSize: 20))),
-                      Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                child: const Text('Delete Account'),
-                                onPressed: () {
-                                  _deleteUser();
-                                  Navigator.of(context).pop();
-                                  Navigator.pushNamed(context, '/login');
-                                },
-                              ),
-                              ElevatedButton(
-                                child: const Text('Cancel'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          )),
-                    ]))
-              ]),
-            ));
+                    ElevatedButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                )),
+          ])
+        ]),
+      ));
   }
 
   void _openLandingChanger(BuildContext context) async {
     await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-                content: Stack(children: <Widget>[
-              Positioned(
-                right: -40,
-                top: -40,
-                child: InkResponse(
-                  onTap: () {
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Stack(
+            children: <Widget>[
+          Positioned(
+            right: -40,
+            top: -40,
+            child: InkResponse(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child:
+                  const CircleAvatar(
+                backgroundColor:
+                    Colors.red,
+                child: Icon(
+                    Icons.close),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                  'Choose which page you want to see when you login',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                  )),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Default Homepage'),
+                  onPressed: () {
+                    _setLandingPage('/home');
                     Navigator.of(context).pop();
-                  },
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.red,
-                    child: Icon(Icons.close),
-                  ),
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Investments Page'),
+                  onPressed: () {
+                    _setLandingPage('/investments');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Bill Tracking Page'),
+                  onPressed: () {
+                    _setLandingPage('/tracking');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Budget Page'),
+                  onPressed: () {
+                    _setLandingPage('/budgets');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Profile Page'),
+                  onPressed: () {
+                    _setLandingPage('/profile');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Graph Page'),
+                  onPressed: () {
+                    _setLandingPage('/dashboard');
+                    Navigator.of(context).pop();
+                  }),
+              ),
+            ])
+        ])));
+  }
+
+  void _openSettings(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Stack(
+          children: <Widget>[
+            Positioned(
+              right: -40,
+              top: -40,
+              child: InkResponse(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: const CircleAvatar(
+                  backgroundColor: Colors.red,
+                  child: Icon(Icons.close),
                 ),
               ),
-              Form(
-                  child:
-                      Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
                 const Padding(
                   padding: EdgeInsets.all(8),
-                  child:
-                      Text('Choose which page you want to see when you login',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          )),
+                  child: Text('Settings',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                      ))
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
-                      child: const Text('Default Homepage'),
-                      onPressed: () {
-                        _setLandingPage('/home');
-                        Navigator.of(context).pop();
-                      }),
+                    child: const Text('Set Custom Homepage'),
+                    onPressed: () => _openLandingChanger(context)
+                  )
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
-                      child: const Text('Investments Page'),
-                      onPressed: () {
-                        _setLandingPage('/investments');
-                        Navigator.of(context).pop();
-                      }),
+                    child: const Text('Notifications Settings'),
+                    onPressed: () {
+                      _getAllNotifs();
+                      _openNotifsSettings(context);
+                    }
+                  )
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
-                      child: const Text('Bill Tracking Page'),
-                      onPressed: () {
-                        _setLandingPage('/tracking');
-                        Navigator.of(context).pop();
-                      }),
+                    child: const Text('Delete Account'),
+                    onPressed: () => _openAccountSaver(context),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
-                      child: const Text('Budget Page'),
-                      onPressed: () {
-                        _setLandingPage('/budgets');
-                        Navigator.of(context).pop();
-                      }),
+                    child: const Text('Sign Out'),
+                    onPressed: () {
+                      FirebaseAuth.instance.signOut();
+                      Navigator.pushNamed(context, '/login');
+                    },
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: ElevatedButton(
-                      child: const Text('Profile Page'),
-                      onPressed: () {
-                        _setLandingPage('/profile');
-                        Navigator.of(context).pop();
-                      }),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: ElevatedButton(
-                      child: const Text('Graph Page'),
-                      onPressed: () {
-                        _setLandingPage('/dashboard');
-                        Navigator.of(context).pop();
-                      }),
-                ),
-              ]))
-            ])));
-  }
-
-  void _openSettings(BuildContext context) async {
-    await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-                content: Stack(
-              children: <Widget>[
-                Positioned(
-                  right: -40,
-                  top: -40,
-                  child: InkResponse(
-                    onTap: () {
+                    child: const Text('Close'),
+                    onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.close),
-                    ),
                   ),
-                ),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Settings',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 32,
-                              ))),
-                      Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: ElevatedButton(
-                              child: const Text('Set Custom Homepage'),
-                              onPressed: () => _openLandingChanger(context))),
-                      Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: ElevatedButton(
-                              child: const Text('Notifications Settings'),
-                              onPressed: () {
-                                _getAllNotifs();
-                                _openNotifsSettings(context);
-                              })),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Delete Account'),
-                          onPressed: () => _openAccountSaver(context),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          child: const Text('Close'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+                )
               ],
-            )));
+            ),
+          ],
+        )
+      )
+    );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
       leading: IconButton(
-        icon: Image.asset('images/FFLogo.png', height: 100),
+        icon: Image.asset('images/FFLogo.png'),
         onPressed: () => Navigator.pushNamed(context, '/home'),
       ),
       title: const Text(
@@ -368,7 +384,7 @@ class _FFAppBarState extends State<FFAppBar> {
       centerTitle: true,
       actions: <Widget>[
         IconButton(
-          icon: Image.asset('images/Settings.png', height: 100),
+          icon: Image.asset('images/Settings.png'),
           onPressed: () => _openSettings(context),
         ),
       ],
