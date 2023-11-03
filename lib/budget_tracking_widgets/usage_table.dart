@@ -1,4 +1,5 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
+import 'package:financefriend/graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
@@ -135,13 +136,19 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
           DataColumn(label: Text("Category")),
           DataColumn(label: Text("Percentage")),
           DataColumn(label: Text("Dollar Amount")),
+          //DataColumn(label: Text("Dollar Allowance"))
         ],
         rows: categoryUsageMap.entries.map((entry) {
+          String percentage_str = "${entry.value.toStringAsFixed(2)}%";
+          if (entry.value >= 100) {
+            percentage_str = "\u26A0\uFE0F Over Budget!";
+          }
           return DataRow(cells: [
             DataCell(Text(entry.key)),
-            DataCell(Text("${entry.value.toStringAsFixed(2)}%")),
+            DataCell(Text("${percentage_str}")),
             DataCell(Text(
-                "\$${widget.expensesList.where((expense) => expense.category == entry.key).fold(0, (prev, expense) => prev + expense.price.toInt()).toStringAsFixed(2)}"))
+                "\$${widget.expensesList.where((expense) => expense.category == entry.key).fold(0, (prev, expense) => prev + expense.price.toInt()).toStringAsFixed(2)}")),
+            //DataCell(Text("\$${widget.budget.budgetMap[entry.key]}")),
           ]);
         }).toList(),
       ),
@@ -157,10 +164,18 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
 
     final List<Widget> pieCharts = [];
 
-    final Map<String, double> overallDataMap = {
-      "Spent": totalExpenses,
-      "Available": totalBudget - totalExpenses,
-    };
+    final Map<String, double> overallDataMap;
+    if (totalExpenses >= 100) {
+      overallDataMap = {
+        "Spent": 100,
+        "Available": 0,
+      };
+    } else {
+      overallDataMap = {
+        "Spent": totalExpenses,
+        "Available": totalBudget - totalExpenses,
+      };
+    }
 
     pieCharts.add(
       Column(
@@ -208,10 +223,18 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
 
     categoryUsageMap.forEach((category, usage) {
       if (usage > 0) {
-        final Map<String, double> dataMap = {
-          "Spent": usage,
-          "Available": 100 - usage,
-        };
+        final Map<String, double> dataMap;
+        if (usage <= 100) {
+          dataMap = {
+            "Spent": usage,
+            "Available": 100 - usage,
+          };
+        } else {
+          dataMap = {
+            "Spent": 100,
+            "Available": 0,
+          };
+        }
         pieCharts.add(
           Column(
             children: [
@@ -277,10 +300,18 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
     final List<Widget> donutCharts = [];
 
     // Create a chart for overall expenses vs. overall budget
-    final Map<String, double> overallDataMap = {
-      "Spent": totalExpenses,
-      "Available": totalBudget - totalExpenses,
-    };
+    final Map<String, double> overallDataMap;
+    if (totalExpenses >= 100) {
+      overallDataMap = {
+        "Spent": 100,
+        "Available": 0,
+      };
+    } else {
+      overallDataMap = {
+        "Spent": totalExpenses,
+        "Available": totalBudget - totalExpenses,
+      };
+    }
 
     donutCharts.add(Container(
       margin: const EdgeInsets.all(10), // 20px margin around the donut chart
@@ -303,8 +334,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
             chartType: ChartType.ring,
             ringStrokeWidth: 20,
             colorList: [
-              Color(
-                  int.parse("#871224".substring(1, 7), radix: 16) + 0xFF000000),
+              Colors.red,
               Colors.green,
             ],
             centerText:
@@ -322,11 +352,33 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
     ));
 
     categoryUsageMap.forEach((category, usage) {
+      String usage_str = usage.toStringAsFixed(2) + "%";
       if (usage > 0) {
-        final Map<String, double> dataMap = {
-          "Spent": usage,
-          "Available": 100 - usage,
-        };
+        final Map<String, double> dataMap;
+        List<Color> colorList = [];
+        if (usage <= 100) {
+          dataMap = {
+            "Spent": usage,
+            "Available": 100 - usage,
+          };
+        } else {
+          print("GREATER THAN 100");
+          usage = 100;
+          usage_str = "\u26A0\uFE0F\n>100%";
+          dataMap = {
+            "Spent": usage,
+            "Available": 100 - usage,
+          };
+        }
+        if (usage <= 49) {
+          colorList = [Colors.green, Colors.transparent];
+        } else if (usage <= 74) {
+          colorList = [Colors.yellow, Colors.transparent];
+        } else if (usage <= 89) {
+          colorList = [Colors.orange, Colors.transparent];
+        } else {
+          colorList = [Colors.red, Colors.transparent];
+        }
         donutCharts.add(Container(
           margin:
               const EdgeInsets.all(10), // 20px margin around the donut chart
@@ -343,20 +395,16 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
               PieChart(
                 dataMap: dataMap,
                 animationDuration: const Duration(milliseconds: 800),
-                chartLegendSpacing: 80,
                 chartRadius: 80,
                 initialAngleInDegree: 0,
                 chartType: ChartType.ring,
                 ringStrokeWidth: 20,
-                colorList: [
-                  Color(int.parse("#871224".substring(1, 7), radix: 16) +
-                      0xFF000000),
-                  Colors.green,
-                ],
-                centerText: "${usage.toStringAsFixed(2)}%",
+                colorList: colorList,
+                centerText: "${usage_str}",
+                legendOptions: LegendOptions(showLegends: false),
                 chartValuesOptions: const ChartValuesOptions(
                   showChartValues: false,
-                  showChartValuesInPercentage: true,
+                  showChartValuesInPercentage: false,
                   showChartValueBackground: false,
                   decimalPlaces: 0,
                   chartValueStyle: TextStyle(fontSize: 16),
@@ -383,15 +431,6 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
   Map<String, double> calculateCategoryUsage() {
     final Map<String, double> categoryUsageMap = {};
 
-    // Calculate the total budget amount
-    double totalBudget =
-        widget.budget.budgetMap.values.fold(0, (prev, amount) => prev + amount);
-
-    // Calculate the total expenses amount
-    double totalExpenses =
-        widget.expensesList.fold(0, (prev, expense) => prev + expense.price);
-
-    // Calculate the percentage of each category used
     widget.budget.budgetMap.forEach((category, budgetAmount) {
       double expensesAmount = widget.expensesList
           .where((expense) => expense.category == category)

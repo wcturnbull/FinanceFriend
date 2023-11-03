@@ -1,15 +1,17 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
+import 'package:financefriend/budget_tracking_widgets/wishlist.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:financefriend/budget_tracking_widgets/budget_db_utils.dart';
 import 'budget_tracking_widgets/budget_creation.dart';
 import 'budget_tracking_widgets/expense_tracking.dart';
 import 'budget_tracking_widgets/usage_table.dart';
 import 'budget_tracking_widgets/budget_category.dart';
-import 'budget_tracking_widgets/budget_db_utils.dart';
 import 'budget_tracking_widgets/budget_colors.dart';
 
 class BudgetTracking extends StatefulWidget {
@@ -31,19 +33,39 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   bool budgetCreated = false;
 
   List<Expense> expenseList = <Expense>[];
+  List<Color> colorList = <Color>[];
 
   Map<String, double> budgetMap = {};
+
   double budgetAmount = 0;
   String budgetName = "";
 
   List<String> budgetList = [];
+  List<WishListItem> wishlistLoaded = [];
 
   @override
   void initState() {
     super.initState();
     controller = TextEditingController();
+    loadBudgetListFromDB();
     getBudgetListFromFirebase(); // Fetch the list of budget names
+    loadWishlistFromDB();
   }
+
+  Future<void> loadWishlistFromDB() async {
+    print("loading wishlist");
+    if (currentUser == null) {
+      return;
+    }
+
+    List<WishListItem> tempWishList = await getWishlistFromDB();
+    print(tempWishList);
+    setState(() {
+      wishlistLoaded = tempWishList;
+    });
+  }
+
+  Future<void> loadBudgetListFromDB() async {}
 
   Future<void> getBudgetListFromFirebase() async {
     if (currentUser == null) {
@@ -78,16 +100,19 @@ class _BudgetTrackingState extends State<BudgetTracking> {
       budgetName = selectedBudgetName;
       budgetMap = {}; // Clear the current budget map
       budgetCreated = false; // Reset budgetCreated to indicate loading
+      colorList = greenColorList;
     });
 
     // Fetch the selected budget data and update your UI
     getBudgetFromFirebaseByName(selectedBudgetName).then((selectedBudget) {
       if (selectedBudget != null) {
         print(selectedBudget.expenses);
+        print("ColorList:");
         setState(() {
           budgetMap = selectedBudget.budgetMap;
           expenseList = selectedBudget.expenses;
           budgetName = selectedBudget.budgetName;
+          colorList = selectedBudget.colorList;
           budgetCreated = true; // Set budgetCreated to true when data is loaded
           // Load other budget-related data as needed
         });
@@ -99,6 +124,18 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     }).catchError((error) {
       print("Error fetching budget data: $error");
       // Handle the error. You might want to show an error message to the user.
+    });
+
+    getWishlistFromDB().then((wishlist) {
+      if (wishlist != null) {
+        setState(() {
+          wishlistLoaded = wishlist;
+        });
+      } else {
+        print("Error locating wishlist");
+      }
+    }).catchError((error) {
+      print("Error locating error: $error");
     });
   }
 
@@ -174,8 +211,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   final Color color =
       Color(int.parse("#248712".substring(1, 7), radix: 16) + 0xFF0000000);
 
-  List<Color> colorList = greenColorList;
-
   List<String> dropdownItems = [
     "Select Category",
     "Housing",
@@ -209,7 +244,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
         ),
         body: Row(
           children: [
-            Container(
+            AnimatedContainer(
+                duration: Duration(seconds: 2),
                 width: 300,
                 color: Colors.white,
                 child: Column(
@@ -220,46 +256,21 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                     Column(children: [
                       ElevatedButton(
                         onPressed: () {
-                          setState(() {
-                            budgetMap = {
-                              "Housing": 250,
-                              "Utilities": 250,
-                              "Food": 150,
-                              "Transportation": 140,
-                              "Entertainment": 120,
-                              "Investments": 50,
-                              "Debt Payments": 40
-                            };
-                            budgetName = "Default";
-                            createBudgetInFirebase(Budget(
-                                budgetName: budgetName,
-                                budgetMap: budgetMap,
-                                expenses: []));
-
-                            // print("printing budget:");
-                            // print((await getBudgetMapFromFirebase()).toString());
-                            // You can also set other values here if needed.
-                          });
-                        },
-                        child: const Text("Set Default Budget"),
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
                           showDialog(
                             context: context,
                             builder: (context) {
                               return BudgetCreationPopup(onBudgetCreated:
                                   (Map<String, double> budgetMap,
-                                      String budgetName) {
+                                      String budgetName,
+                                      List<Color> colorListRecieved) {
                                 // Step 1: Create the budget in Firebase
 
                                 createBudgetInFirebase(Budget(
-                                    budgetName: budgetName,
-                                    budgetMap: budgetMap,
-                                    expenses: [])).then((result) {
+                                        budgetName: budgetName,
+                                        budgetMap: budgetMap,
+                                        expenses: [],
+                                        colorList: colorListRecieved))
+                                    .then((result) {
                                   if (result == true) {
                                     // Step 2: Update local state after Firebase operation is successful
                                     setState(() {
@@ -267,6 +278,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                       this.budgetName = budgetName;
                                       budgetCreated = true;
                                       this.budgetList.add(budgetName);
+                                      this.colorList = colorListRecieved;
                                     });
                                   } else {
                                     // Handle error or show an error message
@@ -302,6 +314,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                               visible: budgetMap.isNotEmpty,
                               child: Center(
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     const SizedBox(
                                       height: 10,
@@ -384,7 +398,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                                 valuesAdded:
                                                     budgetMap.isNotEmpty,
                                                 colorList: colorList,
-                                                color: colorList[0],
                                               ),
                                             ],
                                           ),
@@ -405,7 +418,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                                 budget: Budget(
                                                     budgetMap: budgetMap,
                                                     budgetName: budgetName,
-                                                    expenses: expenseList),
+                                                    expenses: expenseList,
+                                                    colorList: colorList),
                                                 expensesList: expenseList,
                                               )
                                             ],
@@ -414,15 +428,32 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                       ),
                                     ),
                                     const SizedBox(height: 35),
-                                    Builder(
-                                      builder: (BuildContext context) {
-                                        return ElevatedButton(
-                                          onPressed: openBudgetTable,
-                                          child: const Text(
-                                              "View/Edit Current Budget",
-                                              style: TextStyle()),
-                                        );
-                                      },
+                                    Center(
+                                      child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                openColorChoice((newColorList) {
+                                                  setState(() {
+                                                    colorList = newColorList;
+                                                  });
+                                                });
+                                              },
+                                              child:
+                                                  Text("Change Chart Colors"),
+                                            ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: openBudgetTable,
+                                              child: const Text(
+                                                  "View/Edit Current Budget",
+                                                  style: TextStyle()),
+                                            ),
+                                          ]),
                                     ),
                                     const SizedBox(height: 35),
                                   ],
@@ -441,7 +472,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                         budget: Budget(
                                             budgetMap: budgetMap,
                                             expenses: expenseList,
-                                            budgetName: budgetName),
+                                            budgetName: budgetName,
+                                            colorList: colorList),
                                         dropdownItems: dropdownItems,
                                         onExpensesListChanged:
                                             (updatedExpensesList) {
@@ -459,7 +491,14 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                             const SizedBox(
                               height: 35,
                             ),
-                            Text("test"),
+                            WishList(
+                              budget: Budget(
+                                  budgetMap: budgetMap,
+                                  budgetName: budgetName,
+                                  expenses: expenseList,
+                                  colorList: colorList),
+                              wishlist: wishlistLoaded,
+                            ),
                             SizedBox(
                               height: 35,
                             ),
@@ -581,6 +620,10 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   Future<String?> openAddToBudget() => showDialog<String>(
         context: scaffoldKey.currentContext!,
         builder: (context) {
+          bool isCustomColorSelected =
+              false; // Track if custom color is selected
+          Color customColor = Colors.green; // Initialize with a default color
+
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -621,9 +664,71 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                     TextField(
                       autofocus: true,
                       decoration: const InputDecoration(
-                          hintText: 'Enter your expense amount (i.e. \$25)',
-                          hintStyle: TextStyle()),
+                        hintText: 'Enter your expense amount (i.e. \$25)',
+                        hintStyle: TextStyle(),
+                      ),
                       controller: controller,
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isCustomColorSelected,
+                          onChanged: (bool? newValue) {
+                            setState(() {
+                              isCustomColorSelected = newValue ?? false;
+                            });
+                          },
+                        ),
+                        Text("Custom Color"),
+                        SizedBox(width: 28),
+                        if (isCustomColorSelected)
+                          ElevatedButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  Color selectedColor = customColor;
+                                  return AlertDialog(
+                                    title: Text("Select Custom Color"),
+                                    content: SingleChildScrollView(
+                                      child: ColorPicker(
+                                        pickerColor: selectedColor,
+                                        onColorChanged: (color) {
+                                          selectedColor = color;
+                                        },
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: Text("Cancel"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text("Apply"),
+                                        onPressed: () {
+                                          setState(() {
+                                            customColor = selectedColor;
+                                          });
+                                          colorList.insert(
+                                              budgetMap.length, selectedColor);
+                                          saveColorListToFirebase(
+                                              budgetName, colorList);
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            child: Text("Pick Color"),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -634,7 +739,7 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                       setState(() {
                         values_added = true;
                       });
-                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pop();
                     },
                     child: const Text("Submit", style: TextStyle()),
                   ),
@@ -655,7 +760,8 @@ class _BudgetTrackingState extends State<BudgetTracking> {
               budget: Budget(
                   budgetMap: budgetMap,
                   budgetName: budgetName,
-                  expenses: expenseList),
+                  expenses: expenseList,
+                  colorList: colorList),
               onBudgetUpdate: (updatedBudgetMap) async {
                 bool updateResult =
                     await updateBudgetInFirebase(budgetName, updatedBudgetMap);
@@ -671,6 +777,91 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                 }
               },
             ));
+      },
+    );
+  }
+
+  String colorChoice = "Custom";
+
+  final Map<String, List<Color>> colorMap = {
+    "Custom": customColorList,
+    "Green": greenColorList,
+    "Blue": blueColorList,
+    "Orange": orangeColorList,
+    "Purple": purpleColorList,
+    "Black": blackColorList,
+  };
+
+  List<String> colorOptions = [
+    "Custom",
+    "Green",
+    "Blue",
+    "Orange",
+    "Purple",
+    "Black"
+  ];
+
+  void openColorChoice(void Function(List<Color>) updateColorList) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("Choose A Color Scheme"),
+            content: Column(
+              children: [
+                SizedBox(height: 10),
+                Column(
+                  children: budgetMap.keys.map((category) {
+                    final colorIndex =
+                        budgetMap.keys.toList().indexOf(category);
+                    final color = colorIndex != -1
+                        ? colorList[colorIndex]
+                        : Colors
+                            .black; // Replace 'defaultColor' with your default color
+                    return Column(
+                      children: <Widget>[
+                        CategoryColorWidget(
+                          budgetName: budgetName,
+                          category: category,
+                          colorList: colorList,
+                          index: colorIndex,
+                          color: color,
+                          onSelect: () {},
+                        ),
+                        SizedBox(
+                            height:
+                                10), // Adds spacing between CategoryColorWidgets
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Perform actions based on the selected category and colorChoice
+                  Navigator.of(context).pop(); // Close the dialog
+                  List<Color> currList =
+                      await getColorListFromFirebase(budgetName);
+                  print("current color list:");
+                  print(currList);
+                  setState(() {
+                    updateColorList(currList);
+                  });
+                },
+                child: const Text("Submit"),
+              ),
+            ],
+          );
+        });
       },
     );
   }
@@ -714,13 +905,11 @@ class BudgetPieChart extends StatelessWidget {
   final Map<String, double> budgetMap;
   final bool valuesAdded;
   final List<Color> colorList;
-  final Color color;
 
   BudgetPieChart({
     required this.budgetMap,
     required this.valuesAdded,
     required this.colorList,
-    required this.color,
   });
 
   @override
@@ -747,7 +936,7 @@ class BudgetPieChart extends StatelessWidget {
       ringStrokeWidth: 35,
       centerText: formattedTotalBudget,
       centerTextStyle: TextStyle(
-        color: color,
+        color: Colors.black,
         fontSize: 40,
       ),
       chartValuesOptions: ChartValuesOptions(
@@ -781,5 +970,81 @@ class BudgetPieChart extends StatelessWidget {
     });
 
     return double.parse(total.toStringAsFixed(2));
+  }
+}
+
+class CategoryColorWidget extends StatefulWidget {
+  final String category;
+  Color color;
+  final VoidCallback onSelect;
+  int index;
+  List<Color> colorList;
+  String budgetName;
+
+  CategoryColorWidget({
+    required this.category,
+    required this.color,
+    required this.onSelect,
+    required this.index,
+    required this.colorList,
+    required this.budgetName,
+  });
+
+  @override
+  _CategoryColorWidgetState createState() => _CategoryColorWidgetState();
+}
+
+class _CategoryColorWidgetState extends State<CategoryColorWidget> {
+  void changeColor(Color newColor) {
+    setState(() {
+      widget.color = newColor;
+      widget.colorList[widget.index] = newColor;
+      saveColorListToFirebase(widget.budgetName, widget.colorList);
+      widget.onSelect;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Pick a color'),
+              content: SingleChildScrollView(
+                child: ColorPicker(
+                  pickerColor: widget.color,
+                  onColorChanged: changeColor,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(widget.category),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
