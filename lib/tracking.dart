@@ -47,15 +47,15 @@ class _TrackingPageState extends State<TrackingPage> {
     DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
     DataSnapshot settings = await settingsRef.get();
     if (!settings.hasChild('allNotifs')) {
-      settingsRef.child('allNotifs').set(1);
-    } else if (settings.child('allNotifs').value == 0) {
+      settingsRef.child('allNotifs').set(true);
+    } else if (!(settings.child('allNotifs').value as bool)) {
       return false;
     }
     if (!settings.hasChild('billNotifs')) {
-      settingsRef.child('billNotifs').set(1);
+      settingsRef.child('billNotifs').set(true);
       return true;
     } else {
-      return (settings.child('billNotifs').value == 1);
+      return (settings.child('billNotifs').value as bool);
     }
   }
 
@@ -167,9 +167,7 @@ class _TrackingPageState extends State<TrackingPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('bills')) {
-      return [
-        {'title': '', 'note': '', 'duedate': ''}
-      ];
+      return;
     }
 
     DataSnapshot bills = await userRef.child('bills').get();
@@ -495,30 +493,22 @@ class _TrackingPageState extends State<TrackingPage> {
                       );
                     } else {
                       return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
                           Padding(
                             padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
+                            child: Text('You have no saved bills. Try adding one!'),
                           ),
                         ],
                       );
                     }
                   } else {
                     return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
                         Padding(
                           padding: EdgeInsets.all(40),
-                          child: Text('No Data Found...'),
+                          child: Text('You have no saved bills. Try adding one!'),
                         ),
                       ],
                     );

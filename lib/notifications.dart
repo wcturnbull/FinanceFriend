@@ -63,9 +63,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('notifications')) {
-      return [
-        {'title': '', 'note': ''}
-      ];
+      return;
     }
 
     DataSnapshot notifs = await userRef.child('notifications').get();
@@ -138,21 +136,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     );
                   } else {
                     return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
                         Padding(
                           padding: EdgeInsets.all(40),
-                          child: Text('No Data Found...'),
+                          child: Text('You have no notifications'),
                         ),
                       ],
                     );
                   }
                 } else {
                   return const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       SizedBox(
                         width: 30,
