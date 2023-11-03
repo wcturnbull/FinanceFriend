@@ -180,9 +180,24 @@ class HomePage extends StatelessWidget {
                     Navigator.pushNamed(context, '/profile');
                   },
                   child: const Text("Go to Profile Page"),
-                )
+                ),
+                
               ],
             ),
+            const SizedBox(height: 16), //spacing
+            ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/locations');
+                  },
+                  child: const Text("Go to Locations Page"),
+                ),
+            const SizedBox(height: 16), //spacing
+            ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: const Text("Sign Out"),
+                ),
             const SizedBox(height: 16), //spacing
           ],
         ),

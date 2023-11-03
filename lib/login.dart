@@ -46,7 +46,7 @@ class Login extends StatelessWidget {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: emailControl.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
               Text('Reset email sent successfully!'),
         ),
@@ -54,7 +54,7 @@ class Login extends StatelessWidget {
     } catch (e) {
       print('Password reset error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
               Text('Password reset failed. Please verify that your email was entered correctly.'),
         ),
@@ -101,10 +101,10 @@ class Login extends StatelessWidget {
                             style: TextStyle(fontSize: 20)
                     )),
                     Padding(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         child: TextField(
                           controller: emailControl,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: 'Email',
                           ),
                       ),
@@ -189,7 +189,7 @@ class Login extends StatelessWidget {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
               Text('Authentication failed. Please check your credentials.'),
         ),

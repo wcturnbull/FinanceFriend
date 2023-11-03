@@ -2,6 +2,7 @@ import 'package:financefriend/budget_tracking.dart';
 import 'package:financefriend/create_account.dart';
 import 'package:financefriend/graph_page.dart';
 import 'package:financefriend/home.dart';
+import 'package:financefriend/location.dart';
 import 'package:financefriend/profile.dart';
 import 'package:financefriend/notifications.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'app_state.dart'; // new
+import 'location.dart';
 
 Future<void> main() async {
   await Firebase.initializeApp(
@@ -53,9 +55,10 @@ class MyApp extends StatelessWidget {
           '/investments': (context) => InvestmentPage(),
           '/tracking': (context) => const TrackingPage(),
           '/credit_card': (context) => CreditCardPage(),
-          '/home': (context) => HomePage(),
+          '/home': (context) => const HomePage(),
           '/dashboard': (context) => BudgetTracking(),
-          '/profile': (context) => Profile(),
+          '/profile': (context) => const Profile(),
+          '/locations': (context) => const LocationPage(),
           '/notifications': (context) => const NotificationsPage(),
         });
   }

@@ -22,7 +22,6 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
-    print(currentUser?.photoURL);
     final url = currentUser?.photoURL as String;
 
     return Scaffold(
@@ -86,7 +85,6 @@ class _GoalsListState extends State<GoalsList> {
   }
 
   void initializeGoalChips() async {
-    print('initializing goalChips: ${goalChips.toString()}');
     final userGoalsReference =
         reference.child('users/${currentUser?.uid}/goals');
     try {

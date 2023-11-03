@@ -10,7 +10,7 @@ final database = FirebaseDatabase.instanceFor(
 final reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-class FFAppBar extends StatefulWidget implements PreferredSizeWidget{
+class FFAppBar extends StatefulWidget implements PreferredSizeWidget {
   const FFAppBar({super.key});
 
   @override
@@ -22,6 +22,7 @@ class FFAppBar extends StatefulWidget implements PreferredSizeWidget{
 class _FFAppBarState extends State<FFAppBar> {
   bool _allNotifs = true;
   bool _billNotifs = true;
+  bool _locHistNotifs = true;
 
   Future<void> _deleteUser() async {
     try {
@@ -35,7 +36,10 @@ class _FFAppBarState extends State<FFAppBar> {
 
   void _setLandingPage(String path) async {
     try {
-      reference.child('users/${currentUser?.uid}').child('landing_page').set(path);
+      reference
+          .child('users/${currentUser?.uid}')
+          .child('landing_page')
+          .set(path);
     } catch (error) {
       print("Error setting landing page: $error");
     }
@@ -43,20 +47,28 @@ class _FFAppBarState extends State<FFAppBar> {
 
   void _getAllNotifs() async {
     try {
-      DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+      DatabaseReference settingsRef =
+          reference.child('users/${currentUser?.uid}').child('settings');
       DataSnapshot settings = await settingsRef.get();
       if (!settings.hasChild('allNotifs')) {
-        settingsRef.child('allNotifs').set(1);
+        settingsRef.child('allNotifs').set('true');
       } else {
         setState(() {
-          _allNotifs = (settings.child('allNotifs').value == 1);
+          _allNotifs = (settings.child('allNotifs').value == 'true');
         });
       }
       if (!settings.hasChild('billNotifs')) {
-        settingsRef.child('billNotifs').set(1);
+        settingsRef.child('billNotifs').set('true');
       } else {
         setState(() {
-          _billNotifs = (settings.child('billNotifs').value == 1);
+          _billNotifs = (settings.child('billNotifs').value == 'true');
+        });
+      }
+      if (!settings.hasChild('locHistNotifs')) {
+        settingsRef.child('locHistNotifs').set('true');
+      } else {
+        setState(() {
+          _locHistNotifs = (settings.child('locHistNotifs').value == 'true');
         });
       }
     } catch (error) {
@@ -64,94 +76,59 @@ class _FFAppBarState extends State<FFAppBar> {
     }
   }
 
-  void _writeNotifSettings() {
-    DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
-    settingsRef.child('allNotifs').set(_allNotifs ? 1 : 0);
-    settingsRef.child('billNotifs').set(_billNotifs ? 1 : 0);
-  }
-
-  void _openNotifsSettings(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Stack(children: <Widget>[
-          Positioned(
-            right: -40,
-            top: -40,
-            child: InkResponse(
-              onTap: () => Navigator.of(context).pop(),
-              child: const CircleAvatar(
-                backgroundColor: Colors.red,
-                child: Icon(Icons.close),
-              ),
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Padding(
-                padding: EdgeInsets.all(8),
-                child: Text(
-                  'Notification Settings',
-                  style: TextStyle(fontSize: 20),
-              )),
-              StatefulBuilder(
-                builder: (BuildContext context, StateSetter setState) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('All Notifications'),
-                        Switch(
-                          value: _allNotifs, 
-                          onChanged: (bool newValue) {
-                            setState(() {
-                              _allNotifs = newValue;
-                            });
-                          },
-                        ),
-                      ],
-                  ));
-                }
-              ),
-              StatefulBuilder(
-                builder: (BuildContext context, StateSetter setState) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Bill Tracking Notifications'),
-                        Switch(
-                          value: _billNotifs, 
-                          onChanged: (bool newValue) {
-                            setState(() {
-                              _billNotifs = newValue;
-                            });
-                          },
-                        ),
-                      ],
-                  ));
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      child: const Text('Save'),
-                      onPressed: () {
-                        _writeNotifSettings();
-                        Navigator.of(context).pop();
-                      }
+  void _openNotifsSettings(BuildContext context) async {
+    DatabaseReference settingsRef =
+        reference.child('users/${currentUser?.uid}').child('settings');
+    DataSnapshot settings = await settingsRef.get();
+    _allNotifs = settings.child('allNotifs').value as bool;
+    _billNotifs = settings.child('billNotifs').value as bool;
+    _locHistNotifs = settings.child('locHistNotifs').value as bool;
+    // ignore: use_build_context_synchronously
+    await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Stack(children: <Widget>[
+                Positioned(
+                  right: -40,
+                  top: -40,
+                  child: InkResponse(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close),
                     ),
-                  ],
-              )),
-          ]),
-        ]),
-    ));
+                  ),
+                ),
+                Form(
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                      const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Notification Settings',
+                            style: TextStyle(fontSize: 20),
+                          )),
+                      SwitchWidget(
+                          label: 'All Notifications',
+                          dbLocation: 'allNotifs',
+                          switched: _allNotifs,
+                          all: false),
+                      SwitchWidget(
+                          label: 'Bill Notifications',
+                          dbLocation: 'billNotifs',
+                          switched: _billNotifs,
+                          all: _allNotifs),
+                      SwitchWidget(
+                          label: 'Location History Notifications',
+                          dbLocation: 'locHistNotifs',
+                          switched: _locHistNotifs,
+                          all: _allNotifs)
+                    ])),
+              ]),
+            ));
   }
 
   void _openAccountSaver(BuildContext context) async {
@@ -412,5 +389,67 @@ class _FFAppBarState extends State<FFAppBar> {
         ),
       ],
     );
+  }
+}
+
+class SwitchWidget extends StatefulWidget {
+  final String label;
+  final String dbLocation;
+  bool switched;
+  bool all;
+
+  SwitchWidget(
+      {super.key,
+      required this.label,
+      required this.dbLocation,
+      required this.switched,
+      required this.all});
+
+  @override
+  _SwitchWidgetState createState() => _SwitchWidgetState();
+}
+
+class _SwitchWidgetState extends State<SwitchWidget> {
+  TimeOfDay selectedTime = TimeOfDay.now();
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(widget.label),
+            Switch(
+              value: widget.switched,
+              onChanged: (bool value) {
+                setState(() {
+                  widget.switched = value;
+                  reference
+                      .child(
+                          'users/${currentUser?.uid}/settings/${widget.dbLocation}')
+                      .set(value);
+                });
+              },
+            )
+          ]),
+          if (widget.dbLocation == 'locHistNotifs')
+            if (widget.switched)
+              ElevatedButton(
+                onPressed: () => _selectTime(context),
+                child: Text('Selected time: ${selectedTime.format(context)}'),
+              ),
+        ]));
   }
 }
