@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<BudgetPieChart> _getBudgetPreview() async {
+  Future<Widget> _getBudgetPreview() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
@@ -104,20 +104,67 @@ class _HomePageState extends State<HomePage> {
     DataSnapshot snapshot = event.snapshot;
 
     if (snapshot.value != null) {
-      Map<String, dynamic> budgetData1 = snapshot.value as Map<String, dynamic>;
+      Map<String, dynamic> budgetData = snapshot.value as Map<String, dynamic>;
+      List<String> budgetKeys = budgetData.keys.toList();
 
-      List<String> budgetKeys = budgetData1.keys.toList();
+      if (budgetKeys.isNotEmpty) {
+        List<Widget> budgetWidgets = [];
+        budgetWidgets.add(SizedBox(height: 10));
+        budgetWidgets.add(Text("Budgets:",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)));
+        budgetWidgets.add(SizedBox(height: 10));
 
-      Budget currBudge = await getBudgetFromFirebaseByName(budgetKeys[0]);
+        for (String budgetKey in budgetKeys) {
+          Budget currBudget = await getBudgetFromFirebaseByName(budgetKey);
 
-      return BudgetPieChart(
-        budgetMap: currBudge.budgetMap,
-        valuesAdded: currBudge.budgetMap.isNotEmpty,
-        colorList: currBudge.colorList,
-      );
-    } else {
-      return PieChart(dataMap: {"": 0.0}) as BudgetPieChart;
+          budgetWidgets.add(
+            Column(
+              children: [
+                const SizedBox(height: 20),
+                Row(children: [
+                  const SizedBox(width: 20),
+                  PieChart(
+                    dataMap: currBudget.budgetMap,
+                    colorList: currBudget.colorList,
+                    chartRadius: 100,
+                    chartType: ChartType.ring,
+                    animationDuration: const Duration(milliseconds: 800),
+                    ringStrokeWidth: 30,
+                    chartValuesOptions:
+                        const ChartValuesOptions(showChartValues: false),
+                    centerText: budgetKey,
+                  ),
+                  const SizedBox(width: 20),
+                ]),
+                const SizedBox(
+                    height: 20), // Add spacing between budget previews
+              ],
+            ),
+          );
+        }
+
+        return Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.black,
+                width: 2.0, // Adjust the border width as needed
+              ),
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            height: 400,
+            width: 350,
+            margin: const EdgeInsets.all(50),
+            child: SingleChildScrollView(
+                child: Column(
+              children: budgetWidgets,
+            )));
+      }
     }
+
+    // If there are no budgets or any other condition that prevents showing them
+    return const Column(
+      children: [],
+    );
   }
 
   @override
