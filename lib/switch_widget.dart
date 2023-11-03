@@ -82,7 +82,7 @@ class _SwitchWidgetState extends State<SwitchWidget> {
           builder: (context) {
             return const AlertDialog(
               title: Text('Notification'),
-              content: Text('Go enter your expenses into your location history!.'),
+              content: Text('Go enter your expenses into your location history!'),
             );
           },
         );

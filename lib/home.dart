@@ -110,7 +110,7 @@ class _HomePageState extends State<HomePage> {
         budgetMap: budgetMap,
         valuesAdded: budgetMap.isNotEmpty,
         colorList: greenColorList,
-        color: greenColorList[0]);
+        );
   }
 
   @override
