@@ -1,3 +1,4 @@
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -54,20 +55,7 @@ class _CreditCardPageState extends State<CreditCardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        leading: IconButton(
-          icon: Image.asset('images/FFLogo.png'),
-          onPressed: () => Navigator.pushNamed(context, '/home'),
-        ),
-        title: Text(
-          'Credit Card Page',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      appBar: FFAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
