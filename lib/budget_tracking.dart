@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:csv/csv.dart';
+import 'dart:convert';
+import 'dart:html' as html;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -499,21 +502,39 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                   colorList: colorList),
                               wishlist: wishlistLoaded,
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 35,
                             ),
-                            ElevatedButton(
-                              // Add a button to delete the budget
-                              child: const Text(
-                                "Delete Budget",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                              onPressed: () {
-                                deleteBudget();
-                                setState(() {
-                                  budgetList.remove(this.budgetName);
-                                });
-                              },
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                  // Exports the current budget to a downloadable CSV file
+                                  child: const Text(
+                                    "Export Budget",
+                                    style: TextStyle(color: Colors.blue),
+                                  ),
+                                  onPressed: () {
+                                    exportBudget();
+                                  },
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                ElevatedButton(
+                                  // Add a button to delete the budget
+                                  child: const Text(
+                                    "Delete Budget",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                  onPressed: () {
+                                    deleteBudget();
+                                    setState(() {
+                                      budgetList.remove(this.budgetName);
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                             const SizedBox(
                               height: 35,
@@ -528,6 +549,26 @@ class _BudgetTrackingState extends State<BudgetTracking> {
             ),
           ],
         ));
+  }
+
+  void exportBudget() {
+    List<List<dynamic>> csvList = [
+      ['Category', 'Amount']
+    ];
+    budgetMap.forEach((category, amount) {
+      csvList.add([category, amount]);
+    });
+
+    String csv = const ListToCsvConverter().convert(csvList);
+    String filename = budgetName.trim().replaceAll(' ', '_') + '.csv';
+
+    final bytes = utf8.encode(csv);
+    final blob = html.Blob([bytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", filename)
+      ..click();
+    html.Url.revokeObjectUrl(url);
   }
 
   void deleteBudget() {
