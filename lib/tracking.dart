@@ -27,7 +27,8 @@ class TrackingPage extends StatefulWidget {
 class _TrackingPageState extends State<TrackingPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController billTitleController = TextEditingController();
-  final TextEditingController billDataController = TextEditingController();
+  final TextEditingController billAmountController = TextEditingController();
+  final TextEditingController billNoteController = TextEditingController();
   final TextEditingController billDateController = TextEditingController();
 
   // Calendar info
@@ -87,12 +88,30 @@ class _TrackingPageState extends State<TrackingPage> {
     }
   }
 
-  void _writeBill(String title, String note, String duedate) async {
+  bool _validBillInput() {
+    String title = billTitleController.text;
+    if (title.isEmpty) return false;
+    String amount = billAmountController.text;
+    if (amount.isEmpty) return false;
+    if (amount.contains(RegExp(r'[A-Za-z]'))) return false;
+    String duedate = billDateController.text;
+    if (duedate.isEmpty) return false;
+    if (duedate.length != 10) return false;
+    if (duedate.contains(RegExp(r'[A-Za-z]'))) return false;
+    if (duedate[2] != '/' || duedate[5] != '/') return false;
+    return true;
+  }
+
+  void _writeBill() async {
     try {
-      DatabaseReference newBill =
-          reference.child('users/${currentUser?.uid}/bills').push();
+      String title = billTitleController.text.trim();
+      String amount = billAmountController.text.trim();
+      String note = billNoteController.text.trim();
+      String duedate = billDateController.text.trim();
+      DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
       newBill.set({
         'title': title,
+        'amount': amount,
         'note': note,
         'duedate': duedate,
       });
@@ -152,6 +171,7 @@ class _TrackingPageState extends State<TrackingPage> {
     return DataRow(
       cells: <DataCell>[
         DataCell(Text(data['title'])),
+        DataCell(Text("\$" + data['amount'])),
         DataCell(Text(data['note'])),
         DataCell(Text(data['duedate'])),
         DataCell(IconButton(
@@ -177,6 +197,7 @@ class _TrackingPageState extends State<TrackingPage> {
       results.add({
         'id': key.toString(),
         'title': value['title'].toString(),
+        'amount': value['amount'] != null ? value['amount'].toString() : '0',
         'note': value['note'].toString(),
         'duedate': value['duedate'].toString()
       });
@@ -225,8 +246,8 @@ class _TrackingPageState extends State<TrackingPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+                  const Padding(
+                    padding: EdgeInsets.all(8),
                     child: Text(
                       'Please input bill data that you would like us to keep track of.',
                       style: TextStyle(fontSize: 20),
@@ -236,7 +257,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Title: ', style: TextStyle(fontSize: 14)),
+                        const Text('Title: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
                             decoration: const InputDecoration(
@@ -252,14 +273,13 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Data: ', style: TextStyle(fontSize: 14)),
+                        const Text('Amount: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
-                            decoration: InputDecoration(
-                              hintText:
-                                  "Enter some data that you'd like to remember about the bill",
+                            decoration: const InputDecoration(
+                              hintText: "Enter the amount owed for the bill",
                             ),
-                            controller: billDataController,
+                            controller: billAmountController,
                           ),
                         ),
                       ],
@@ -269,11 +289,27 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Due Date: ', style: TextStyle(fontSize: 14)),
+                        const Text('Notes: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
-                            decoration: InputDecoration(
-                              hintText: 'Use MM/DD/YYYY',
+                            decoration: const InputDecoration(
+                              hintText: "OPTIONAL: Enter any notes relating to the bill",
+                            ),
+                            controller: billNoteController,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        const Text('Due Date: ', style: TextStyle(fontSize: 14)),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              hintText: 'MM/DD/YYYY',
                             ),
                             controller: billDateController,
                           ),
@@ -289,23 +325,17 @@ class _TrackingPageState extends State<TrackingPage> {
                         ElevatedButton(
                           child: const Text('Submit'),
                           onPressed: () {
-                            String billTitle = billTitleController.text;
-                            String billData = billDataController.text;
-                            String billDate = billDateController.text;
-                            if (billTitle.isEmpty ||
-                                billData.isEmpty ||
-                                billDate.isEmpty) {
+                            if (_validBillInput()) {
+                              _writeBill();
+                              Navigator.of(context).pop();
+                            } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    'Failed to add bill. Please ensure that all fields are filled in.',
+                                    'Failed to add bill. Please ensure that all required fields are formatted correctly.',
                                   ),
                                 ),
                               );
-                            } else {
-                              _writeBill(billTitle, billData, billDate);
-                              Navigator.of(context).pop();
-                              // Update page
                             }
                           },
                         ),
@@ -455,7 +485,7 @@ class _TrackingPageState extends State<TrackingPage> {
             ),
 
             // Calendar End
-            Text('Bills', style: TextStyle(fontSize: 32)),
+            const Text('Bills', style: TextStyle(fontSize: 32)),
             RefreshIndicator(
               onRefresh: () async {
                 return await _fetchBills();
@@ -467,6 +497,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     results = snapshot.data;
                     if (snapshot.data.length != 0) {
                       return Container(
+                        width: 500,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
                         ),
@@ -474,9 +505,10 @@ class _TrackingPageState extends State<TrackingPage> {
                           headingRowColor: MaterialStateColor.resolveWith(
                             (states) => Colors.green,
                           ),
-                          columnSpacing: 30,
+                          columnSpacing: 50,
                           columns: [
                             DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Amount')),
                             DataColumn(label: Text('Note')),
                             DataColumn(label: Text('Due Date')),
                             DataColumn(label: Text('Delete')),
