@@ -182,7 +182,9 @@ class _TrackingPageState extends State<TrackingPage> {
     );
   }
 
+  double billTotal = 0.0;
   Future _fetchBills() async {
+    billTotal = 0.0;
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
 
     DataSnapshot user = await userRef.get();
@@ -194,13 +196,15 @@ class _TrackingPageState extends State<TrackingPage> {
     Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
     results = [];
     billsMap.forEach((key, value) {
+      var amount = value['amount'] != null ? value['amount'].toString() : '0';
       results.add({
         'id': key.toString(),
         'title': value['title'].toString(),
-        'amount': value['amount'] != null ? value['amount'].toString() : '0',
+        'amount': amount,
         'note': value['note'].toString(),
         'duedate': value['duedate'].toString()
       });
+      billTotal += double.parse(amount);
     });
 
     return results;
@@ -496,33 +500,38 @@ class _TrackingPageState extends State<TrackingPage> {
                   if (snapshot.hasData) {
                     results = snapshot.data;
                     if (snapshot.data.length != 0) {
-                      return Container(
-                        width: 500,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
+                      return Column(children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
                           ),
-                          columnSpacing: 50,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Amount')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Due Date')),
-                            DataColumn(label: Text('Delete')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
+                          child: DataTable(
+                            headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.green,
                             ),
+                            columnSpacing: 50,
+                            columns: [
+                              DataColumn(label: Text('Title')),
+                              DataColumn(label: Text('Amount')),
+                              DataColumn(label: Text('Note')),
+                              DataColumn(label: Text('Due Date')),
+                              DataColumn(label: Text('Delete')),
+                            ],
+                            rows: List.generate(
+                              results.length,
+                              (index) => _getDataRow(
+                                index,
+                                results[index],
+                              ),
+                            ),
+                            showBottomBorder: true,
                           ),
-                          showBottomBorder: true,
                         ),
-                      );
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Text('Total Owed: \$' + billTotal.toStringAsFixed(2))
+                        ),
+                      ],);
                     } else {
                       return const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -551,7 +560,7 @@ class _TrackingPageState extends State<TrackingPage> {
             ElevatedButton(
               onPressed: _openAddBillDialog,
               child: const Text('Add Bill'),
-            )
+            ),
           ],
         ),
       ),
