@@ -420,7 +420,17 @@ class _TrackingPageState extends State<TrackingPage> {
                             padding: const EdgeInsets.all(8),
                             child: Row(
                               children: [
-                                Text('Note: ', style: TextStyle(fontSize: 14)),
+                                Text('Amount: ', style: TextStyle(fontSize: 14)),
+                                Text(bill['amount']!,
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text('Notes: ', style: TextStyle(fontSize: 14)),
                                 Text(bill['note']!,
                                     style: TextStyle(fontSize: 14)),
                               ],
@@ -470,14 +480,22 @@ class _TrackingPageState extends State<TrackingPage> {
       appBar: const FFAppBar(),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 50),
             // Calendar Start
-            Container(
+            Card(
+              margin: const EdgeInsets.all(10),
+              elevation: 10,
+              color: Colors.green,
               child: TableCalendar(
-                headerStyle: HeaderStyle(
+                headerStyle: const HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
+                  titleTextStyle: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)
+                ),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+                  weekendStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
                 ),
                 focusedDay: _focusedDay,
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -485,11 +503,26 @@ class _TrackingPageState extends State<TrackingPage> {
                 firstDay: DateTime.utc(2020, 1, 1),
                 lastDay: DateTime.utc(2025),
                 eventLoader: _getEventsForDay,
+                calendarStyle: const CalendarStyle(
+                  todayDecoration: BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
+                  selectedDecoration: BoxDecoration(color: Colors.blueGrey, shape: BoxShape.circle),
+                  defaultTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  weekendTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  outsideTextStyle: TextStyle(color: Color(0xFFBBBBBB), fontWeight: FontWeight.bold),
+                ),
               ),
             ),
 
             // Calendar End
-            const Text('Bills', style: TextStyle(fontSize: 32)),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Container(
+                width: 1750,
+                height: 2,
+                color: Colors.green,
+              ),
+            ),
+            const Text('Bills', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
             RefreshIndicator(
               onRefresh: () async {
                 return await _fetchBills();
@@ -513,7 +546,7 @@ class _TrackingPageState extends State<TrackingPage> {
                             columns: [
                               DataColumn(label: Text('Title')),
                               DataColumn(label: Text('Amount')),
-                              DataColumn(label: Text('Note')),
+                              DataColumn(label: Text('Notes')),
                               DataColumn(label: Text('Due Date')),
                               DataColumn(label: Text('Delete')),
                             ],
@@ -529,7 +562,10 @@ class _TrackingPageState extends State<TrackingPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(10),
-                          child: Text('Total Owed: \$' + billTotal.toStringAsFixed(2))
+                          child: Text(
+                            'Total Owed: \$' + billTotal.toStringAsFixed(2),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          )
                         ),
                       ],);
                     } else {
