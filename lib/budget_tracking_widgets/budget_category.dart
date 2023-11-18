@@ -39,6 +39,7 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
     });
 
     String editedCategory = category;
+    String originalCat = category;
 
     showDialog(
       context: context,
@@ -80,10 +81,10 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                  widget.budget.budgetMap.remove(category);
+                  widget.budget.budgetMap.remove(originalCat);
                   widget.onBudgetUpdate(widget.budget.budgetMap);
                   bool success = await removeBudgetCategory(
-                      widget.budget.budgetName, category);
+                      widget.budget.budgetName, originalCat);
                   if (success) {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
