@@ -14,13 +14,89 @@ final userRef = reference.child('users/${currentUser?.uid}');
 final userNotificationsReference = reference.child('notifications');
 final currentUser = FirebaseAuth.instance.currentUser;
 
+class AnimationSettingsDialog extends StatefulWidget {
+  final bool initialValue;
+
+  const AnimationSettingsDialog({Key? key, required this.initialValue})
+      : super(key: key);
+
+  @override
+  _AnimationSettingsDialogState createState() =>
+      _AnimationSettingsDialogState(initialValue);
+}
+
+class _AnimationSettingsDialogState extends State<AnimationSettingsDialog> {
+  late bool seeTransitions;
+
+  _AnimationSettingsDialogState(this.seeTransitions);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              'Animation Settings',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              'Toggle To Turn Page Transition Animations On Or Off',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('See Transitions'),
+                Switch(
+                  value: seeTransitions,
+                  onChanged: (value) {
+                    setState(() {
+                      seeTransitions = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop(seeTransitions);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class FFAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const FFAppBar({super.key});
+  FFAppBar({super.key});
 
   @override
   State<FFAppBar> createState() => _FFAppBarState();
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  bool seeTransitions = true;
 }
 
 class _FFAppBarState extends State<FFAppBar> {
@@ -275,6 +351,21 @@ class _FFAppBarState extends State<FFAppBar> {
             ])));
   }
 
+  void _openAnimationSettings(BuildContext context) async {
+    bool? result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AnimationSettingsDialog(
+        initialValue: widget.seeTransitions,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        widget.seeTransitions = result;
+      });
+    }
+  }
+
   void _openSettings(BuildContext context) {
     showDialog<void>(
         context: context,
@@ -318,6 +409,11 @@ class _FFAppBarState extends State<FFAppBar> {
                               _getAllNotifs();
                               _openNotifsSettings(context);
                             })),
+                    Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ElevatedButton(
+                            child: const Text('Animation Settings'),
+                            onPressed: () => _openAnimationSettings(context))),
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: ElevatedButton(

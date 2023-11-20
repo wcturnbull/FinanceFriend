@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final String? url = currentUser!.photoURL;
     return Scaffold(
-        appBar: const FFAppBar(),
+        appBar: FFAppBar(),
         body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: Column(
