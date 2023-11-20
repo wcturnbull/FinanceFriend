@@ -2,6 +2,7 @@ import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_colors.dart';
 import 'package:financefriend/credit_card.dart';
 import 'package:financefriend/ff_appbar.dart';
+import 'package:financefriend/globals.dart';
 import 'package:financefriend/investment_page.dart';
 import 'package:financefriend/location.dart';
 import 'package:financefriend/notifications.dart';
@@ -279,37 +280,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return InvestmentPage(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return InvestmentPage(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/investments');
+                            }
                           },
                           child: const Text('Go to Investment Page'),
                         ),
@@ -320,37 +326,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return BudgetTracking(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return BudgetTracking(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/dashboard');
+                            }
                           },
                           child: const Text('Go to Budget Dashboard Page'),
                         ),
@@ -361,37 +372,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return TrackingPage(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return TrackingPage(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/tracking');
+                            }
                           },
                           child: const Text('Go to Bill Tracking Page'),
                         ),
@@ -402,37 +418,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return CreditCardPage(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return CreditCardPage(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/credit_card');
+                            }
                           },
                           child: const Text('Go to Credit Card Page'),
                         ),
@@ -443,37 +464,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return NotificationsPage(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return NotificationsPage(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/notifications');
+                            }
                           },
                           child: const Text('Go to Notification Page'),
                         ),
@@ -484,37 +510,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return Profile(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return Profile(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/profile');
+                            }
                           },
                           child: const Text('Go to Profile Page'),
                         ),
@@ -525,37 +556,42 @@ class _HomePageState extends State<HomePage> {
                                 MaterialStatePropertyAll(Size(300.0, 50.0)),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                  return LocationPage(); // Replace with your actual page widget
-                                },
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeInOut;
-                                  const duration = Duration(
+                            if (seeTransitions) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) {
+                                    return LocationPage(); // Replace with your actual page widget
+                                  },
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeInOut;
+                                    const duration = Duration(
+                                        milliseconds:
+                                            2000); // Adjust the duration here
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    var opacityAnimation =
+                                        animation.drive(tween);
+
+                                    return FadeTransition(
+                                      opacity: opacityAnimation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(
                                       milliseconds:
-                                          2000); // Adjust the duration here
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  var opacityAnimation = animation.drive(tween);
-
-                                  return FadeTransition(
-                                    opacity: opacityAnimation,
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                    milliseconds:
-                                        2000), // Adjust the duration here
-                              ),
-                            );
+                                          2000), // Adjust the duration here
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(context, '/locations');
+                            }
                           },
                           child: const Text('Go to Locations Page'),
                         ),
