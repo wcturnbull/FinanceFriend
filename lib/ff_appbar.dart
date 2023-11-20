@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'switch_widget.dart';
+import 'globals.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -96,7 +97,6 @@ class FFAppBar extends StatefulWidget implements PreferredSizeWidget {
   State<FFAppBar> createState() => _FFAppBarState();
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-  bool seeTransitions = true;
 }
 
 class _FFAppBarState extends State<FFAppBar> {
@@ -355,13 +355,13 @@ class _FFAppBarState extends State<FFAppBar> {
     bool? result = await showDialog<bool>(
       context: context,
       builder: (context) => AnimationSettingsDialog(
-        initialValue: widget.seeTransitions,
+        initialValue: seeTransitions,
       ),
     );
 
     if (result != null) {
       setState(() {
-        widget.seeTransitions = result;
+        seeTransitions = result;
       });
     }
   }
@@ -453,34 +453,42 @@ class _FFAppBarState extends State<FFAppBar> {
       leading: IconButton(
         icon: Image.asset('images/FFLogo.png'),
         onPressed: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) {
-                return HomePage(); // Replace with your actual page widget
-              },
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = 0.0;
-                const end = 1.0;
-                const curve = Curves.easeInOut;
-                const duration =
-                    Duration(milliseconds: 2000); // Adjust the duration here
+          if (seeTransitions) {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return HomePage(); // Replace with your actual page widget
+                },
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = 0.0;
+                  const end = 1.0;
+                  const curve = Curves.easeInOut;
+                  const duration =
+                      Duration(milliseconds: 2000); // Adjust the duration here
 
-                var tween = Tween(begin: begin, end: end)
-                    .chain(CurveTween(curve: curve));
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
 
-                var opacityAnimation = animation.drive(tween);
+                  var opacityAnimation = animation.drive(tween);
 
-                return FadeTransition(
-                  opacity: opacityAnimation,
-                  child: child,
-                );
-              },
-              transitionDuration: const Duration(
-                  milliseconds: 2000), // Adjust the duration here
-            ),
-          );
+                  return FadeTransition(
+                    opacity: opacityAnimation,
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(
+                    milliseconds: 2000), // Adjust the duration here
+              ),
+            );
+          } else {
+            // If seeTransitions is false, simply navigate to the home page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          }
         },
       ),
       title: const Text(
