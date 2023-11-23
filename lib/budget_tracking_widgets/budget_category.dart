@@ -98,13 +98,9 @@ class _BudgetCategoryTableState extends State<BudgetCategoryTable> {
               onPressed: () async {
                 if (editController.text.isNotEmpty) {
                   double newValue = double.tryParse(editController.text) ?? 0;
-                  print("category: " + category);
                   widget.budget.budgetMap.remove(category);
                   await removeBudgetCategory(
                       widget.budget.budgetName, category);
-                  // print(widget.budget.budgetMap);
-                  // await updateBudgetInFirebase(widget.budget.budgetMap);
-                  // print(await getBudgetMapFromFirebase());
                   widget.budget.budgetMap[editedCategory] = newValue;
                   widget.onBudgetUpdate(widget.budget.budgetMap);
                   final success = await updateBudgetInFirebase(

@@ -147,7 +147,6 @@ class _BudgetCreationPopupState extends State<BudgetCreationPopup> {
                   // Get the budget amount from the text field
                   double budgetAmount =
                       double.tryParse(budgetAmountController.text) ?? 0.0;
-                  print("Budget Amount: \$${budgetAmount.toStringAsFixed(2)}");
 
                   // Process the budgetItems list here
                   // You can access category names and percentages from budgetItems
@@ -350,8 +349,6 @@ class _BudgetItemInputState extends State<BudgetItemInput> {
                                   setState(() {
                                     selectedColor = selectedColorCopy;
                                     widget.item.color = selectedColorCopy;
-                                    print("Color in apply:");
-                                    print(widget.item.color);
                                     widget.onUpdate;
                                   });
                                   Navigator.of(context)
