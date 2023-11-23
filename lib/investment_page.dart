@@ -49,8 +49,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
   }
 
   Future<void> fetchDataFromFirebase() async {
-    final userRef = reference.child('users/${currentUser?.uid}');
-    final investmentsRef = reference.child('investments');
+    final investmentsRef =
+        reference.child('users/${currentUser?.uid}/investments');
 
     DataSnapshot investmentsData = await investmentsRef.get();
 
@@ -244,7 +244,10 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   });
 
                   // Save the new investment to Firebase
-                  reference.child('investments').push().set(newInvestment);
+                  reference
+                      .child('users/${currentUser?.uid}/investments')
+                      .push()
+                      .set(newInvestment);
 
                   Navigator.of(context).pop();
                 }
