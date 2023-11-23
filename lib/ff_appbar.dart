@@ -32,6 +32,9 @@ class _FFAppBarState extends State<FFAppBar> {
       FirebaseAuth.instance.currentUser?.delete();
       DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
       await userRef.remove();
+      DatabaseReference userIndexRef =
+          reference.child('userIndex/${currentUser?.displayName}');
+      await userIndexRef.remove();
     } catch (error) {
       print("Error deleting user: $error");
     }
