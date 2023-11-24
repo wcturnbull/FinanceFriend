@@ -97,7 +97,6 @@ class CreateAccount extends StatelessWidget {
       final String uid = user!.uid;
 
       final usersReference = reference.child('users');
-      usersReference.push().set(uid);
 
       final currentUserReference = usersReference.child(uid);
       await currentUserReference.set({
@@ -115,12 +114,46 @@ class CreateAccount extends StatelessWidget {
       // Registration successful, navigate to another page or handle the next steps.
       Navigator.pushNamed(context, '/home');
     } catch (e) {
-      // Handle registration errors (e.g., email is already in use)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration failed. Please try again.'),
-        ),
-      );
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'email-already-in-use':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('The provided email is already in use.'),
+              ),
+            );
+            break;
+          case 'weak-password':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'The password is too weak. Please choose a stronger password.'),
+              ),
+            );
+            break;
+          case 'invalid-email':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('The provided email is not valid.'),
+              ),
+            );
+            break;
+          // Add more cases for other FirebaseAuthException codes if needed
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration failed. Please try again.'),
+              ),
+            );
+        }
+      } else {
+        // Handle other non-FirebaseAuthException registration errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration failed. Please try again.'),
+          ),
+        );
+      }
     }
   }
 
