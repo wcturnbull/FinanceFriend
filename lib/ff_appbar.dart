@@ -57,24 +57,24 @@ class _FFAppBarState extends State<FFAppBar> {
           reference.child('users/${currentUser?.uid}').child('settings');
       DataSnapshot settings = await settingsRef.get();
       if (!settings.hasChild('allNotifs')) {
-        settingsRef.child('allNotifs').set('true');
+        settingsRef.child('allNotifs').set(true);
       } else {
         setState(() {
-          _allNotifs = (settings.child('allNotifs').value == 'true');
+          _allNotifs = (settings.child('allNotifs').value as bool);
         });
       }
       if (!settings.hasChild('billNotifs')) {
-        settingsRef.child('billNotifs').set('true');
+        settingsRef.child('billNotifs').set(true);
       } else {
         setState(() {
-          _billNotifs = (settings.child('billNotifs').value == 'true');
+          _billNotifs = (settings.child('billNotifs').value as bool);
         });
       }
       if (!settings.hasChild('locHistNotifs')) {
-        settingsRef.child('locHistNotifs').set('true');
+        settingsRef.child('locHistNotifs').set(true);
       } else {
         setState(() {
-          _locHistNotifs = (settings.child('locHistNotifs').value == 'true');
+          _locHistNotifs = (settings.child('locHistNotifs').value as bool);
         });
       }
     } catch (error) {
