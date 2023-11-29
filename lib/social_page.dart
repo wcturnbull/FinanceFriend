@@ -146,12 +146,35 @@ class _SocialPageState extends State<SocialPage> {
   List<String> userFriends = [];
   Map<String, bool> friendStatus = {};
   Map<String, List<String>> friendGoalsMap = {};
+  String? name = currentUser!.displayName;
+  List<String> userGoals = [];
 
   @override
   void initState() {
     super.initState();
     loadUsers();
     loadUserFriends();
+    loadUserGoals();
+  }
+
+  Future<void> loadUserGoals() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    DatabaseEvent userDataEvent =
+        await reference.child('users/${currentUser?.uid}').once();
+    DataSnapshot userData = userDataEvent.snapshot;
+
+    Map<String, dynamic>? userDataMap = userData.value as Map<String, dynamic>?;
+
+    if (userDataMap != null && userDataMap.containsKey('goals')) {
+      List<dynamic> goalsDynamic = userDataMap['goals'] ?? [];
+
+      // Convert each element in the dynamic list to String
+      List<String> goals = goalsDynamic.map((goal) => goal.toString()).toList();
+
+      userGoals = goals;
+    } else {
+      userGoals = ["${currentUser?.displayName} does not currently have"];
+    }
   }
 
   Future<void> loadUserFriends() async {
@@ -220,11 +243,12 @@ class _SocialPageState extends State<SocialPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const FFAppBar(),
-        body: Column(
+      appBar: const FFAppBar(),
+      body: SingleChildScrollView(
+        child: Column(
           children: [
             const SizedBox(
-              height: 100,
+              height: 50,
             ),
             Row(
               children: [
@@ -239,14 +263,39 @@ class _SocialPageState extends State<SocialPage> {
                 const SizedBox(
                   width: 100,
                 ),
-                FriendGoalsWidget(
-                  friends: userFriends,
-                  friendGoalMap: friendGoalsMap,
-                )
+                Column(
+                  children: [
+                    Container(
+                      height: 110,
+                      width: 400,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 2.0),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        children: [
+                          MyUserTile(
+                            name: ("$name") ?? '',
+                            goals: userGoals,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    FriendGoalsWidget(
+                      friends: userFriends,
+                      friendGoalMap: friendGoalsMap,
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
-        ));
+        ),
+      ),
+    );
   }
 }
 
@@ -263,7 +312,7 @@ class FriendTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: getProfilePictureUrl(),
+      future: getProfilePictureUrl(name),
       builder: (context, snapshot) {
         String profilePictureUrl =
             snapshot.data ?? ''; // Use an empty string as a fallback
@@ -309,7 +358,7 @@ class FriendTile extends StatelessWidget {
     );
   }
 
-  Future<String> getProfilePictureUrl() async {
+  Future<String> getProfilePictureUrl(String name) async {
     String userUID = await getUidFromName(name) ?? '';
     DatabaseEvent event =
         await reference.child('users/$userUID/profilePic').once();
@@ -473,5 +522,79 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
         ),
       ),
     );
+  }
+}
+
+class MyUserTile extends StatelessWidget {
+  final String name;
+  final List<String> goals;
+
+  const MyUserTile({
+    Key? key,
+    required this.name,
+    required this.goals,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: getProfilePictureUrl(name),
+      builder: (context, snapshot) {
+        String profilePictureUrl =
+            snapshot.data ?? ''; // Use an empty string as a fallback
+
+        return ListTile(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(profilePictureUrl),
+                    radius: 20,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text("$name (you)",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Goals: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: goals.join(', '),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String> getProfilePictureUrl(String name) async {
+    String userUID = await getUidFromName(name) ?? '';
+    DatabaseEvent event =
+        await reference.child('users/$userUID/profilePic').once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      return snapshot.value.toString();
+    } else {
+      return ''; // Return an empty string if the profile picture URL is not found
+    }
   }
 }
