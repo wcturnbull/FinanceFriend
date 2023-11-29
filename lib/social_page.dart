@@ -117,6 +117,87 @@ Future<void> removeUserAsFriend(String name) async {
   }
 }
 
+void _openRequestDialog(BuildContext context, String name) {
+  showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      content: Stack(children: <Widget>[
+        Positioned(
+          right: -40,
+          top: -40,
+          child: InkResponse(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: const CircleAvatar(
+              backgroundColor: Colors.red,
+              child: Icon(Icons.close),
+            ),
+          ),
+        ),
+        Form(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  "Request to view $name's financial information",
+                  style: const TextStyle(fontSize: 20),
+                )
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Request Budgets'),
+                  onPressed: () => _sendBudgetRequest(context, name)
+                )
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: ElevatedButton(
+                  child: const Text('Request Bill Calendar'),
+                  onPressed: () => _sendCalendarRequest(context, name)
+                )
+              ),
+            ]
+          )
+        ),
+      ]),
+    )
+  );
+}
+
+void _sendBudgetRequest(BuildContext context, String name) async {
+  try {
+    String userName = currentUser?.displayName as String;
+    DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+    DatabaseReference newNotif = notifRef.push();
+    newNotif.set({
+      'title': 'Request to View Budgets',
+      'note': 'Your friend $userName would like to view your budgets.',
+    });
+    notifRef.child('state').set(1);
+  } catch (error) {
+    print(error);
+  }
+}
+
+void _sendCalendarRequest(BuildContext context, String name) async {
+  try {
+    String userName = currentUser?.displayName as String;
+    DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+    DatabaseReference newNotif = notifRef.push();
+    newNotif.set({
+      'title': 'Request to View Calendar',
+      'note': 'Your friend $userName would like to view your bill calendar.',
+    });
+    notifRef.child('state').set(1);
+  } catch (error) {
+    print(error);
+  }
+}
+
 class SocialPage extends StatefulWidget {
   const SocialPage({Key? key}) : super(key: key);
 
@@ -215,26 +296,47 @@ class _SocialPageState extends State<SocialPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(userNames[index]),
-                            ElevatedButton(
-                              child: Text(friendStatus[userNames[index]] == true
-                                  ? "Remove Friend"
-                                  : "Add Friend"),
-                              onPressed: () {
-                                // Handle the button click here
-                                // You can add the logic to do something when the button is clicked
-                                if (friendStatus[userNames[index]] == true) {
-                                  // User is already a friend, so remove
-                                  removeUserAsFriend(userNames[index]);
-                                } else {
-                                  // User is not a friend, so add
-                                  addUserAsFriend(userNames[index]);
-                                }
-                                setState(() {
-                                  // Update the friend status for the clicked user
-                                  friendStatus[userNames[index]] =
-                                      !friendStatus[userNames[index]]!;
-                                });
-                              },
+                            Row(
+                              children: [
+                                ElevatedButton(
+                                  child: const Text("Request"),
+                                  onPressed: () {
+                                    if (friendStatus[userNames[index]] == true) {
+                                      _openRequestDialog(context, userNames[index]);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'You can only request users that you are friends with!',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                                const SizedBox(width: 5),
+                                ElevatedButton(
+                                  child: Text(friendStatus[userNames[index]] == true
+                                      ? "Remove Friend"
+                                      : "Add Friend"),
+                                  onPressed: () {
+                                    // Handle the button click here
+                                    // You can add the logic to do something when the button is clicked
+                                    if (friendStatus[userNames[index]] == true) {
+                                      // User is already a friend, so remove
+                                      removeUserAsFriend(userNames[index]);
+                                    } else {
+                                      // User is not a friend, so add
+                                      addUserAsFriend(userNames[index]);
+                                    }
+                                    setState(() {
+                                      // Update the friend status for the clicked user
+                                      friendStatus[userNames[index]] =
+                                          !friendStatus[userNames[index]]!;
+                                    });
+                                  },
+                                ),
+                              ]
                             ),
                           ],
                         ),

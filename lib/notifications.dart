@@ -105,6 +105,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         ],
       );
+    } else if (data['title'].contains('Request to View ')) {
+      return DataRow(
+        cells: <DataCell>[
+          DataCell(Text(data['title'])),
+          DataCell(Text(data['note'])),
+          DataCell(IconButton(
+            icon: ,
+            onPressed: () => ,
+          )),
+          DataCell(IconButton(
+            icon: Image.asset('images/DeleteButton.png'),
+            onPressed: () => _deleteNotif(data['id']),
+          )),
+        ]
+      );
     } else {
       return DataRow(
         cells: <DataCell>[
@@ -146,7 +161,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         columns: [
                           DataColumn(label: Text('Title')),
                           DataColumn(label: Text('Note')),
-                          DataColumn(label: Text('Delete')),
+                          DataColumn(label: Text('Actions')),
                         ],
                         rows: List.generate(
                           results.length,

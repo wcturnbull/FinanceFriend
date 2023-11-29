@@ -301,6 +301,16 @@ class _HomePageState extends State<HomePage> {
                               fixedSize:
                                   MaterialStatePropertyAll(Size(300.0, 50.0))),
                           onPressed: () {
+                            Navigator.pushNamed(context, '/social');
+                          },
+                          child: const Text("Go to Social Page"),
+                        ),
+                        const SizedBox(height: 16), //spacing
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
+                          onPressed: () {
                             Navigator.pushNamed(context, '/login');
                           },
                           child: const Text("Sign Out"),
