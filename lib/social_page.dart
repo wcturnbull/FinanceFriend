@@ -8,9 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
-  app: firebaseApp,
-  databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/",
-);
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -156,6 +155,8 @@ class _SocialPageState extends State<SocialPage> {
   }
 
   Future<void> loadUserFriends() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
     // Use await to wait for the completion of the asynchronous operation
     DatabaseEvent event = await reference
         .child('users')
@@ -186,6 +187,7 @@ class _SocialPageState extends State<SocialPage> {
   }
 
   Future<void> loadUsers() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
     reference.child('users').onValue.listen((event) {
       DataSnapshot snapshot = event.snapshot;
 
@@ -250,55 +252,74 @@ class _SocialPageState extends State<SocialPage> {
 
 class FriendTile extends StatelessWidget {
   final String name;
-  final String profilePictureUrl;
   final List<String> goals;
 
   const FriendTile({
     Key? key,
     required this.name,
-    required this.profilePictureUrl,
     required this.goals,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 10,
-          ),
-          Row(
+    return FutureBuilder<String>(
+      future: getProfilePictureUrl(),
+      builder: (context, snapshot) {
+        String profilePictureUrl =
+            snapshot.data ?? ''; // Use an empty string as a fallback
+
+        return ListTile(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(profilePictureUrl),
-                radius: 20,
-              ),
               SizedBox(
-                width: 10,
+                height: 10,
               ),
-              Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(profilePictureUrl),
+                    radius: 20,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Goals: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: goals.join(', '),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              style: DefaultTextStyle.of(context).style,
-              children: <TextSpan>[
-                TextSpan(
-                  text: 'Goals: ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(
-                  text: goals.join(', '),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Future<String> getProfilePictureUrl() async {
+    String userUID = await getUidFromName(name) ?? '';
+    DatabaseEvent event =
+        await reference.child('users/$userUID/profilePic').once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      return snapshot.value.toString();
+    } else {
+      return ''; // Return an empty string if the profile picture URL is not found
+    }
   }
 }
 
@@ -347,13 +368,11 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
                         String friendName = widget.friends[index];
                         String profilePictureUrl =
                             currentUser!.photoURL as String;
-                        print(widget.friendGoalMap.toString());
                         List<String> friendGoals =
                             widget.friendGoalMap[friendName] ?? [];
 
                         return FriendTile(
                           name: friendName,
-                          profilePictureUrl: profilePictureUrl,
                           goals: friendGoals,
                         );
                       },
