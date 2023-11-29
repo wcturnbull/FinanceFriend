@@ -332,8 +332,9 @@ class _FFAppBarState extends State<FFAppBar> {
                       child: ElevatedButton(
                         child: const Text('Sign Out'),
                         onPressed: () {
+                          Navigator.pushNamedAndRemoveUntil(
+                              context, '/login', (route) => false);
                           FirebaseAuth.instance.signOut();
-                          Navigator.pushNamed(context, '/login');
                         },
                       ),
                     ),

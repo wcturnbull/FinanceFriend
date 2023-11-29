@@ -8,9 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
-  app: firebaseApp,
-  databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/",
-);
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -24,6 +23,7 @@ Future<String?> getUidFromName(String name) async {
       return userIndex[name];
     }
   }
+  return null;
 }
 
 Future<void> addUserAsFriend(String name) async {
@@ -42,19 +42,17 @@ Future<void> addUserAsFriend(String name) async {
         if (snapshot.value != null) {
           Map<String, dynamic> friendMap =
               snapshot.value as Map<String, dynamic>;
-          print(friendMap);
+          // print(friendMap);
           friendMap[name] = name;
           reference.child('users').child(uid).child('friends').set(friendMap);
         }
       } else {
-        print("NO FRIENDS YET USER");
-
         Map<String, String> friendMap = {};
         friendMap[name] = name;
         reference.child('users').child(uid).child('friends').push();
         reference.child('users').child(uid).child('friends').set(friendMap);
       }
-      print(userData);
+      // print(userData);
     }
     String? friendUid = await getUidFromName(name);
 
@@ -64,8 +62,8 @@ Future<void> addUserAsFriend(String name) async {
     if (preSnapshot2.value != null) {
       Map<String, dynamic> friendData =
           preSnapshot2.value as Map<String, dynamic>;
-      print("Friend Data:");
-      print(friendData);
+      // print("Friend Data:");
+      // print(friendData);
       if (friendData.containsKey("friends")) {
         DatabaseEvent event2 =
             await reference.child('users/${friendUid}/friends').once();
@@ -82,7 +80,6 @@ Future<void> addUserAsFriend(String name) async {
               .set(friendMap);
         }
       } else {
-        print("NO FRIENDS YET FRIEND");
         String? userName = currentUser!.displayName;
         Map<String, String> friendMap = {};
         friendMap[userName!] = userName;
@@ -106,8 +103,6 @@ Future<void> removeUserAsFriend(String name) async {
 
     String userName = currentUser?.displayName as String;
 
-    // List<String> otherFriendMap = [userName];
-
     reference
         .child('users')
         .child(friendUid!)
@@ -115,6 +110,28 @@ Future<void> removeUserAsFriend(String name) async {
         .child(userName)
         .remove();
   }
+}
+
+Future<List<String>> getGoalsFromName(String name) async {
+  if (currentUser != null) {
+    DatabaseEvent userDataEvent =
+        await reference.child('users/${await getUidFromName(name)}').once();
+    DataSnapshot userData = userDataEvent.snapshot;
+
+    Map<String, dynamic>? userDataMap = userData.value as Map<String, dynamic>?;
+
+    if (userDataMap != null && userDataMap.containsKey('goals')) {
+      List<dynamic> goalsDynamic = userDataMap['goals'] ?? [];
+
+      // Convert each element in the dynamic list to String
+      List<String> goals = goalsDynamic.map((goal) => goal.toString()).toList();
+
+      return goals;
+    } else {
+      return ["$name does not currently have"];
+    }
+  }
+  return [];
 }
 
 class SocialPage extends StatefulWidget {
@@ -127,13 +144,50 @@ class SocialPage extends StatefulWidget {
 class _SocialPageState extends State<SocialPage> {
   List<String> userNames = [];
   List<String> userFriends = [];
-  Map<String, bool> friendStatus =
-      {}; // Keep track of friend status for each user
+  Map<String, bool> friendStatus = {};
+  Map<String, List<String>> friendGoalsMap = {};
 
   @override
   void initState() {
     super.initState();
+    loadUsers();
+    loadUserFriends();
+  }
 
+  Future<void> loadUserFriends() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    // Use await to wait for the completion of the asynchronous operation
+    DatabaseEvent event = await reference
+        .child('users')
+        .child(currentUser!.uid)
+        .child('friends')
+        .once();
+
+    // Now you can work with the 'event'
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.value is Map) {
+      Map<String, dynamic> friendMap =
+          Map<String, dynamic>.from(snapshot.value as Map<String, dynamic>);
+      userFriends = friendMap.keys.toList();
+
+      // Initialize friendStatus based on existing friends
+      List<Future<void>> futures = [];
+      for (var userName in userNames) {
+        futures.add(loadFriendGoals(userName));
+      }
+      await Future.wait(futures);
+
+      setState(() {
+        for (var userName in userNames) {
+          friendStatus[userName] = userFriends.contains(userName);
+        }
+      });
+    }
+  }
+
+  Future<void> loadUsers() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
     reference.child('users').onValue.listen((event) {
       DataSnapshot snapshot = event.snapshot;
 
@@ -156,96 +210,266 @@ class _SocialPageState extends State<SocialPage> {
         setState(() {});
       }
     });
+  }
 
-    reference
-        .child('users')
-        .child(currentUser!.uid)
-        .child('friends')
-        .onValue
-        .listen((event) {
-      DataSnapshot snapshot = event.snapshot;
-
-      if (snapshot.value is Map) {
-        Map<String, dynamic> friendMap =
-            Map<String, dynamic>.from(snapshot.value as Map<String, dynamic>);
-        userFriends = friendMap.keys.toList();
-
-        print("Current User Friends:");
-        print(userFriends);
-
-        // Update the UI
-        setState(() {
-          // Update friend status for each user
-          friendStatus = {};
-          for (var userName in userNames) {
-            friendStatus[userName] = userFriends.contains(userName);
-          }
-        });
-      }
-    });
+  Future<void> loadFriendGoals(String friendName) async {
+    List<String> goals = await getGoalsFromName(friendName);
+    friendGoalsMap[friendName] = goals;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FFAppBar(),
-      body: Center(
-        child: Container(
-          height: 500,
-          width: 400,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.black, // You can set the border color
-              width: 2.0, // You can set the border width
+        appBar: const FFAppBar(),
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 100,
             ),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Center(
-            child: Column(
+            Row(
               children: [
-                Text("Other Users:", style: TextStyle(fontSize: 20)),
-                // Use a ListView.builder to display the user names
-                Divider(),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: userNames.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(userNames[index]),
-                            ElevatedButton(
-                              child: Text(friendStatus[userNames[index]] == true
-                                  ? "Remove Friend"
-                                  : "Add Friend"),
-                              onPressed: () {
-                                // Handle the button click here
-                                // You can add the logic to do something when the button is clicked
-                                if (friendStatus[userNames[index]] == true) {
-                                  // User is already a friend, so remove
-                                  removeUserAsFriend(userNames[index]);
-                                } else {
-                                  // User is not a friend, so add
-                                  addUserAsFriend(userNames[index]);
-                                }
-                                setState(() {
-                                  // Update the friend status for the clicked user
-                                  friendStatus[userNames[index]] =
-                                      !friendStatus[userNames[index]]!;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        // You can customize the ListTile as needed
-                      );
-                    },
-                  ),
+                const SizedBox(width: 100),
+                AddFriendsWidget(
+                  userNames: userNames,
+                  friendList: userFriends,
+                  friendStatus: friendStatus,
+                  onAddFriend: addUserAsFriend,
+                  onRemoveFriend: removeUserAsFriend,
                 ),
+                const SizedBox(
+                  width: 100,
+                ),
+                FriendGoalsWidget(
+                  friends: userFriends,
+                  friendGoalMap: friendGoalsMap,
+                )
               ],
             ),
+          ],
+        ));
+  }
+}
+
+class FriendTile extends StatelessWidget {
+  final String name;
+  final List<String> goals;
+
+  const FriendTile({
+    Key? key,
+    required this.name,
+    required this.goals,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: getProfilePictureUrl(),
+      builder: (context, snapshot) {
+        String profilePictureUrl =
+            snapshot.data ?? ''; // Use an empty string as a fallback
+
+        return ListTile(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(profilePictureUrl),
+                    radius: 20,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Goals: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: goals.join(', '),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        );
+      },
+    );
+  }
+
+  Future<String> getProfilePictureUrl() async {
+    String userUID = await getUidFromName(name) ?? '';
+    DatabaseEvent event =
+        await reference.child('users/$userUID/profilePic').once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      return snapshot.value.toString();
+    } else {
+      return ''; // Return an empty string if the profile picture URL is not found
+    }
+  }
+}
+
+class FriendGoalsWidget extends StatefulWidget {
+  final List<String> friends;
+  final Map<String, List<String>> friendGoalMap;
+
+  const FriendGoalsWidget({
+    Key? key,
+    required this.friends,
+    required this.friendGoalMap,
+  }) : super(key: key);
+
+  @override
+  _FriendGoalsWidgetState createState() => _FriendGoalsWidgetState();
+}
+
+class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
+  Future<void> loadFriendGoals(String friendName) async {
+    List<String> goals = await getGoalsFromName(friendName);
+    widget.friendGoalMap[friendName] = goals;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 500,
+      width: 400,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black, width: 2.0),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(
+        child: widget.friends.isEmpty
+            ? const Text("No Friends Yet")
+            : FutureBuilder(
+                // Use FutureBuilder to wait for all asynchronous tasks
+                future: fetchFriendGoals(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else {
+                    return ListView.builder(
+                      itemCount: widget.friends.length,
+                      itemBuilder: (context, index) {
+                        String friendName = widget.friends[index];
+                        String profilePictureUrl =
+                            currentUser!.photoURL as String;
+                        List<String> friendGoals =
+                            widget.friendGoalMap[friendName] ?? [];
+
+                        return FriendTile(
+                          name: friendName,
+                          goals: friendGoals,
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+      ),
+    );
+  }
+
+  Future<void> fetchFriendGoals() async {
+    // Use Future.forEach to ensure asynchronous tasks complete sequentially
+    await Future.forEach(widget.friends, (friendName) async {
+      await loadFriendGoals(friendName);
+    });
+  }
+}
+
+class AddFriendsWidget extends StatefulWidget {
+  final List<String> userNames;
+  final List<String> friendList;
+  final Map<String, bool> friendStatus;
+  final Function(String) onAddFriend;
+  final Function(String) onRemoveFriend;
+
+  const AddFriendsWidget({
+    Key? key,
+    required this.userNames,
+    required this.friendList,
+    required this.friendStatus,
+    required this.onAddFriend,
+    required this.onRemoveFriend,
+  }) : super(key: key);
+
+  @override
+  _AddFriendsWidgetState createState() => _AddFriendsWidgetState();
+}
+
+class _AddFriendsWidgetState extends State<AddFriendsWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 500,
+      width: 400,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.black,
+          width: 2.0,
+        ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            const Text("Add Friends:", style: TextStyle(fontSize: 20)),
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.userNames.length,
+                itemBuilder: (context, index) {
+                  // print(widget.friendStatus.toString());
+                  return ListTile(
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(widget.userNames[index]),
+                        ElevatedButton(
+                          child: Text(
+                            widget.friendStatus[widget.userNames[index]] == true
+                                ? "Remove Friend"
+                                : "Add Friend",
+                          ),
+                          onPressed: () {
+                            if (widget.friendStatus[widget.userNames[index]] ==
+                                true) {
+                              widget.onRemoveFriend(widget.userNames[index]);
+                              widget.friendList.remove(widget.userNames[index]);
+                            } else {
+                              widget.onAddFriend(widget.userNames[index]);
+                              widget.friendList.add(widget.userNames[index]);
+                            }
+                            setState(() {
+                              widget.friendStatus[widget.userNames[index]] =
+                                  !widget
+                                      .friendStatus[widget.userNames[index]]!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
