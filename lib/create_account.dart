@@ -103,7 +103,8 @@ class CreateAccount extends StatelessWidget {
         'name': desiredName,
         'bio': bioController.text,
         'goals': goalChips,
-        'landing_page': '/home'
+        'landing_page': '/home',
+        'profilePic': profileUrl,
       });
 
       await reference
