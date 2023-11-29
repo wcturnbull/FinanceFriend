@@ -146,7 +146,7 @@ class _SocialPageState extends State<SocialPage> {
   List<String> userFriends = [];
   Map<String, bool> friendStatus = {};
   Map<String, List<String>> friendGoalsMap = {};
-  String? name = currentUser!.displayName;
+  String? name = "";
   List<String> userGoals = [];
 
   @override
@@ -154,10 +154,10 @@ class _SocialPageState extends State<SocialPage> {
     super.initState();
     loadUsers();
     loadUserFriends();
-    loadUserGoals();
+    loadUserData();
   }
 
-  Future<void> loadUserGoals() async {
+  Future<void> loadUserData() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     DatabaseEvent userDataEvent =
         await reference.child('users/${currentUser?.uid}').once();
@@ -172,6 +172,7 @@ class _SocialPageState extends State<SocialPage> {
       List<String> goals = goalsDynamic.map((goal) => goal.toString()).toList();
 
       userGoals = goals;
+      name = currentUser?.displayName;
     } else {
       userGoals = ["${currentUser?.displayName} does not currently have"];
     }
