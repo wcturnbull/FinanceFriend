@@ -61,7 +61,9 @@ class CreateAccount extends StatelessWidget {
       await currentUserReference.set({
         'name': nameController.text,
         'bio': bioController.text,
-        'goals': goalChips
+        'goals': goalChips,
+        'landing_page': '/home',
+        'profilePic': profileUrl,
       });
 
       // Registration successful, you can now navigate to another page or handle the next steps.

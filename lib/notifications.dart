@@ -60,6 +60,30 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
+  void _acceptRequest(String note, String id) async {
+    //Returns true if completed successfully, false otherwise
+    try {
+      String userName = note.substring(note.indexOf(' friend ')+8, note.indexOf(' would '));
+      String typeS = note.substring(note.indexOf(' would '));
+      String type = '';
+      if (typeS.contains('bill')) {
+        type = 'calendar';
+      } else if (typeS.contains('budget')) {
+        type = 'budgets';
+      }
+      DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}/settings');
+      DataSnapshot settings = await settingsRef.get();
+      if (!settings.hasChild('permissions') || 
+          !(settings.child('permissions').hasChild(userName) && 
+          settings.child('permissions').child(userName).child(type).value == true)) {
+        settingsRef.child('permissions').child(userName).child(type).set(true);
+      }
+    } catch (error) {
+      print(error);
+    }
+    _deleteNotif(id);
+  }
+
   List<Map<String, String>> results = [];
   Future _fetchNotifs() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
@@ -110,14 +134,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
         cells: <DataCell>[
           DataCell(Text(data['title'])),
           DataCell(Text(data['note'])),
-          DataCell(IconButton(
-            icon: ,
-            onPressed: () => ,
-          )),
-          DataCell(IconButton(
-            icon: Image.asset('images/DeleteButton.png'),
+          DataCell(Row(children: [
+            ElevatedButton(
+              child: const Text('Accept'),
+              onPressed: () => _acceptRequest(data['note'], data['id']),
+            ),
+            ElevatedButton(
+            child: const Text('Deny'),
             onPressed: () => _deleteNotif(data['id']),
-          )),
+            ),
+          ])),
         ]
       );
     } else {

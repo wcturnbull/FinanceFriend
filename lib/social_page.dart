@@ -117,7 +117,18 @@ Future<void> removeUserAsFriend(String name) async {
   }
 }
 
-void _openRequestDialog(BuildContext context, String name) {
+void _openRequestDialog(BuildContext context, String name) async {
+  bool budgetAccess = false;
+  bool calendarAccess = false;
+  DataSnapshot user = await reference.child('users/${currentUser?.uid}').get();
+  if (user.hasChild('permissions') && user.child('permissions').hasChild(name)) {
+    if (user.child('permissions').child(name).hasChild('budgets')) {
+      budgetAccess = true;
+    }
+    if (user.child('permissions').child(name).hasChild('calendar')) {
+      calendarAccess = true;
+    }
+  }
   showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
@@ -142,22 +153,34 @@ void _openRequestDialog(BuildContext context, String name) {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  "Request to view $name's financial information",
+                  "View $name's financial information",
                   style: const TextStyle(fontSize: 20),
                 )
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: ElevatedButton(
-                  child: const Text('Request Budgets'),
-                  onPressed: () => _sendBudgetRequest(context, name)
+                  child: Text(budgetAccess ? 'View Budgets' : 'Request Budgets'),
+                  onPressed: () {
+                    if (budgetAccess) {
+                      _viewBudgets(context, name);
+                    } else {
+                      _sendBudgetRequest(context, name);
+                    }
+                  }
                 )
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: ElevatedButton(
-                  child: const Text('Request Bill Calendar'),
-                  onPressed: () => _sendCalendarRequest(context, name)
+                  child: Text(calendarAccess ? 'View Bill Calendar' : 'Request Bill Calendar'),
+                  onPressed: () {
+                    if (calendarAccess) {
+                      _viewCalendar(context, name);
+                    } else {
+                      _sendCalendarRequest(context, name);
+                    }
+                  }
                 )
               ),
             ]
@@ -171,7 +194,8 @@ void _openRequestDialog(BuildContext context, String name) {
 void _sendBudgetRequest(BuildContext context, String name) async {
   try {
     String userName = currentUser?.displayName as String;
-    DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+    String? friendUid = await getUidFromName(name);
+    DatabaseReference notifRef = reference.child('users/$friendUid/notifications');
     DatabaseReference newNotif = notifRef.push();
     newNotif.set({
       'title': 'Request to View Budgets',
@@ -181,6 +205,113 @@ void _sendBudgetRequest(BuildContext context, String name) async {
   } catch (error) {
     print(error);
   }
+}
+
+ DataRow _getDataRow(index, data) {
+    return DataRow(
+      cells: <DataCell>[
+        DataCell(Text(data['title'])),
+        DataCell(Text(data['note'])),
+        DataCell(Text(data['duedate'])),
+      ],
+    );
+  }
+
+void _viewBudgets(BuildContext context, String name) async {
+  String? friendUid = await getUidFromName(name);
+  showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      content: Stack(children: <Widget>[
+        Positioned(
+          right: -40,
+          top: -40,
+          child: InkResponse(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: const CircleAvatar(
+              backgroundColor: Colors.red,
+              child: Icon(Icons.close),
+            ),
+          ),
+        ),
+        Form(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  "$name's Budgets",
+                  style: const TextStyle(fontSize: 24),
+                )
+              ),
+              FutureBuilder(
+                future: reference.child(friendUid!).child('budgets').get(), 
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Map<String, dynamic> results = snapshot.data as Map<String, dynamic>;
+                    if (results.length != 0) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: DataTable(
+                          headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.green,
+                          ),
+                          columnSpacing: 30,
+                          columns: [
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Note')),
+                            DataColumn(label: Text('Actions')),
+                          ],
+                          rows: List.generate(
+                            results.length,
+                            (index) => _getDataRow(
+                              index,
+                              results[index],
+                            ),
+                          ),
+                          showBottomBorder: true,
+                        ),
+                      );
+                    } else {
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Text('This user has no budgets'),
+                          ),
+                        ],
+                      );
+                    }
+                  } else {
+                    return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text('No Data Found...'),
+                        ),
+                      ],
+                    );
+                  }
+                }
+              ),
+            ]
+          )
+        ),
+      ]),
+    )
+  );
 }
 
 void _sendCalendarRequest(BuildContext context, String name) async {
@@ -299,7 +430,7 @@ class _SocialPageState extends State<SocialPage> {
                             Row(
                               children: [
                                 ElevatedButton(
-                                  child: const Text("Request"),
+                                  child: const Text("View"),
                                   onPressed: () {
                                     if (friendStatus[userNames[index]] == true) {
                                       _openRequestDialog(context, userNames[index]);
@@ -307,7 +438,7 @@ class _SocialPageState extends State<SocialPage> {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                            'You can only request users that you are friends with!',
+                                            'You must be friends with this user to do this.',
                                           ),
                                         ),
                                       );
