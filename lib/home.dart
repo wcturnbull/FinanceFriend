@@ -28,6 +28,30 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late User? currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set up a listener for authentication state changes
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        currentUser = user;
+      });
+
+      if (user != null) {
+        // Fetch and update user-specific data here
+        _fetchUserData();
+      }
+    });
+  }
+
+  // Add this function to fetch and update user-specific data
+  Future<void> _fetchUserData() async {
+    // Update or refresh data based on the new user's information
+    // ...
+  }
+
   String _getInvestmentsPreview() {
     return 'Your investments can be found here!';
   }
@@ -185,7 +209,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final String? url = currentUser!.photoURL;
+    final String? name = currentUser?.displayName;
+    final String? url = currentUser?.photoURL;
     return Scaffold(
         appBar: const FFAppBar(),
         body: SingleChildScrollView(
@@ -197,9 +222,9 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ProfilePictureUpload(profileUrl: url as String, dash: true),
+                    ProfilePictureUpload(profileUrl: url ?? '', dash: true),
                     Text(
-                      'Welcome, ${currentUser?.displayName}!',
+                      'Welcome, $name!',
                       style: const TextStyle(
                           fontSize: 48, fontWeight: FontWeight.bold),
                     )
@@ -308,13 +333,22 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 16), //spacing
                         ElevatedButton(
                           style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/login');
+                            fixedSize:
+                                MaterialStatePropertyAll(Size(300.0, 50.0)),
+                          ),
+                          onPressed: () async {
+                            try {
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, '/login', (route) => false);
+                              await FirebaseAuth.instance.signOut();
+                            } catch (e) {
+                              // Handle sign-out errors, if any
+                              print('Error signing out: $e');
+                            }
                           },
                           child: const Text("Sign Out"),
                         ),
+
                         const SizedBox(height: 16), //spacing
                       ],
                     ),
@@ -322,5 +356,31 @@ class _HomePageState extends State<HomePage> {
                 )
               ],
             )));
+  }
+}
+
+Future<String?> getUidFromName(String name) async {
+  if (currentUser != null) {
+    DatabaseEvent event = await reference.child('userIndex').once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<String, dynamic> userIndex = snapshot.value as Map<String, dynamic>;
+      return userIndex[name];
+    }
+  }
+  return null;
+}
+
+Future<String> getProfilePictureUrl(String name) async {
+  String userUID = await getUidFromName(name) ?? '';
+  DatabaseEvent event =
+      await reference.child('users/$userUID/profilePic').once();
+  DataSnapshot snapshot = event.snapshot;
+
+  if (snapshot.value != null) {
+    return snapshot.value.toString();
+  } else {
+    return ''; // Return an empty string if the profile picture URL is not found
   }
 }
