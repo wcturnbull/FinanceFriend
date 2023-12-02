@@ -117,17 +117,20 @@ Future<void> removeUserAsFriend(String name) async {
   }
 }
 
-void _openRequestDialog(BuildContext context, String name) async {
+void _openRequestDialog(BuildContext context, String friendName) async {
+  //Opens popup window allowing user to request or view a friend's financials
   bool budgetAccess = false;
   bool calendarAccess = false;
-  DataSnapshot user = await reference.child('users/${currentUser?.uid}').get();
-  if (user.hasChild('permissions') && user.child('permissions').hasChild(name)) {
-    if (user.child('permissions').child(name).hasChild('budgets')) {
-      budgetAccess = true;
-    }
-    if (user.child('permissions').child(name).hasChild('calendar')) {
-      calendarAccess = true;
-    }
+  String userName = currentUser?.displayName as String;
+  String? friendUid = await getUidFromName(friendName);
+  DataSnapshot user = await reference.child('users/$friendUid').get();
+  if (user.hasChild('settings') && user.child('settings').hasChild('permissions')) {
+    DataSnapshot perms = await reference.child('users/$friendUid/settings/permissions/$userName').get();
+    Map<String, dynamic> permsMap = perms.value as Map<String, dynamic>;
+    permsMap.forEach((key, value) {
+      if (key == 'budgets') budgetAccess = value;
+      if (key == 'calendar') calendarAccess = value;
+    });
   }
   showDialog<void>(
     context: context,
@@ -153,7 +156,7 @@ void _openRequestDialog(BuildContext context, String name) async {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  "View $name's financial information",
+                  "View $friendName's financial information",
                   style: const TextStyle(fontSize: 20),
                 )
               ),
@@ -163,9 +166,9 @@ void _openRequestDialog(BuildContext context, String name) async {
                   child: Text(budgetAccess ? 'View Budgets' : 'Request Budgets'),
                   onPressed: () {
                     if (budgetAccess) {
-                      _viewBudgets(context, name);
+                      _viewBudgets(context, friendName);
                     } else {
-                      _sendBudgetRequest(context, name);
+                      _sendBudgetRequest(context, friendName);
                     }
                   }
                 )
@@ -176,9 +179,9 @@ void _openRequestDialog(BuildContext context, String name) async {
                   child: Text(calendarAccess ? 'View Bill Calendar' : 'Request Bill Calendar'),
                   onPressed: () {
                     if (calendarAccess) {
-                      _viewCalendar(context, name);
+                      _viewCalendar(context, friendName);
                     } else {
-                      _sendCalendarRequest(context, name);
+                      _sendCalendarRequest(context, friendName);
                     }
                   }
                 )
@@ -191,10 +194,11 @@ void _openRequestDialog(BuildContext context, String name) async {
   );
 }
 
-void _sendBudgetRequest(BuildContext context, String name) async {
+void _sendBudgetRequest(BuildContext context, String friendName) async {
+  //Sends a request via notification to view a friend's budgets
   try {
     String userName = currentUser?.displayName as String;
-    String? friendUid = await getUidFromName(name);
+    String? friendUid = await getUidFromName(friendName);
     DatabaseReference notifRef = reference.child('users/$friendUid/notifications');
     DatabaseReference newNotif = notifRef.push();
     newNotif.set({
@@ -202,23 +206,59 @@ void _sendBudgetRequest(BuildContext context, String name) async {
       'note': 'Your friend $userName would like to view your budgets.',
     });
     notifRef.child('state').set(1);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Budget request sent successfully!',
+        ),
+      ),
+    );
   } catch (error) {
     print(error);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Budget request failed to send due to an error.',
+        ),
+      ),
+    );
   }
 }
 
- DataRow _getDataRow(index, data) {
-    return DataRow(
-      cells: <DataCell>[
-        DataCell(Text(data['title'])),
-        DataCell(Text(data['note'])),
-        DataCell(Text(data['duedate'])),
-      ],
+void _sendCalendarRequest(BuildContext context, String friendName) async {
+  //Sends a request via notification to view a friend's bill tracking calendar
+  try {
+    String userName = currentUser?.displayName as String;
+    String? friendUid = await getUidFromName(friendName);
+    DatabaseReference notifRef = reference.child('users/$friendUid/notifications');
+    DatabaseReference newNotif = notifRef.push();
+    newNotif.set({
+      'title': 'Request to View Calendar',
+      'note': 'Your friend $userName would like to view your bill calendar.',
+    });
+    notifRef.child('state').set(1);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Calendar request sent successfully!',
+        ),
+      ),
+    );
+  } catch (error) {
+    print(error);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Calendar request failed to send due to an error.',
+        ),
+      ),
     );
   }
+}
 
-void _viewBudgets(BuildContext context, String name) async {
-  String? friendUid = await getUidFromName(name);
+void _viewBudgets(BuildContext context, String friendName) async {
+  //Opens a popup window containing a friend's budgets
+  String? friendUid = await getUidFromName(friendName);
   showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
@@ -243,16 +283,23 @@ void _viewBudgets(BuildContext context, String name) async {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  "$name's Budgets",
+                  "$friendName's Budgets",
                   style: const TextStyle(fontSize: 24),
                 )
               ),
               FutureBuilder(
-                future: reference.child(friendUid!).child('budgets').get(), 
+                future: reference.child('users/$friendUid/budgets').get(), 
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    Map<String, dynamic> results = snapshot.data as Map<String, dynamic>;
-                    if (results.length != 0) {
+                  if (snapshot.data != null && snapshot.data?.value != null) {
+                    Map<String, dynamic> results = snapshot.data?.value as Map<String, dynamic>;
+                    List<Map<String, dynamic>> budgets = [];
+                    results.forEach((key, value) {
+                      budgets.add({
+                        'budgetName': value['budgetName'].toString(),
+                        'budgetMap': value['budgetMap'],
+                      });
+                    });
+                    if (budgets.length != 0) {
                       return Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
@@ -263,15 +310,14 @@ void _viewBudgets(BuildContext context, String name) async {
                           ),
                           columnSpacing: 30,
                           columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Actions')),
+                            DataColumn(label: Text('Name')),
+                            DataColumn(label: Text('Items')),
                           ],
                           rows: List.generate(
-                            results.length,
+                            budgets.length,
                             (index) => _getDataRow(
                               index,
-                              results[index],
+                              budgets[index],
                             ),
                           ),
                           showBottomBorder: true,
@@ -290,19 +336,14 @@ void _viewBudgets(BuildContext context, String name) async {
                     }
                   } else {
                     return const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Text('No Data Found...'),
-                        ),
-                      ],
-                    );
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Text('This user has no budgets'),
+                          ),
+                        ],
+                      );
                   }
                 }
               ),
@@ -314,19 +355,118 @@ void _viewBudgets(BuildContext context, String name) async {
   );
 }
 
-void _sendCalendarRequest(BuildContext context, String name) async {
-  try {
-    String userName = currentUser?.displayName as String;
-    DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
-    DatabaseReference newNotif = notifRef.push();
-    newNotif.set({
-      'title': 'Request to View Calendar',
-      'note': 'Your friend $userName would like to view your bill calendar.',
-    });
-    notifRef.child('state').set(1);
-  } catch (error) {
-    print(error);
-  }
+DataRow _getDataRow(index, data) {
+  //Used to display budgets in a table format
+  String budgetMap = '';
+  data['budgetMap'].forEach((key, value) {
+    budgetMap += '$key: \$$value, ';
+  });
+  budgetMap = budgetMap.substring(0, budgetMap.lastIndexOf(', '));
+  return DataRow(
+    cells: <DataCell>[
+      DataCell(Text(data['budgetName'])),
+      DataCell(Text(budgetMap)),
+    ],
+  );
+}
+
+void _viewCalendar(context, friendName) async {
+  //Opens a popup window containing a friend's budgets
+  String? friendUid = await getUidFromName(friendName);
+  showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      content: Stack(children: <Widget>[
+        Positioned(
+          right: -40,
+          top: -40,
+          child: InkResponse(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: const CircleAvatar(
+              backgroundColor: Colors.red,
+              child: Icon(Icons.close),
+            ),
+          ),
+        ),
+        Form(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  "$friendName's Bill Calendar",
+                  style: const TextStyle(fontSize: 24),
+                )
+              ),
+              FutureBuilder(
+                future: reference.child('users/$friendUid/bills').get(), 
+                builder: (context, snapshot) {
+                  if (snapshot.data != null && snapshot.data?.value != null) {
+                    Map<String, dynamic> results = snapshot.data?.value as Map<String, dynamic>;
+                    List<Map<String, dynamic>> bills = [];
+                    results.forEach((key, value) {
+                      bills.add({
+                        'budgetName': value['budgetName'].toString(),
+                        'budgetMap': value['budgetMap'],
+                      });
+                    });
+                    if (bills.length != 0) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: DataTable(
+                          headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.green,
+                          ),
+                          columnSpacing: 30,
+                          columns: [
+                            DataColumn(label: Text('Name')),
+                            DataColumn(label: Text('Items')),
+                          ],
+                          rows: List.generate(
+                            bills.length,
+                            (index) => _getDataRow(
+                              index,
+                              bills[index],
+                            ),
+                          ),
+                          showBottomBorder: true,
+                        ),
+                      );
+                    } else {
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Text('This user has no bills'),
+                          ),
+                        ],
+                      );
+                    }
+                  } else {
+                    return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Text('This user has no bills'),
+                          ),
+                        ],
+                      );
+                  }
+                }
+              ),
+            ]
+          )
+        ),
+      ]),
+    )
+  );
 }
 
 class SocialPage extends StatefulWidget {
