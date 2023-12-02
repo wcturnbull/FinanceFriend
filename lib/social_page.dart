@@ -309,13 +309,13 @@ void _viewBudgets(BuildContext context, String friendName) async {
                             (states) => Colors.green,
                           ),
                           columnSpacing: 30,
-                          columns: [
+                          columns: const [
                             DataColumn(label: Text('Name')),
                             DataColumn(label: Text('Items')),
                           ],
                           rows: List.generate(
                             budgets.length,
-                            (index) => _getDataRow(
+                            (index) => _getBudgetRow(
                               index,
                               budgets[index],
                             ),
@@ -355,7 +355,7 @@ void _viewBudgets(BuildContext context, String friendName) async {
   );
 }
 
-DataRow _getDataRow(index, data) {
+DataRow _getBudgetRow(index, data) {
   //Used to display budgets in a table format
   String budgetMap = '';
   data['budgetMap'].forEach((key, value) {
@@ -406,11 +406,12 @@ void _viewCalendar(context, friendName) async {
                 builder: (context, snapshot) {
                   if (snapshot.data != null && snapshot.data?.value != null) {
                     Map<String, dynamic> results = snapshot.data?.value as Map<String, dynamic>;
-                    List<Map<String, dynamic>> bills = [];
+                    List<Map<String, String>> bills = [];
                     results.forEach((key, value) {
                       bills.add({
-                        'budgetName': value['budgetName'].toString(),
-                        'budgetMap': value['budgetMap'],
+                        'title': value['title'].toString(),
+                        'amount': value['amount'].toString(),
+                        'duedate': value['duedate'].toString(),
                       });
                     });
                     if (bills.length != 0) {
@@ -423,13 +424,14 @@ void _viewCalendar(context, friendName) async {
                             (states) => Colors.green,
                           ),
                           columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Name')),
-                            DataColumn(label: Text('Items')),
+                          columns: const [
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Amount')),
+                            DataColumn(label: Text('Due Date')),
                           ],
                           rows: List.generate(
                             bills.length,
-                            (index) => _getDataRow(
+                            (index) => _getBillRow(
                               index,
                               bills[index],
                             ),
@@ -466,6 +468,17 @@ void _viewCalendar(context, friendName) async {
         ),
       ]),
     )
+  );
+}
+
+DataRow _getBillRow(index, data) {
+  //Used to display bills in a table format
+  return DataRow(
+    cells: <DataCell>[
+      DataCell(Text(data['title'])),
+      DataCell(Text(data['amount'])),
+      DataCell(Text(data['duedate'])),
+    ],
   );
 }
 

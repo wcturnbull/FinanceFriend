@@ -61,7 +61,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   void _acceptRequest(String note, String id) async {
-    //Returns true if completed successfully, false otherwise
     try {
       String userName = note.substring(note.indexOf(' friend ')+8, note.indexOf(' would '));
       String typeS = note.substring(note.indexOf(' would '));
