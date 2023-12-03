@@ -220,7 +220,7 @@ class _SocialPageState extends State<SocialPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const FFAppBar(),
+        appBar: FFAppBar(),
         body: Column(
           children: [
             const SizedBox(
