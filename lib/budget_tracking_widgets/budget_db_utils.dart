@@ -93,7 +93,6 @@ Future<List<WishListItem>> getWishlistFromDB() async {
 
 Future<bool> saveExpensesToFirebase(
     String budgetName, List<Expense> expenses) async {
-  print("SAVING EXPENSES TO DB");
   if (currentUser == null) {
     return false;
   }
@@ -101,7 +100,6 @@ Future<bool> saveExpensesToFirebase(
   try {
     final expensesReference = reference
         .child('users/${currentUser?.uid}/budgets/$budgetName/expenses');
-    print(budgetName);
 
     final List<Map<String, dynamic>> expensesData = expenses.map((expense) {
       return {
@@ -122,7 +120,6 @@ Future<bool> saveExpensesToFirebase(
 }
 
 Future<bool> saveWishlistToFirebase(List<WishListItem> wishlist) async {
-  print("SAVING EXPENSES TO DB");
   if (currentUser == null) {
     return false;
   }
@@ -203,7 +200,6 @@ Future<Budget> getBudgetFromFirebaseByName(String budgetName) async {
         }
       });
 
-      print("In here!");
       List<Color> colorList = [];
       if (dataMap['colorList'] != null) {
         List<Color> colorStrings =
@@ -346,7 +342,6 @@ Future<bool> updateBudgetNameInFirebase(
         reference.child('users/${currentUser?.uid}/budgets/$newBudgetName');
 
     Budget temp = await getBudgetFromFirebaseByName(oldBudgetName);
-    print(temp.expenses);
 
     // Delete the old budget
     await reference
@@ -401,8 +396,6 @@ Future<bool> removeBudgetCategory(
     final newBudgetReference = reference
         .child('users/${currentUser?.uid}/budgets/budgetData/budgetMap');
 
-    print("trying to remove: " + categoryName);
-
     await newBudgetReference.child(categoryName).remove();
 
     return true; // Operation successful
@@ -415,8 +408,6 @@ Future<bool> removeBudgetCategory(
 
 Future<bool> saveColorListToFirebase(
     String budgetName, List<Color> colorList) async {
-  print("SAVING COLORS TO DB");
-
   if (currentUser == null) {
     return false;
   }

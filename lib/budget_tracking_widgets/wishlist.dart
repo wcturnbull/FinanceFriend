@@ -157,9 +157,6 @@ class _WishListState extends State<WishList> {
   void _deleteWishlistItem(int index) {
     widget.wishlist.removeAt(index);
 
-    print("Wishlist:");
-    print(widget.wishlist);
-
     saveWishlistToFirebase(widget.wishlist);
 
     setState(() {});

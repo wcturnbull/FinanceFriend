@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:financefriend/home.dart';
 
 class ProfilePictureUpload extends StatefulWidget {
   String profileUrl;
@@ -23,7 +24,19 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
   @override
   void initState() {
     super.initState();
-    _imageFile = NetworkImage(widget.profileUrl);
+    _loadProfilePicture();
+  }
+
+  // New method to load the profile picture
+  Future<void> _loadProfilePicture() async {
+    // Call getProfilePictureUrl to get the profile picture URL
+    String profileUrl =
+        await getProfilePictureUrl(currentUser?.displayName ?? '');
+
+    setState(() {
+      widget.profileUrl = profileUrl;
+      _imageFile = NetworkImage(widget.profileUrl);
+    });
   }
 
   Future<void> _getImage() async {
@@ -43,9 +56,10 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
 
       await currentUser?.updatePhotoURL(url);
 
-      widget.profileUrl = url;
+      await reference.child('users/${currentUser!.uid}/profilePic').set(url);
 
       setState(() {
+        widget.profileUrl = url;
         _imageFile = NetworkImage(widget.profileUrl);
       });
     }
@@ -73,11 +87,11 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
                 ),
               ),
         const SizedBox(height: 10.0),
-        if (!widget.dash) 
-        ElevatedButton(
-          onPressed: _getImage,
-          child: const Text('Select Profile Picture'),
-        ),
+        if (!widget.dash)
+          ElevatedButton(
+            onPressed: _getImage,
+            child: const Text('Select Profile Picture'),
+          ),
       ],
     );
   }
