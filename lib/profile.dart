@@ -25,7 +25,7 @@ class _ProfileState extends State<Profile> {
     final url = currentUser?.photoURL as String;
 
     return Scaffold(
-        appBar: const FFAppBar(title: 'Profile Page'),
+        appBar: FFAppBar(),
         body: Center(
           child: SingleChildScrollView(
               child: Column(
@@ -44,7 +44,7 @@ class _ProfileState extends State<Profile> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ProfilePictureUpload(profileUrl: url),
+                        ProfilePictureUpload(profileUrl: url, dash: false),
                         Text('${currentUser!.displayName}',
                             textAlign: TextAlign.center,
                             style: const TextStyle(

@@ -1,6 +1,6 @@
 import 'package:financefriend/profile.dart';
 import 'package:flutter/material.dart';
-import 'ff_appbar.dart';
+import 'login_appbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,17 +21,163 @@ class Login extends StatelessWidget {
   final TextEditingController emailControl = TextEditingController();
   final TextEditingController passwordControl = TextEditingController();
 
+  DateTime _parseDate(String date) {
+    String year = date.substring(6);
+    String month = date.substring(0, 2);
+    String day = date.substring(3, 5);
+    String reformattedDate = year + '-' + month + '-' + day;
+    return DateTime.parse(reformattedDate);
+  }
+
   Future<String> _getLandingPage() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
 
-    if(!user.hasChild('landing_page')) {
+    if (!user.hasChild('landing_page')) {
       return '/home';
     } else {
       DataSnapshot snapshot = await userRef.child('landing_page').get();
       String landingPage = snapshot.value as String;
       return landingPage;
     }
+  }
+
+  void _resetPassword(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: emailControl.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reset email sent successfully!'),
+        ),
+      );
+    } catch (e) {
+      print('Password reset error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Password reset failed. Please verify that your email was entered correctly.'),
+        ),
+      );
+    }
+  }
+
+  void _openPasswordResetter(BuildContext context) async {
+    await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Stack(children: <Widget>[
+                Positioned(
+                  right: -40,
+                  top: -40,
+                  child: InkResponse(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close),
+                    ),
+                  ),
+                ),
+                Form(
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                      const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Password Reset',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                          )),
+                      const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Enter your email',
+                              style: TextStyle(fontSize: 20))),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: TextField(
+                          controller: emailControl,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                          ),
+                        ),
+                      ),
+                      Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                child: const Text('Submit'),
+                                onPressed: () {
+                                  _resetPassword(context);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              ElevatedButton(
+                                child: const Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          )),
+                    ]))
+              ]),
+            ));
+  }
+
+  void _writeBillNotif(String billTitle, String dueDate) {
+    String title = billTitle + ' is due soon!';
+    String note = 'This bill is due on ' + dueDate;
+    try {
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference newNotif = notifRef.push();
+      newNotif.set({
+        'title': title,
+        'note': note,
+      });
+      notifRef.child('state').set(1);
+    } catch (error) {
+      print('Error writing bill notification: $error');
+    }
+  }
+
+  Future<bool> _checkNotifs() async {
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot hasAllNotifs = await userRef.child('settings/allNotifs').get();
+    //Check if user has notifications enabled
+    if (hasAllNotifs.value == null) {
+      userRef.child('settings/allNotifs').set(true);
+    } else if (!(hasAllNotifs.value as bool)) {
+      return true;
+    }
+    DataSnapshot hasBillNotifs =
+        await userRef.child('settings/billNotifs').get();
+    //Check if user has bill tracking notifications enabled
+    if (hasBillNotifs.value == null) {
+      userRef.child('settings/billNotifs').set(true);
+    } else if (hasBillNotifs.value as bool) {
+      DataSnapshot bills = await userRef.child('bills').get();
+      if (bills.value != null) {
+        Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
+        billsMap.forEach((key, value) {
+          DateTime billDate = _parseDate(value['duedate'].toString());
+          if (billDate.isAfter(DateTime.now()) &&
+              billDate.difference(DateTime.now()).inDays <= 7) {
+            _writeBillNotif(
+                value['title'].toString(), value['duedate'].toString());
+          }
+        });
+      }
+    }
+    return true;
   }
 
   Future<void> _handleLogin(BuildContext context) async {
@@ -41,12 +187,13 @@ class Login extends StatelessWidget {
         password: passwordControl.text.trim(),
       );
       appState.init(); // Initialize the app state to trigger userChanges()
+      var wait = await _checkNotifs();
       Navigator.pushNamed(context, await _getLandingPage());
     } catch (e) {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
               Text('Authentication failed. Please check your credentials.'),
         ),
@@ -57,7 +204,7 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(title: 'Login Page'),
+      appBar: const LoginAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -127,6 +274,17 @@ class Login extends StatelessWidget {
                     },
                     child: const Text(
                         "New here? Click here to create an account!",
+                        style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white)),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _openPasswordResetter(context);
+                    },
+                    child: const Text(
+                        "Forgot your password? Click here to reset it!",
                         style: TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.underline,

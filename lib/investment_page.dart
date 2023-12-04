@@ -1,9 +1,20 @@
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final firebaseApp = Firebase.app();
+final database = FirebaseDatabase.instanceFor(
+    app: firebaseApp,
+    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
+final reference = database.ref();
+final currentUser = FirebaseAuth.instance.currentUser;
 
 class InvestmentPage extends StatefulWidget {
   @override
@@ -24,8 +35,50 @@ class _InvestmentPageState extends State<InvestmentPage> {
   String historicalPrice = '';
   String percentChange = '';
   String selectedInterval = '1min';
+  String selectedRecommendation1 = '';
+  String selectedRecommendation2 = '';
 
   List<DataRow> investmentsTableRows = [];
+
+  //Methods To Fetch And Display FireBase Data For the DataTable
+  @override
+  void initState() {
+    super.initState();
+    // Fetch data from Firebase when the page is initialized
+    fetchDataFromFirebase();
+  }
+
+  Future<void> fetchDataFromFirebase() async {
+    final investmentsRef =
+        reference.child('users/${currentUser?.uid}/investments');
+
+    DataSnapshot investmentsData = await investmentsRef.get();
+
+    if (investmentsData.exists) {
+      Map<String, dynamic> investmentsMap =
+          investmentsData.value as Map<String, dynamic>;
+      final List<Map<String, dynamic>> firebaseInvestments = [];
+
+      investmentsMap.forEach((key, value) {
+        firebaseInvestments.add(Map<String, dynamic>.from(value));
+      });
+
+      setState(() {
+        investments = firebaseInvestments;
+      });
+    } else {
+      setState(() {
+        investments = [
+          {
+            'Stock Name': 'HIasdfl',
+            'Date Purchased': '2023-10-01',
+            'Amount': '10',
+            'Price': '1500.00',
+          },
+        ];
+      });
+    }
+  }
 
   DataTable investmentsDataTable = DataTable(
     columns: [
@@ -56,7 +109,9 @@ class _InvestmentPageState extends State<InvestmentPage> {
       double investmentValue = (double.parse(investment['Price']) *
           double.parse(investment['Amount']));
       double percentage = (investmentValue / totalInvestment) * 100;
-      pieChartData[investment['Stock Name']] = percentage;
+      // Include both price and percent in the pie chart data
+      pieChartData['${investment['Stock Name']} - \$${investment['Price']}'] =
+          percentage;
     }
   }
 
@@ -114,6 +169,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     }
   }
 
+  //Code For The Add Investments Button
   void showAddInvestmentsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -171,14 +227,28 @@ class _InvestmentPageState extends State<InvestmentPage> {
                   final currentDate =
                       DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+                  double price = double.parse(formData['price']);
+                  double amount = double.parse(formData['amount']);
+
+                  // Create a Map for the new investment
+                  final newInvestment = {
+                    'Stock Name': formData['stockOption'],
+                    'Date Purchased': currentDate,
+                    'Amount': amount.toString(),
+                    'Price': (price * amount).toStringAsFixed(2),
+                  };
+
+                  // Add the new investment to the local list (for UI)
                   setState(() {
-                    investments.add({
-                      'Stock Name': formData['stockOption'],
-                      'Date Purchased': currentDate,
-                      'Amount': formData['amount'],
-                      'Price': formData['price'],
-                    });
+                    investments.add(newInvestment);
                   });
+
+                  // Save the new investment to Firebase
+                  reference
+                      .child('users/${currentUser?.uid}/investments')
+                      .push()
+                      .set(newInvestment);
+
                   Navigator.of(context).pop();
                 }
               },
@@ -196,6 +266,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method To Handle More Information Button Section
   void showMoreInformationDialog(BuildContext context) {
     final stockSymbolNames = investments.map((investment) {
       return investment['Stock Name'];
@@ -368,6 +439,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method For Handling Graph Generation
   void showGenerateGraphDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -404,6 +476,315 @@ class _InvestmentPageState extends State<InvestmentPage> {
     );
   }
 
+  //Method For New Screen When You Click The Recommendations Button
+  void showRecommendationsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Recommendations'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FormBuilderDropdown(
+                    name: 'riskPreference',
+                    decoration: InputDecoration(labelText: 'Risk Level'),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'low',
+                        child: Text('Low'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'medium',
+                        child: Text('Medium'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'high',
+                        child: Text('High'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'noPreference',
+                        child: Text('No Preference'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRecommendation1 = value!;
+                      });
+                    },
+                  ),
+                  FormBuilderDropdown(
+                    name: 'assetPreference',
+                    decoration: InputDecoration(labelText: 'Asset Preference'),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'stocks',
+                        child: Text('Stocks'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'bonds',
+                        child: Text('Bonds'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'pms',
+                        child: Text('Precious Metals'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'noPreference',
+                        child: Text('No Preference'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRecommendation2 = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    String advice = '';
+                    if (selectedRecommendation1 == 'low') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice =
+                            'Recommendation: VOO - Vanguard S&P 500 ETF. This investment provides broad exposure to the top stocks of the NYSE with little cumulative risk.';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice =
+                            'Recommendation: SHY - iShares 1-3 Years Treasury Bond ETF. This investment tracks a market weighted index of debt issued by the US Treasury with 1-3 years remaining to maturity.';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice =
+                            'Recommendation: GLD - SPDR Gold Trust. This investment tracks the gold spot price, less expenses and liabilities, using gold bars held in London vaults.';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice =
+                            'Recommendation: VEA - Vanguard FTSE Developed Markets ETF. This investment is passively managed to provide exposure to the developed markets ex-US equity space. It holds stocks of any market capitalization.';
+                      }
+                    } else if (selectedRecommendation1 == 'medium') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice =
+                            'Recommendation: IBM - International Business Machines Corp. IBM is an information technology company, which engages in the provision of integrated solutions that leverage information technology and knowledge of business processes';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice =
+                            'Recommendation: VCIT - Vanguard Intermediate-Term Corporate Bond ETF. This investment tracks a market value-weighted index of US investment grade corporate bonds with maturities of 5-10 years.';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice =
+                            'Recommendation: SLV - iShares Silver Trust. This investment tracks the silver spot price, less expenses and liabilities, using silver bullion held in London.';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice =
+                            'Recommendation: CBT - Cabot Corp. Cabot Corp. is a global specialty chemicals and performance materials company. Its products are rubber and specialty grade carbon blacks, specialty compounds, fumed metal oxides, activated carbons, inkjet colorants, and aerogel.';
+                      }
+                    } else if (selectedRecommendation1 == 'high') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice =
+                            'Recommendation: CZR - Caesars Entertainment, Inc. Caesars Entertainment, Inc. engages in the management of casinos and resorts under the Caesars, Harrah\'s, Horseshoe, and Eldorado brands. It was founded in the Las Vegas area.';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice =
+                            'Recommendation: BNDX - Vanguard Total International Bond ETF. This investment tracks an investment-grade, non-USD denominated bond index, hedged against currency fluctuations for US investors.';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice =
+                            'Recommendation: SPPP - Sprott Physical Platinum and Palladium Trust. SPPP is a closed-end trust that invests in unencumbered and fully-allocated Good Delivery physical platinum and palladium bullion.';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice =
+                            'Recommendation: BTC - BitCoin. Bitcoin is the first successful internet money based on peer-to-peer technology; whereby no central bank or authority is involved in the transaction and production of the Bitcoin currency.';
+                      }
+                    } else if (selectedRecommendation1 == 'noPreference') {
+                      if (selectedRecommendation2 == 'stocks') {
+                        advice =
+                            'Recommendation: AMD - Advanced Micro Devices, Inc. Advanced Micro Devices, Inc. engages in the provision of semiconductor businesses. It operates through the following segments: Computing & Graphics, and Enterprise, Embedded and Semi-Custom. ';
+                      } else if (selectedRecommendation2 == 'bonds') {
+                        advice =
+                            'Recommendation: MUB - iShares National Muni Bond ETF. This investment tracks a market-weighted index of investment-grade debt issued by state and local governments and agencies. Interest is exempt from US income tax and from AMT.';
+                      } else if (selectedRecommendation2 == 'pms') {
+                        advice =
+                            'Recommendation: GOLD - Barrick Gold Corp. Barrick Gold Corp. engages in the production and sale of gold, copper, and related activities. It also provides exploration and mining development.';
+                      } else if (selectedRecommendation2 == 'noPreference') {
+                        advice =
+                            'Recommendation: VNQ - Vanguard Real Estate ETF. This investment tracks a market-cap-weighted index of companies involved in the ownership and operation of real estate in the United States.';
+                      }
+                    }
+                    // Display the advice underneath the DataTable
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(advice),
+                        backgroundColor: Color.fromARGB(255, 59, 139, 61),
+                        duration: Duration(seconds: 100),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Save'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  //Method To Handle The Compare Button's Click Events
+  void showCompareDialog(BuildContext context) {
+    final stockSymbolNames = investments.map((investment) {
+      return investment['Stock Name'];
+    }).toList();
+
+    String selectedStockName = ''; // To store the selected stock name
+    String originalPrice = '';
+    String currentPrice = '';
+    String percentChange = '5';
+    String oldPrice = '';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Compare Dialog'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FormBuilderDropdown(
+                    name: 'selectedStock',
+                    decoration: InputDecoration(labelText: 'Select Investment'),
+                    items: stockSymbolNames.map((symbol) {
+                      return DropdownMenuItem(
+                        value: symbol,
+                        child: Text(symbol),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedStockName = value.toString();
+                        originalPrice =
+                            getSelectedStockPrice(selectedStockName);
+                        oldPrice = getOldPrice(selectedStockName);
+                      });
+                    },
+                  ),
+                  if (selectedStockName
+                      .isNotEmpty) // Display when a stock is selected
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await fetchHistoricalStockData(
+                                selectedStockSymbol, '60min');
+                            setState(() {
+                              selectedInterval = '60min';
+                              String cAmount = investments.firstWhere(
+                                (investment) =>
+                                    investment['Stock Name'] ==
+                                    selectedStockName,
+                                orElse: () => {'Amount': ''},
+                              )['Amount'];
+                              String newhistoricalPrice =
+                                  (double.parse(historicalPrice) *
+                                          double.parse(cAmount))
+                                      .toStringAsFixed(2);
+                              percentChange = calculatePercentChange(
+                                  originalPrice, newhistoricalPrice);
+                            });
+                          },
+                          child: Text('Compare'),
+                        ),
+                        if (historicalPrice.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Original Price: \$$originalPrice'),
+                              Text(
+                                  'Current Price: \$${(double.parse(historicalPrice) * double.parse(investments.firstWhere((investment) => investment['Stock Name'] == selectedStockName)['Amount'])).toStringAsFixed(2)}'),
+                              Text(
+                                'Percent Change: $percentChange%',
+                                style: TextStyle(
+                                  color: double.parse(percentChange) > 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              )
+                            ],
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Update the color of the selected stock symbol based on percentChange
+                    updateSelectedStockColor(percentChange, selectedStockName);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Save'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Method to update the color of the selected stock symbol based on percentChange
+  void updateSelectedStockColor(String percentChange, String stockName) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == stockName,
+    );
+
+    if (selectedStock != null) {
+      final double change = double.parse(percentChange);
+      if (change > 0) {
+        selectedStock['Color'] =
+            Colors.green; // Change to green if percentChange is positive
+      } else if (change < 0) {
+        selectedStock['Color'] =
+            Colors.red; // Change to red if percentChange is negative
+      }
+    }
+  }
+
+  String calculatePercentChange(String originalPrice, String currentPrice) {
+    double original = double.parse(originalPrice);
+    double current = double.parse(currentPrice);
+
+    double change = current - original;
+    double percentChange1 = (change / original * 100);
+
+    return percentChange1.toStringAsFixed(2);
+  }
+
+//Helper Method For Compare Dialog Method
+  String getSelectedStockPrice(String stockName) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == stockName,
+      orElse: () => {},
+    );
+
+    if (selectedStock != null) {
+      return selectedStock['Price'];
+    } else {
+      return 'Stock information not found';
+    }
+  }
+
   String getSelectedStockInfo(String stockName) {
     final selectedStock = investments.firstWhere(
       (investment) => investment['Stock Name'] == stockName,
@@ -423,6 +804,18 @@ class _InvestmentPageState extends State<InvestmentPage> {
     }
   }
 
+  String getOldPrice(String stockSymbol) {
+    final selectedStock = investments.firstWhere(
+      (investment) => investment['Stock Name'] == stockSymbol,
+    );
+
+    if (selectedStock != null) {
+      return selectedStock['Price'];
+    } else {
+      return 'Stock information not found';
+    }
+  }
+
   void updateDataTable(
       String stockName, String price, String amount, String datePurchased) {
     final index = investments
@@ -430,7 +823,8 @@ class _InvestmentPageState extends State<InvestmentPage> {
 
     if (index != -1) {
       setState(() {
-        investments[index]['Price'] = price;
+        investments[index]['Price'] =
+            (double.parse(price) * double.parse(amount)).toStringAsFixed(2);
         investments[index]['Amount'] = amount;
         investments[index]['Date Purchased'] = datePurchased;
         editedPrice = '';
@@ -523,14 +917,7 @@ class _InvestmentPageState extends State<InvestmentPage> {
     investmentsTableRows.add(totalRow);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        leading: IconButton(
-          icon: Image.asset('images/FFLogo.png'),
-          onPressed: () => {Navigator.pushNamed(context, '/home')},
-        ),
-        title: Text('Investment Page', style: TextStyle(color: Colors.white)),
-      ),
+      appBar: FFAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -556,6 +943,26 @@ class _InvestmentPageState extends State<InvestmentPage> {
                       showGenerateGraphDialog(context);
                     },
                     child: Text('Generate Graph'),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      showRecommendationsDialog(context);
+                    },
+                    child: Text('Recommendations'),
+                  ),
+                  SizedBox(
+                      width: 16), // Add horizontal space between the buttons
+                  ElevatedButton(
+                    onPressed: () {
+                      showCompareDialog(context);
+                    },
+                    child: Text('Compare'),
                   ),
                 ],
               ),

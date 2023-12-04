@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:financefriend/ff_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -34,6 +35,46 @@ class _TrackingPageState extends State<TrackingPage> {
   DateTime? _selectedDay;
   Map<DateTime, List<String>> _events = {};
 
+  DateTime _parseDate(String date) {
+    String year = date.substring(6);
+    String month = date.substring(0, 2);
+    String day = date.substring(3, 5);
+    String reformattedDate = year + '-' + month + '-' + day;
+    return DateTime.parse(reformattedDate);
+  }
+
+  Future<bool> _billNotifsOn() async {
+    DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+    DataSnapshot settings = await settingsRef.get();
+    if (!settings.hasChild('allNotifs')) {
+      settingsRef.child('allNotifs').set(true);
+    } else if (!(settings.child('allNotifs').value as bool)) {
+      return false;
+    }
+    if (!settings.hasChild('billNotifs')) {
+      settingsRef.child('billNotifs').set(true);
+      return true;
+    } else {
+      return (settings.child('billNotifs').value as bool);
+    }
+  }
+
+  void _writeNotif(String billTitle, String dueDate) {
+    String title = billTitle + ' is due soon!';
+    String note = 'This bill is due on ' + dueDate;
+    try {
+      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference newNotif = notifRef.push();
+      newNotif.set({
+        'title': title,
+        'note': note,
+      });
+      notifRef.child('state').set(1);
+    } catch (error) {
+      print('Error writing bill notification: $error');
+    }
+  }
+
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     if (!isSameDay(_selectedDay, selectedDay)) {
       setState(() {
@@ -46,7 +87,7 @@ class _TrackingPageState extends State<TrackingPage> {
     }
   }
 
-  void _writeBill(String title, String note, String duedate) {
+  void _writeBill(String title, String note, String duedate) async {
     try {
       DatabaseReference newBill =
           reference.child('users/${currentUser?.uid}/bills').push();
@@ -55,13 +96,19 @@ class _TrackingPageState extends State<TrackingPage> {
         'note': note,
         'duedate': duedate,
       });
+      if (await _billNotifsOn()) {
+        DateTime parsedDueDate = _parseDate(duedate);
+        if (parsedDueDate.isAfter(DateTime.now()) && parsedDueDate.difference(DateTime.now()).inDays <= 7) {
+          _writeNotif(title, duedate);
+        }
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Bill added successfully! Refresh to update page.'),
         ),
       );
     } catch (error) {
-      print(error);
+      print('Error adding bill: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to add bill.'),
@@ -120,9 +167,7 @@ class _TrackingPageState extends State<TrackingPage> {
 
     DataSnapshot user = await userRef.get();
     if (!user.hasChild('bills')) {
-      return [
-        {'title': '', 'note': '', 'duedate': ''}
-      ];
+      return;
     }
 
     DataSnapshot bills = await userRef.child('bills').get();
@@ -387,115 +432,95 @@ class _TrackingPageState extends State<TrackingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.green,
-          leading: 
-            IconButton(
-              icon: Image.asset('images/FFLogo.png'),
-              onPressed: () => {
-                Navigator.pushNamed(context, '/home')
-              },
-            ),
-          title: Text('Bill Tracking Page'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Calendar Start
-              Container(
-                child: TableCalendar(
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: _onDaySelected,
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2025),
-                  eventLoader: _getEventsForDay,
+    return Scaffold(
+      appBar: const FFAppBar(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Calendar Start
+            Container(
+              child: TableCalendar(
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
                 ),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2025),
+                eventLoader: _getEventsForDay,
               ),
+            ),
 
-              // Calendar End
-              Text('Bills', style: TextStyle(fontSize: 32)),
-              RefreshIndicator(
-                onRefresh: () async {
-                  return await _fetchBills();
-                },
-                child: FutureBuilder(
-                  future: _fetchBills(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      results = snapshot.data;
-                      if (snapshot.data.length != 0) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
+            // Calendar End
+            Text('Bills', style: TextStyle(fontSize: 32)),
+            RefreshIndicator(
+              onRefresh: () async {
+                return await _fetchBills();
+              },
+              child: FutureBuilder(
+                future: _fetchBills(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    results = snapshot.data;
+                    if (snapshot.data.length != 0) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: DataTable(
+                          headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.green,
                           ),
-                          child: DataTable(
-                            headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.green,
-                            ),
-                            columnSpacing: 30,
-                            columns: [
-                              DataColumn(label: Text('Title')),
-                              DataColumn(label: Text('Note')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(label: Text('Delete')),
-                            ],
-                            rows: List.generate(
-                              results.length,
-                              (index) => _getDataRow(
-                                index,
-                                results[index],
-                              ),
-                            ),
-                            showBottomBorder: true,
-                          ),
-                        );
-                      } else {
-                        return const Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: CircularProgressIndicator(),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.all(40),
-                              child: Text('No Data Found...'),
-                            ),
+                          columnSpacing: 30,
+                          columns: [
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Note')),
+                            DataColumn(label: Text('Due Date')),
+                            DataColumn(label: Text('Delete')),
                           ],
-                        );
-                      }
+                          rows: List.generate(
+                            results.length,
+                            (index) => _getDataRow(
+                              index,
+                              results[index],
+                            ),
+                          ),
+                          showBottomBorder: true,
+                        ),
+                      );
                     } else {
                       return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: CircularProgressIndicator(),
-                          ),
                           Padding(
                             padding: EdgeInsets.all(40),
-                            child: Text('No Data Found...'),
+                            child: Text('You have no saved bills. Try adding one!'),
                           ),
                         ],
                       );
                     }
-                  },
-                ),
+                  } else {
+                    return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text('You have no saved bills. Try adding one!'),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
-              ElevatedButton(
-                onPressed: _openAddBillDialog,
-                child: const Text('Add Bill'),
-              )
-            ],
-          ),
+            ),
+            ElevatedButton(
+              onPressed: _openAddBillDialog,
+              child: const Text('Add Bill'),
+            )
+          ],
         ),
       ),
     );
