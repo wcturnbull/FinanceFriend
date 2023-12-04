@@ -196,6 +196,25 @@ class Login extends StatelessWidget {
           pageBuilder: (context, animation, secondaryAnimation) {
             return SplashScreen(); // Replace with your actual page widget
           },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = 0.0;
+            const end = 1.0;
+            const curve = Curves.easeInOut;
+            const duration =
+                Duration(milliseconds: 2000); // Adjust the duration here
+
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+            var opacityAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: opacityAnimation,
+              child: child,
+            );
+          },
+          transitionDuration:
+              const Duration(milliseconds: 2000), // Adjust the duration here
         ),
       );
     } catch (e) {

@@ -242,11 +242,48 @@ class _SocialPageState extends State<SocialPage> {
                 FriendGoalsWidget(
                   friends: userFriends,
                   friendGoalMap: friendGoalsMap,
-                )
+                ),
+                // Add the ChallengesBox here
+                const SizedBox(width: 100),
+                ChallengesBox(),
               ],
             ),
           ],
         ));
+  }
+}
+
+class ChallengesBox extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 500,
+      width: 400,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.black,
+          width: 2.0,
+        ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            const Text("Challenges:", style: TextStyle(fontSize: 20)),
+            const Divider(),
+            ElevatedButton(
+              child: Text("Custom Challenge"),
+              onPressed: () {
+                // Handle custom challenge button press
+                // You can add your logic here
+              },
+            ),
+            // Add other challenge-related content here if needed
+          ],
+        ),
+      ),
+    );
   }
 }
 
