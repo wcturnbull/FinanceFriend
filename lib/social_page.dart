@@ -253,7 +253,14 @@ class _SocialPageState extends State<SocialPage> {
   }
 }
 
-class ChallengesBox extends StatelessWidget {
+class ChallengesBox extends StatefulWidget {
+  @override
+  _ChallengesBoxState createState() => _ChallengesBoxState();
+}
+
+class _ChallengesBoxState extends State<ChallengesBox> {
+  String customChallengeMessage = "";
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -277,8 +284,28 @@ class ChallengesBox extends StatelessWidget {
               onPressed: () {
                 // Handle custom challenge button press
                 // You can add your logic here
+
+                // Display the custom challenge message
+                setState(() {
+                  customChallengeMessage = "This is a test custom challenge!";
+                });
               },
             ),
+            const SizedBox(height: 10),
+            Text(
+              customChallengeMessage,
+              style: TextStyle(fontSize: 16, color: Colors.green),
+            ),
+            if (customChallengeMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ElevatedButton(
+                child: Text("Join"),
+                onPressed: () {
+                  // Handle join button press
+                  // You can add your logic here
+                },
+              ),
+            ],
             // Add other challenge-related content here if needed
           ],
         ),
