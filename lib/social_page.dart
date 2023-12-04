@@ -261,6 +261,41 @@ class ChallengesBox extends StatefulWidget {
 class _ChallengesBoxState extends State<ChallengesBox> {
   String customChallengeMessage = "";
   bool isJoined = false;
+  List<Map<String, dynamic>> challenges = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch challenges when the widget is first created
+    fetchChallenges();
+  }
+
+  Future<void> fetchChallenges() async {
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+
+      // Retrieve the list of challenges from the Firebase database
+      DatabaseEvent challengesEvent =
+          await reference.child('users/$uid/challenges').once();
+      DataSnapshot challengesSnapshot = challengesEvent.snapshot;
+
+      if (challengesSnapshot.value != null) {
+        Map<String, dynamic> challengesData =
+            challengesSnapshot.value as Map<String, dynamic>;
+
+        challenges = challengesData.entries
+            .map((entry) => {
+                  'key': entry.key,
+                  'message': entry.value['message'],
+                  'status': entry.value['status'],
+                })
+            .toList();
+
+        // Update the UI to display challenges
+        setState(() {});
+      }
+    }
+  }
 
   Future<void> getOverBudgetCategory() async {
     if (currentUser != null) {
@@ -296,10 +331,16 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           }
         });
 
+        // Save the custom challenge message to the Firebase database
+        String challengeMessage =
+            "Try to spend less in the \"$overBudgetCategory\" category!";
+        await reference.child('users/$uid/challenges').push().set({
+          'message': challengeMessage,
+        });
+
         // Display the over-budget category in the custom challenge message
         setState(() {
-          customChallengeMessage =
-              "Try to spend less in the \"$overBudgetCategory\" category!";
+          customChallengeMessage = challengeMessage;
           isJoined = false; // Reset the join status
         });
       }
@@ -327,26 +368,29 @@ class _ChallengesBoxState extends State<ChallengesBox> {
             ElevatedButton(
               child: Text("Custom Challenge"),
               onPressed: () {
-                // Handle custom challenge button press
-                // You can add your logic here
-
                 // Display the custom challenge message
                 getOverBudgetCategory();
+                fetchChallenges();
               },
             ),
             const SizedBox(height: 10),
-            Text(
-              customChallengeMessage,
-              style: TextStyle(fontSize: 16, color: Colors.green),
-            ),
-            if (customChallengeMessage.isNotEmpty && !isJoined) ...[
+            if (challenges.isNotEmpty) ...{
+              Text(
+                challenges.first['message'],
+                style: TextStyle(fontSize: 16, color: Colors.green),
+              ),
+            },
+            if (challenges.isEmpty) ...{
+              Text(
+                customChallengeMessage,
+                style: TextStyle(fontSize: 16, color: Colors.green),
+              ),
+            },
+            if (challenges.isNotEmpty && !isJoined) ...[
               const SizedBox(height: 10),
               ElevatedButton(
                 child: Text("Join"),
                 onPressed: () {
-                  // Handle join button press
-                  // You can add your logic here
-
                   // Update the UI to show the "Leave" button
                   setState(() {
                     isJoined = true;
