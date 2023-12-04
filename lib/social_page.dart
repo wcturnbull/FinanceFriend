@@ -260,6 +260,7 @@ class ChallengesBox extends StatefulWidget {
 
 class _ChallengesBoxState extends State<ChallengesBox> {
   String customChallengeMessage = "";
+  bool isJoined = false;
 
   @override
   Widget build(BuildContext context) {
@@ -288,6 +289,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                 // Display the custom challenge message
                 setState(() {
                   customChallengeMessage = "This is a test custom challenge!";
+                  isJoined = false; // Reset the join status
                 });
               },
             ),
@@ -296,13 +298,33 @@ class _ChallengesBoxState extends State<ChallengesBox> {
               customChallengeMessage,
               style: TextStyle(fontSize: 16, color: Colors.green),
             ),
-            if (customChallengeMessage.isNotEmpty) ...[
+            if (customChallengeMessage.isNotEmpty && !isJoined) ...[
               const SizedBox(height: 10),
               ElevatedButton(
                 child: Text("Join"),
                 onPressed: () {
                   // Handle join button press
                   // You can add your logic here
+
+                  // Update the UI to show the "Leave" button
+                  setState(() {
+                    isJoined = true;
+                  });
+                },
+              ),
+            ],
+            if (isJoined) ...[
+              const SizedBox(height: 10),
+              ElevatedButton(
+                child: Text("Leave"),
+                onPressed: () {
+                  // Handle leave button press
+                  // You can add your logic here
+
+                  // Update the UI to show the "Join" button
+                  setState(() {
+                    isJoined = false;
+                  });
                 },
               ),
             ],
