@@ -262,6 +262,50 @@ class _ChallengesBoxState extends State<ChallengesBox> {
   String customChallengeMessage = "";
   bool isJoined = false;
 
+  Future<void> getOverBudgetCategory() async {
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+
+      // Retrieve the user's budget information from Firebase
+      DatabaseEvent budgetsEvent =
+          await reference.child('users/$uid/budgets').once();
+      DataSnapshot budgetsSnapshot = budgetsEvent.snapshot;
+
+      if (budgetsSnapshot.value != null) {
+        Map<String, dynamic> budgetsData =
+            budgetsSnapshot.value as Map<String, dynamic>;
+
+        // Find the budget with the highest expense
+        String overBudgetCategory = "";
+        double maxExpensePrice = 0.0;
+
+        budgetsData.forEach((budgetName, budgetData) {
+          if (budgetData.containsKey('expenses')) {
+            dynamic expensesData = budgetData['expenses'];
+
+            if (expensesData is List) {
+              for (var expenseData in expensesData) {
+                double price = expenseData['price'] ?? 0.0;
+
+                if (price > maxExpensePrice) {
+                  maxExpensePrice = price;
+                  overBudgetCategory = expenseData['category'] ?? "";
+                }
+              }
+            }
+          }
+        });
+
+        // Display the over-budget category in the custom challenge message
+        setState(() {
+          customChallengeMessage =
+              "Try to spend less in the \"$overBudgetCategory\" category!";
+          isJoined = false; // Reset the join status
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -287,10 +331,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                 // You can add your logic here
 
                 // Display the custom challenge message
-                setState(() {
-                  customChallengeMessage = "This is a test custom challenge!";
-                  isJoined = false; // Reset the join status
-                });
+                getOverBudgetCategory();
               },
             ),
             const SizedBox(height: 10),
