@@ -60,6 +60,29 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
+  void _acceptRequest(String note, String id) async {
+    try {
+      String userName = note.substring(note.indexOf(' friend ')+8, note.indexOf(' would '));
+      String typeS = note.substring(note.indexOf(' would '));
+      String type = '';
+      if (typeS.contains('bill')) {
+        type = 'calendar';
+      } else if (typeS.contains('budget')) {
+        type = 'budgets';
+      }
+      DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}/settings');
+      DataSnapshot settings = await settingsRef.get();
+      if (!settings.hasChild('permissions') || 
+          !(settings.child('permissions').hasChild(userName) && 
+          settings.child('permissions').child(userName).child(type).value == true)) {
+        settingsRef.child('permissions').child(userName).child(type).set(true);
+      }
+    } catch (error) {
+      print(error);
+    }
+    _deleteNotif(id);
+  }
+
   List<Map<String, String>> results = [];
   Future _fetchNotifs() async {
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
@@ -106,6 +129,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
           )),
         ],
       );
+    } else if (data['title'].contains('Request to View ')) {
+      return DataRow(
+        cells: <DataCell>[
+          DataCell(Text(data['title'])),
+          DataCell(Text(data['note'])),
+          DataCell(Row(children: [
+            ElevatedButton(
+              child: const Text('Accept'),
+              onPressed: () => _acceptRequest(data['note'], data['id']),
+            ),
+            ElevatedButton(
+            child: const Text('Deny'),
+            onPressed: () => _deleteNotif(data['id']),
+            ),
+          ])),
+        ]
+      );
     } else {
       return DataRow(
         cells: <DataCell>[
@@ -145,7 +185,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         columns: [
                           DataColumn(label: Text('Title')),
                           DataColumn(label: Text('Note')),
-                          DataColumn(label: Text('Delete')),
+                          DataColumn(label: Text('Actions')),
                         ],
                         rows: List.generate(
                           results.length,
