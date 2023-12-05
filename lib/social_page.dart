@@ -279,7 +279,20 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           await reference.child('users/$uid/challenges').once();
       DataSnapshot challengesSnapshot = challengesEvent.snapshot;
 
-      if (challengesSnapshot.value != null) {
+      if (challengesSnapshot.value == null) {
+        // If the challenges section is null, create an initial challenge
+        String initialMessage = "Default Challenge Message";
+        String initialStatus = "not joined";
+
+        await reference.child('users/$uid/challenges').push().set({
+          'message': initialMessage,
+          'status': initialStatus,
+        });
+
+        // Fetch the challenges again after adding the initial challenge
+        await fetchChallenges();
+      } else {
+        // The challenges section exists, fetch and display challenges
         Map<String, dynamic> challengesData =
             challengesSnapshot.value as Map<String, dynamic>;
 
@@ -336,6 +349,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
             "Try to spend less in the \"$overBudgetCategory\" category!";
         await reference.child('users/$uid/challenges').push().set({
           'message': challengeMessage,
+          'status': "not joined",
         });
 
         // Display the over-budget category in the custom challenge message
@@ -344,6 +358,40 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           isJoined = false; // Reset the join status
         });
       }
+    }
+  }
+
+  Future<void> joinChallenge(String challengeKey) async {
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+
+      // Set the status of the challenge to "joined" in the database
+      await reference
+          .child('users/$uid/challenges/$challengeKey')
+          .update({'status': 'joined'});
+
+      // Update the UI to show the "Leave" button
+      setState(() {
+        isJoined = true;
+      });
+      fetchChallenges();
+    }
+  }
+
+  Future<void> leaveChallenge(String challengeKey) async {
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+
+      // Set the status of the challenge to "not joined" in the database
+      await reference
+          .child('users/$uid/challenges/$challengeKey')
+          .update({'status': 'not joined'});
+
+      // Update the UI to show the "Join" button
+      setState(() {
+        isJoined = false;
+      });
+      fetchChallenges();
     }
   }
 
@@ -386,26 +434,26 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                 style: TextStyle(fontSize: 16, color: Colors.green),
               ),
             },
-            if (challenges.isNotEmpty && !isJoined) ...[
+            if (challenges.isNotEmpty &&
+                challenges.first['status'] == 'not joined') ...[
               const SizedBox(height: 10),
               ElevatedButton(
                 child: Text("Join"),
                 onPressed: () {
                   // Update the UI to show the "Leave" button
+                  joinChallenge(challenges.first['key']);
                   setState(() {
                     isJoined = true;
                   });
                 },
               ),
             ],
-            if (isJoined) ...[
+            if (challenges.first['status'] == 'joined') ...[
               const SizedBox(height: 10),
               ElevatedButton(
                 child: Text("Leave"),
                 onPressed: () {
-                  // Handle leave button press
-                  // You can add your logic here
-
+                  leaveChallenge(challenges.first['key']);
                   // Update the UI to show the "Join" button
                   setState(() {
                     isJoined = false;
