@@ -144,7 +144,8 @@ class SocialPage extends StatefulWidget {
 class _SocialPageState extends State<SocialPage> {
   List<String> userNames = [];
   List<String> userFriends = [];
-  Map<String, bool> friendStatus = {};
+  Map<String, int> friendStatus = {};
+  //0: not friends  1: friends  2: blocked
   Map<String, List<String>> friendGoalsMap = {};
 
   @override
@@ -180,7 +181,13 @@ class _SocialPageState extends State<SocialPage> {
 
       setState(() {
         for (var userName in userNames) {
-          friendStatus[userName] = userFriends.contains(userName);
+          if (userFriends.contains(userName)) {
+            friendStatus[userName] = 1;
+          } else if (userFriends.contains('blocked')) {
+            friendStatus[userName] = 2;
+          } else {
+            friendStatus[userName] = 0;
+          }
         }
       });
     }
@@ -395,9 +402,11 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
 class AddFriendsWidget extends StatefulWidget {
   final List<String> userNames;
   final List<String> friendList;
-  final Map<String, bool> friendStatus;
+  final Map<String, int> friendStatus;
   final Function(String) onAddFriend;
   final Function(String) onRemoveFriend;
+  final Function(String) onBlock;
+  final Function(String) onUnblock;
 
   const AddFriendsWidget({
     Key? key,
@@ -406,6 +415,8 @@ class AddFriendsWidget extends StatefulWidget {
     required this.friendStatus,
     required this.onAddFriend,
     required this.onRemoveFriend,
+    required this.onBlock,
+    required this.onUnblock,
   }) : super(key: key);
 
   @override
@@ -443,23 +454,39 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                         Text(widget.userNames[index]),
                         ElevatedButton(
                           child: Text(
-                            widget.friendStatus[widget.userNames[index]] == true
+                            widget.friendStatus[widget.userNames[index]] == 2
+                                ? "Unblock"
+                                : "Block",
+                          ),
+                          onPressed: () {
+                            int status;
+                            if (widget.friendStatus[widget.userNames[index]] ==
+                                2) {
+                              widget.onUnblock(widget.userNames[index]);
+                            }
+                          },
+                        ),
+                        ElevatedButton(
+                          child: Text(
+                            widget.friendStatus[widget.userNames[index]] == 1
                                 ? "Remove Friend"
                                 : "Add Friend",
                           ),
                           onPressed: () {
+                            int status;
                             if (widget.friendStatus[widget.userNames[index]] ==
-                                true) {
+                                1) {
                               widget.onRemoveFriend(widget.userNames[index]);
                               widget.friendList.remove(widget.userNames[index]);
+                              status = 0;
                             } else {
                               widget.onAddFriend(widget.userNames[index]);
                               widget.friendList.add(widget.userNames[index]);
+                              status = 1;
                             }
                             setState(() {
                               widget.friendStatus[widget.userNames[index]] =
-                                  !widget
-                                      .friendStatus[widget.userNames[index]]!;
+                                  status;
                             });
                           },
                         ),

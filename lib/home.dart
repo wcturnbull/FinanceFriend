@@ -28,15 +28,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late User? currentUser;
+  User? user = currentUser;
 
   @override
   void initState() {
     super.initState();
     // Set up a listener for authentication state changes
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    FirebaseAuth.instance.authStateChanges().listen((User? updatedUser) {
       setState(() {
-        currentUser = user;
+        user = updatedUser;
       });
 
       if (user != null) {
