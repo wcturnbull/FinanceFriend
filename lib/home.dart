@@ -1,7 +1,14 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:financefriend/budget_tracking_widgets/budget_colors.dart';
+import 'package:financefriend/credit_card.dart';
 import 'package:financefriend/ff_appbar.dart';
+import 'package:financefriend/globals.dart';
+import 'package:financefriend/investment_page.dart';
+import 'package:financefriend/location.dart';
+import 'package:financefriend/notifications.dart';
+import 'package:financefriend/profile.dart';
 import 'package:financefriend/profile_picture_widget.dart';
+import 'package:financefriend/tracking.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -224,7 +231,7 @@ class _HomePageState extends State<HomePage> {
       final String? name = currentUser?.displayName;
       final String? url = currentUser?.photoURL;
       return Scaffold(
-          appBar: const FFAppBar(),
+          appBar: FFAppBar(),
           body: SingleChildScrollView(
               scrollDirection: Axis.vertical,
               child: Column(
@@ -263,74 +270,367 @@ class _HomePageState extends State<HomePage> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
+                          /*
+                        ElevatedButton(
+                          style: const ButtonStyle(
+                            fixedSize:
+                                MaterialStatePropertyAll(Size(300.0, 50.0)),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) {
+                                  return InvestmentPage(); // Replace with your actual page widget
+                                },
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  const duration = Duration(
+                                      milliseconds:
+                                          1000); // Adjust the duration here
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                    position: offsetAnimation,
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration: const Duration(
+                                    milliseconds:
+                                        1000), // Adjust the duration here
+                              ),
+                            );
+                          },
+                          child: const Text('Go to Investment Page'),
+                        ), */
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/investments');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return InvestmentPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/investments');
+                              }
                             },
                             child: const Text('Go to Investment Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/dashboard');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return BudgetTracking(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/dashboard');
+                              }
                             },
                             child: const Text('Go to Budget Dashboard Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/tracking');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return TrackingPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/tracking');
+                              }
                             },
                             child: const Text('Go to Bill Tracking Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/credit_card');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return CreditCardPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/credit_card');
+                              }
                             },
                             child: const Text('Go to Credit Card Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/notifications');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return NotificationsPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/notifications');
+                              }
                             },
-                            child: const Text("Go to Notification Page"),
+                            child: const Text('Go to Notification Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/profile');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return Profile(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/profile');
+                              }
                             },
-                            child: const Text("Go to Profile Page"),
+                            child: const Text('Go to Profile Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/locations');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return LocationPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/locations');
+                              }
                             },
-                            child: const Text("Go to Locations Page"),
+                            child: const Text('Go to Locations Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
@@ -344,26 +644,23 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
-                            style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
-                            ),
-                            onPressed: () async {
-                              try {
-                                Navigator.pushNamedAndRemoveUntil(
-                                    context, '/login', (route) => false);
-                                await FirebaseAuth.instance.signOut();
-                              } catch (e) {
-                                // Handle sign-out errors, if any
-                                print('Error signing out: $e');
-                              }
-                            },
-                            child: const Text("Sign Out"),
-                          ),
-
-                          const SizedBox(height: 16), //spacing
+                              child: Text("Sign Out"),
+                              style: const ButtonStyle(
+                                fixedSize:
+                                    MaterialStatePropertyAll(Size(300.0, 50.0)),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/login', (route) => false);
+                                  await FirebaseAuth.instance.signOut();
+                                } catch (e) {
+                                  // Handle sign-out errors, if any
+                                  print('Error signing out: $e');
+                                }
+                              }),
                         ],
-                      ),
+                      )
                     ],
                   )
                 ],

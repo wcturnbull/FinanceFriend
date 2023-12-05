@@ -44,7 +44,8 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   Future<bool> _billNotifsOn() async {
-    DatabaseReference settingsRef = reference.child('users/${currentUser?.uid}').child('settings');
+    DatabaseReference settingsRef =
+        reference.child('users/${currentUser?.uid}').child('settings');
     DataSnapshot settings = await settingsRef.get();
     if (!settings.hasChild('allNotifs')) {
       settingsRef.child('allNotifs').set(true);
@@ -63,7 +64,8 @@ class _TrackingPageState extends State<TrackingPage> {
     String title = billTitle + ' is due soon!';
     String note = 'This bill is due on ' + dueDate;
     try {
-      DatabaseReference notifRef = reference.child('users/${currentUser?.uid}/notifications');
+      DatabaseReference notifRef =
+          reference.child('users/${currentUser?.uid}/notifications');
       DatabaseReference newNotif = notifRef.push();
       newNotif.set({
         'title': title,
@@ -98,7 +100,8 @@ class _TrackingPageState extends State<TrackingPage> {
       });
       if (await _billNotifsOn()) {
         DateTime parsedDueDate = _parseDate(duedate);
-        if (parsedDueDate.isAfter(DateTime.now()) && parsedDueDate.difference(DateTime.now()).inDays <= 7) {
+        if (parsedDueDate.isAfter(DateTime.now()) &&
+            parsedDueDate.difference(DateTime.now()).inDays <= 7) {
           _writeNotif(title, duedate);
         }
       }
@@ -433,7 +436,7 @@ class _TrackingPageState extends State<TrackingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(),
+      appBar: FFAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -497,7 +500,8 @@ class _TrackingPageState extends State<TrackingPage> {
                         children: <Widget>[
                           Padding(
                             padding: EdgeInsets.all(40),
-                            child: Text('You have no saved bills. Try adding one!'),
+                            child: Text(
+                                'You have no saved bills. Try adding one!'),
                           ),
                         ],
                       );
@@ -508,7 +512,8 @@ class _TrackingPageState extends State<TrackingPage> {
                       children: <Widget>[
                         Padding(
                           padding: EdgeInsets.all(40),
-                          child: Text('You have no saved bills. Try adding one!'),
+                          child:
+                              Text('You have no saved bills. Try adding one!'),
                         ),
                       ],
                     );

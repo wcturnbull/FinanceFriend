@@ -91,18 +91,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
         cells: <DataCell>[
           DataCell(Text(data['title'])),
           DataCell(Text(data['note'])),
-          DataCell(/*TextField(
+          DataCell(
+              /*TextField(
             decoration: const InputDecoration(labelText: 'Enter a number'),
             onSubmitted: (value) {
               
             },
           )*/
-          LocationInput(date: data['note'].split(': ')[0],
-          locationAddress: data['note'].split(': ')[1],
-          locationName: data['title'].split(': ')[1],
-          deleteNotif: () => _deleteNotif(data['id']),
-          )
-          ),
+              LocationInput(
+            date: data['note'].split(': ')[0],
+            locationAddress: data['note'].split(': ')[1],
+            locationName: data['title'].split(': ')[1],
+            deleteNotif: () => _deleteNotif(data['id']),
+          )),
         ],
       );
     } else {
@@ -122,14 +123,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const FFAppBar(),
+      appBar: FFAppBar(),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Notifications', style: TextStyle(fontSize: 32)),
-            FutureBuilder(
-              future: _fetchNotifs(), 
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('Notifications', style: TextStyle(fontSize: 32)),
+          FutureBuilder(
+              future: _fetchNotifs(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   results = snapshot.data;
@@ -185,13 +184,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     ],
                   );
                 }
-              }
-            ),
-            ElevatedButton(
-              onPressed: _silenceNotifs,
-              child: const Text('Mark Notifications As Read'),
-            ),
-          ]),
+              }),
+          ElevatedButton(
+            onPressed: _silenceNotifs,
+            child: const Text('Mark Notifications As Read'),
+          ),
+        ]),
       ),
     );
   }
