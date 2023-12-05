@@ -158,7 +158,7 @@ class _LocationPageState extends State<LocationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const FFAppBar(),
+        appBar: FFAppBar(),
         body: Center(
             child: Flex(
                 direction: Axis.vertical,

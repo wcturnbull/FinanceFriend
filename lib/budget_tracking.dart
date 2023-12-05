@@ -56,13 +56,11 @@ class _BudgetTrackingState extends State<BudgetTracking> {
   }
 
   Future<void> loadWishlistFromDB() async {
-    print("loading wishlist");
     if (currentUser == null) {
       return;
     }
 
     List<WishListItem> tempWishList = await getWishlistFromDB();
-    print(tempWishList);
     setState(() {
       wishlistLoaded = tempWishList;
     });
@@ -109,8 +107,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     // Fetch the selected budget data and update your UI
     getBudgetFromFirebaseByName(selectedBudgetName).then((selectedBudget) {
       if (selectedBudget != null) {
-        print(selectedBudget.expenses);
-        print("ColorList:");
         setState(() {
           budgetMap = selectedBudget.budgetMap;
           expenseList = selectedBudget.expenses;
@@ -147,9 +143,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     if (budgetList.isEmpty) {
       return const Text("");
     }
-
-    print("Printing budgetNames");
-    print(budgetList);
 
     return Container(
       width: 300,
@@ -349,9 +342,9 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                                           onPressed: () async {
                                             final resp =
                                                 await openAddToBudget();
-                                            if (resp == null || resp.isEmpty)
+                                            if (resp == null || resp.isEmpty) {
                                               return;
-                                            print(resp);
+                                            }
 
                                             setState(() {
                                               if (!dropdownItems
@@ -892,8 +885,6 @@ class _BudgetTrackingState extends State<BudgetTracking> {
                   Navigator.of(context).pop(); // Close the dialog
                   List<Color> currList =
                       await getColorListFromFirebase(budgetName);
-                  print("current color list:");
-                  print(currList);
                   setState(() {
                     updateColorList(currList);
                   });

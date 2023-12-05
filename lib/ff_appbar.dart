@@ -1,8 +1,10 @@
+import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'switch_widget.dart';
+import 'globals.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -13,8 +15,83 @@ final userRef = reference.child('users/${currentUser?.uid}');
 final userNotificationsReference = reference.child('notifications');
 final currentUser = FirebaseAuth.instance.currentUser;
 
+class AnimationSettingsDialog extends StatefulWidget {
+  final bool initialValue;
+
+  const AnimationSettingsDialog({Key? key, required this.initialValue})
+      : super(key: key);
+
+  @override
+  _AnimationSettingsDialogState createState() =>
+      _AnimationSettingsDialogState(initialValue);
+}
+
+class _AnimationSettingsDialogState extends State<AnimationSettingsDialog> {
+  late bool seeTransitions;
+
+  _AnimationSettingsDialogState(this.seeTransitions);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              'Animation Settings',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text(
+              'Toggle To Turn Page Transition Animations On Or Off',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('See Transitions'),
+                Switch(
+                  value: seeTransitions,
+                  onChanged: (value) {
+                    setState(() {
+                      seeTransitions = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop(seeTransitions);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class FFAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const FFAppBar({super.key});
+  FFAppBar({super.key});
 
   @override
   State<FFAppBar> createState() => _FFAppBarState();
@@ -32,6 +109,9 @@ class _FFAppBarState extends State<FFAppBar> {
       FirebaseAuth.instance.currentUser?.delete();
       DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
       await userRef.remove();
+      DatabaseReference userIndexRef =
+          reference.child('userIndex/${currentUser?.displayName}');
+      await userIndexRef.remove();
     } catch (error) {
       print("Error deleting user: $error");
     }
@@ -54,24 +134,24 @@ class _FFAppBarState extends State<FFAppBar> {
           reference.child('users/${currentUser?.uid}').child('settings');
       DataSnapshot settings = await settingsRef.get();
       if (!settings.hasChild('allNotifs')) {
-        settingsRef.child('allNotifs').set('true');
+        settingsRef.child('allNotifs').set(true);
       } else {
         setState(() {
-          _allNotifs = (settings.child('allNotifs').value == 'true');
+          _allNotifs = (settings.child('allNotifs').value as bool);
         });
       }
       if (!settings.hasChild('billNotifs')) {
-        settingsRef.child('billNotifs').set('true');
+        settingsRef.child('billNotifs').set(true);
       } else {
         setState(() {
-          _billNotifs = (settings.child('billNotifs').value == 'true');
+          _billNotifs = (settings.child('billNotifs').value as bool);
         });
       }
       if (!settings.hasChild('locHistNotifs')) {
-        settingsRef.child('locHistNotifs').set('true');
+        settingsRef.child('locHistNotifs').set(true);
       } else {
         setState(() {
-          _locHistNotifs = (settings.child('locHistNotifs').value == 'true');
+          _locHistNotifs = (settings.child('locHistNotifs').value as bool);
         });
       }
     } catch (error) {
@@ -274,6 +354,21 @@ class _FFAppBarState extends State<FFAppBar> {
             ])));
   }
 
+  void _openAnimationSettings(BuildContext context) async {
+    bool? result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AnimationSettingsDialog(
+        initialValue: seeTransitions,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        seeTransitions = result;
+      });
+    }
+  }
+
   void _openSettings(BuildContext context) {
     showDialog<void>(
         context: context,
@@ -318,6 +413,11 @@ class _FFAppBarState extends State<FFAppBar> {
                               _openNotifsSettings(context);
                             })),
                     Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ElevatedButton(
+                            child: const Text('Animation Settings'),
+                            onPressed: () => _openAnimationSettings(context))),
+                    Padding(
                       padding: const EdgeInsets.all(8),
                       child: ElevatedButton(
                         child: const Text('Delete Account'),
@@ -329,8 +429,9 @@ class _FFAppBarState extends State<FFAppBar> {
                       child: ElevatedButton(
                         child: const Text('Sign Out'),
                         onPressed: () {
+                          Navigator.pushNamedAndRemoveUntil(
+                              context, '/login', (route) => false);
                           FirebaseAuth.instance.signOut();
-                          Navigator.pushNamed(context, '/login');
                         },
                       ),
                     ),
@@ -355,7 +456,44 @@ class _FFAppBarState extends State<FFAppBar> {
       backgroundColor: Theme.of(context).colorScheme.primary,
       leading: IconButton(
         icon: Image.asset('images/FFLogo.png'),
-        onPressed: () => Navigator.pushNamed(context, '/home'),
+        onPressed: () {
+          if (seeTransitions) {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return HomePage(); // Replace with your actual page widget
+                },
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = 0.0;
+                  const end = 1.0;
+                  const curve = Curves.easeInOut;
+                  const duration =
+                      Duration(milliseconds: 2000); // Adjust the duration here
+
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+
+                  var opacityAnimation = animation.drive(tween);
+
+                  return FadeTransition(
+                    opacity: opacityAnimation,
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(
+                    milliseconds: 2000), // Adjust the duration here
+              ),
+            );
+          } else {
+            // If seeTransitions is false, simply navigate to the home page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          }
+        },
       ),
       title: const Text(
         'Finance Friend',

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:financefriend/location_card_widget.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -30,8 +31,49 @@ class CreateAccount extends StatelessWidget {
 
   final String profileUrl =
       "https://firebasestorage.googleapis.com/v0/b/financefriend-41da9.appspot.com/o/profile_pictures%2Fdefault.png?alt=media&token=a0d5c338-c123-4373-9ece-d0b0ba40194a";
+  Future<bool> doesKeyExist(String key) async {
+    DataSnapshot snapshot;
+    try {
+      var event = await reference.child('userIndex').once();
+      snapshot = event.snapshot;
+
+      // Check if the key exists in the snapshot
+      return (snapshot.value as Map<String, dynamic>?)?[key] != null;
+    } catch (e) {
+      print('Error fetching data: $e');
+      return false;
+    }
+  }
 
   Future<void> _handleRegistration(BuildContext context) async {
+    // Check if the desired name is unique
+    final String desiredName = nameController.text.trim();
+    bool exists = await doesKeyExist(desiredName);
+
+    if (exists) {
+      // If the name is not unique, show an alert to the user
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Name Not Available'),
+            content: const Text(
+                'The provided name is already in use. Please choose a different name.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    // Continue with user registration
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -49,32 +91,70 @@ class CreateAccount extends StatelessWidget {
       );
 
       final user = userCredential.user;
-      await user?.updateDisplayName(nameController.text);
+      await user?.updateDisplayName(desiredName);
       await user?.updatePhotoURL(profileUrl);
 
       final String uid = user!.uid;
 
       final usersReference = reference.child('users');
-      usersReference.push().set(uid);
 
       final currentUserReference = usersReference.child(uid);
       await currentUserReference.set({
-        'name': nameController.text,
+        'name': desiredName,
         'bio': bioController.text,
         'goals': goalChips,
         'landing_page': '/home',
         'profilePic': profileUrl,
       });
 
-      // Registration successful, you can now navigate to another page or handle the next steps.
+      await reference
+          .child('userIndex')
+          .child(desiredName)
+          .set(currentUser!.uid);
+
+      // Registration successful, navigate to another page or handle the next steps.
       Navigator.pushNamed(context, '/home');
     } catch (e) {
-      // Handle registration errors (e.g., email is already in use)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration failed. Please try again.'),
-        ),
-      );
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'email-already-in-use':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('The provided email is already in use.'),
+              ),
+            );
+            break;
+          case 'weak-password':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'The password is too weak. Please choose a stronger password.'),
+              ),
+            );
+            break;
+          case 'invalid-email':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('The provided email is not valid.'),
+              ),
+            );
+            break;
+          // Add more cases for other FirebaseAuthException codes if needed
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration failed. Please try again.'),
+              ),
+            );
+        }
+      } else {
+        // Handle other non-FirebaseAuthException registration errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration failed. Please try again.'),
+          ),
+        );
+      }
     }
   }
 

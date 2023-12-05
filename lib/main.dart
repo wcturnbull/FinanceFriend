@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const Profile(),
           '/locations': (context) => const LocationPage(),
           '/notifications': (context) => const NotificationsPage(),
-          '/social': (context) => SocialPage(),
+          '/social': (context) => const SocialPage(),
         });
   }
 }

@@ -362,7 +362,6 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
             "Available": 100 - usage,
           };
         } else {
-          print("GREATER THAN 100");
           usage = 100;
           usage_str = "\u26A0\uFE0F\n>100%";
           dataMap = {
