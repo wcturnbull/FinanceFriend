@@ -26,8 +26,49 @@ Future<String?> getUidFromName(String name) async {
   return null;
 }
 
-Future<void> addUserAsFriend(String name) async {
+Future<bool> addUserAsFriend(String name) async {
   if (currentUser != null) {
+    String? friendUid = await getUidFromName(name);
+    DatabaseEvent preEvent2 = await reference.child('users/$friendUid').once();
+    DataSnapshot preSnapshot2 = preEvent2.snapshot;
+
+    if (preSnapshot2.value != null) {
+      Map<String, dynamic> friendData =
+          preSnapshot2.value as Map<String, dynamic>;
+      // print("Friend Data:");
+      // print(friendData);
+      if (friendData.containsKey("friends")) {
+        DatabaseEvent event2 =
+            await reference.child('users/${friendUid}/friends').once();
+        DataSnapshot snapshot2 = event2.snapshot;
+        if (snapshot2.value != null) {
+          String? userName = currentUser!.displayName;
+          Map<String, dynamic> friendMap =
+              snapshot2.value as Map<String, dynamic>;
+
+          //Check if friend to add has blocked the current user
+          if (friendMap[userName!] == 'blocked') return false;
+
+          friendMap[userName] = userName;
+          reference
+              .child('users')
+              .child(friendUid!)
+              .child('friends')
+              .set(friendMap);
+        }
+      } else {
+        String? userName = currentUser!.displayName;
+        Map<String, String> friendMap = {};
+        friendMap[userName!] = userName;
+        reference.child('users').child(friendUid!).child('friends').push();
+        reference
+            .child('users')
+            .child(friendUid)
+            .child('friends')
+            .set(friendMap);
+      }
+    }
+
     String uid = currentUser!.uid;
 
     DatabaseEvent preEvent = await reference.child('users/$uid').once();
@@ -54,44 +95,9 @@ Future<void> addUserAsFriend(String name) async {
       }
       // print(userData);
     }
-    String? friendUid = await getUidFromName(name);
-
-    DatabaseEvent preEvent2 = await reference.child('users/$friendUid').once();
-    DataSnapshot preSnapshot2 = preEvent2.snapshot;
-
-    if (preSnapshot2.value != null) {
-      Map<String, dynamic> friendData =
-          preSnapshot2.value as Map<String, dynamic>;
-      // print("Friend Data:");
-      // print(friendData);
-      if (friendData.containsKey("friends")) {
-        DatabaseEvent event2 =
-            await reference.child('users/${friendUid}/friends').once();
-        DataSnapshot snapshot2 = event2.snapshot;
-        if (snapshot2.value != null) {
-          String? userName = currentUser!.displayName;
-          Map<String, dynamic> friendMap =
-              snapshot2.value as Map<String, dynamic>;
-          friendMap[userName!] = userName;
-          reference
-              .child('users')
-              .child(friendUid!)
-              .child('friends')
-              .set(friendMap);
-        }
-      } else {
-        String? userName = currentUser!.displayName;
-        Map<String, String> friendMap = {};
-        friendMap[userName!] = userName;
-        reference.child('users').child(friendUid!).child('friends').push();
-        reference
-            .child('users')
-            .child(friendUid!)
-            .child('friends')
-            .set(friendMap);
-      }
-    }
+    return true;
   }
+  return false;
 }
 
 Future<void> removeUserAsFriend(String name) async {
@@ -503,7 +509,8 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                               status = 2;
                             }
                             setState(() {
-                              widget.friendStatus[widget.userNames[index]] = status;
+                              widget.friendStatus[widget.userNames[index]] =
+                                  status;
                             });
                           },
                         ),
@@ -513,21 +520,23 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                                 ? "Remove Friend"
                                 : "Add Friend",
                           ),
-                          onPressed: () {
-                            int status;
+                          onPressed: () async {
+                            int? status =
+                                widget.friendStatus[widget.userNames[index]];
                             if (widget.friendStatus[widget.userNames[index]] ==
                                 1) {
                               widget.onRemoveFriend(widget.userNames[index]);
                               widget.friendList.remove(widget.userNames[index]);
                               status = 0;
                             } else {
-                              widget.onAddFriend(widget.userNames[index]);
-                              widget.friendList.add(widget.userNames[index]);
-                              status = 1;
+                              if (await widget.onAddFriend(widget.userNames[index])) {
+                                widget.friendList.add(widget.userNames[index]);
+                                status = 1;
+                              }
                             }
                             setState(() {
                               widget.friendStatus[widget.userNames[index]] =
-                                  status;
+                                  status!;
                             });
                           },
                         ),
