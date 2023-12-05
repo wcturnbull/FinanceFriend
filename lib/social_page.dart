@@ -422,45 +422,43 @@ class _ChallengesBoxState extends State<ChallengesBox> {
               },
             ),
             const SizedBox(height: 10),
-            if (challenges.isNotEmpty) ...{
-              Text(
-                challenges.first['message'],
-                style: TextStyle(fontSize: 16, color: Colors.green),
-              ),
-            },
-            if (challenges.isEmpty) ...{
-              Text(
-                customChallengeMessage,
-                style: TextStyle(fontSize: 16, color: Colors.green),
-              ),
-            },
-            if (challenges.isNotEmpty &&
-                challenges.first['status'] == 'not joined') ...[
-              const SizedBox(height: 10),
-              ElevatedButton(
-                child: Text("Join"),
-                onPressed: () {
-                  // Update the UI to show the "Leave" button
-                  joinChallenge(challenges.first['key']);
-                  setState(() {
-                    isJoined = true;
-                  });
-                },
-              ),
-            ],
-            if (challenges.first['status'] == 'joined') ...[
-              const SizedBox(height: 10),
-              ElevatedButton(
-                child: Text("Leave"),
-                onPressed: () {
-                  leaveChallenge(challenges.first['key']);
-                  // Update the UI to show the "Join" button
-                  setState(() {
-                    isJoined = false;
-                  });
-                },
-              ),
-            ],
+            if (challenges.isNotEmpty)
+              ...challenges.map((challenge) {
+                return Column(
+                  children: [
+                    Text(
+                      challenge['message'],
+                      style: TextStyle(fontSize: 16, color: Colors.green),
+                    ),
+                    if (challenge['status'] == 'not joined') ...[
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        child: Text("Join"),
+                        onPressed: () {
+                          // Update the UI to show the "Leave" button
+                          joinChallenge(challenge['key']);
+                          setState(() {
+                            isJoined = true;
+                          });
+                        },
+                      ),
+                    ],
+                    if (challenge['status'] == 'joined') ...[
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        child: Text("Leave"),
+                        onPressed: () {
+                          leaveChallenge(challenge['key']);
+                          // Update the UI to show the "Join" button
+                          setState(() {
+                            isJoined = false;
+                          });
+                        },
+                      ),
+                    ],
+                  ],
+                );
+              }),
             // Add other challenge-related content here if needed
           ],
         ),
