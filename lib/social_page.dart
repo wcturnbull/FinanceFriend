@@ -475,6 +475,7 @@ DataRow _getBillRow(index, data) {
       DataCell(Text(data['duedate'])),
     ],
   );
+}
 
 Future<List<String>> getGoalsFromName(String name) async {
   if (currentUser != null) {
@@ -1027,7 +1028,7 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                             ElevatedButton(
                               child: const Text("View"),
                               onPressed: () {
-                                if (friendStatus[widget.userNames[index]] == true) {
+                                if (widget.friendStatus[widget.userNames[index]] == true) {
                                   _openRequestDialog(context, widget.userNames[index]);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
