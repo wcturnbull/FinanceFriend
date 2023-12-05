@@ -27,7 +27,8 @@ class TrackingPage extends StatefulWidget {
 class _TrackingPageState extends State<TrackingPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController billTitleController = TextEditingController();
-  final TextEditingController billDataController = TextEditingController();
+  final TextEditingController billAmountController = TextEditingController();
+  final TextEditingController billNoteController = TextEditingController();
   final TextEditingController billDateController = TextEditingController();
 
   // Calendar info
@@ -89,12 +90,30 @@ class _TrackingPageState extends State<TrackingPage> {
     }
   }
 
-  void _writeBill(String title, String note, String duedate) async {
+  bool _validBillInput() {
+    String title = billTitleController.text;
+    if (title.isEmpty) return false;
+    String amount = billAmountController.text;
+    if (amount.isEmpty) return false;
+    if (amount.contains(RegExp(r'[A-Za-z]'))) return false;
+    String duedate = billDateController.text;
+    if (duedate.isEmpty) return false;
+    if (duedate.length != 10) return false;
+    if (duedate.contains(RegExp(r'[A-Za-z]'))) return false;
+    if (duedate[2] != '/' || duedate[5] != '/') return false;
+    return true;
+  }
+
+  void _writeBill() async {
     try {
-      DatabaseReference newBill =
-          reference.child('users/${currentUser?.uid}/bills').push();
+      String title = billTitleController.text.trim();
+      String amount = billAmountController.text.trim();
+      String note = billNoteController.text.trim();
+      String duedate = billDateController.text.trim();
+      DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
       newBill.set({
         'title': title,
+        'amount': amount,
         'note': note,
         'duedate': duedate,
       });
@@ -155,6 +174,7 @@ class _TrackingPageState extends State<TrackingPage> {
     return DataRow(
       cells: <DataCell>[
         DataCell(Text(data['title'])),
+        DataCell(Text("\$" + data['amount'])),
         DataCell(Text(data['note'])),
         DataCell(Text(data['duedate'])),
         DataCell(IconButton(
@@ -165,7 +185,9 @@ class _TrackingPageState extends State<TrackingPage> {
     );
   }
 
+  double billTotal = 0.0;
   Future _fetchBills() async {
+    billTotal = 0.0;
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
 
     DataSnapshot user = await userRef.get();
@@ -177,12 +199,15 @@ class _TrackingPageState extends State<TrackingPage> {
     Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
     results = [];
     billsMap.forEach((key, value) {
+      var amount = value['amount'] != null ? value['amount'].toString() : '0';
       results.add({
         'id': key.toString(),
         'title': value['title'].toString(),
+        'amount': amount,
         'note': value['note'].toString(),
         'duedate': value['duedate'].toString()
       });
+      billTotal += double.parse(amount);
     });
 
     return results;
@@ -228,8 +253,8 @@ class _TrackingPageState extends State<TrackingPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+                  const Padding(
+                    padding: EdgeInsets.all(8),
                     child: Text(
                       'Please input bill data that you would like us to keep track of.',
                       style: TextStyle(fontSize: 20),
@@ -239,7 +264,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Title: ', style: TextStyle(fontSize: 14)),
+                        const Text('Title: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
                             decoration: const InputDecoration(
@@ -255,14 +280,13 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Data: ', style: TextStyle(fontSize: 14)),
+                        const Text('Amount: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
-                            decoration: InputDecoration(
-                              hintText:
-                                  "Enter some data that you'd like to remember about the bill",
+                            decoration: const InputDecoration(
+                              hintText: "Enter the amount owed for the bill",
                             ),
-                            controller: billDataController,
+                            controller: billAmountController,
                           ),
                         ),
                       ],
@@ -272,11 +296,27 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        Text('Bill Due Date: ', style: TextStyle(fontSize: 14)),
+                        const Text('Notes: ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
-                            decoration: InputDecoration(
-                              hintText: 'Use MM/DD/YYYY',
+                            decoration: const InputDecoration(
+                              hintText: "OPTIONAL: Enter any notes relating to the bill",
+                            ),
+                            controller: billNoteController,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        const Text('Due Date: ', style: TextStyle(fontSize: 14)),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              hintText: 'MM/DD/YYYY',
                             ),
                             controller: billDateController,
                           ),
@@ -292,23 +332,17 @@ class _TrackingPageState extends State<TrackingPage> {
                         ElevatedButton(
                           child: const Text('Submit'),
                           onPressed: () {
-                            String billTitle = billTitleController.text;
-                            String billData = billDataController.text;
-                            String billDate = billDateController.text;
-                            if (billTitle.isEmpty ||
-                                billData.isEmpty ||
-                                billDate.isEmpty) {
+                            if (_validBillInput()) {
+                              _writeBill();
+                              Navigator.of(context).pop();
+                            } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    'Failed to add bill. Please ensure that all fields are filled in.',
+                                    'Failed to add bill. Please ensure that all required fields are formatted correctly.',
                                   ),
                                 ),
                               );
-                            } else {
-                              _writeBill(billTitle, billData, billDate);
-                              Navigator.of(context).pop();
-                              // Update page
                             }
                           },
                         ),
@@ -389,7 +423,17 @@ class _TrackingPageState extends State<TrackingPage> {
                             padding: const EdgeInsets.all(8),
                             child: Row(
                               children: [
-                                Text('Note: ', style: TextStyle(fontSize: 14)),
+                                Text('Amount: ', style: TextStyle(fontSize: 14)),
+                                Text(bill['amount']!,
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text('Notes: ', style: TextStyle(fontSize: 14)),
                                 Text(bill['note']!,
                                     style: TextStyle(fontSize: 14)),
                               ],
@@ -439,14 +483,22 @@ class _TrackingPageState extends State<TrackingPage> {
       appBar: FFAppBar(),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 50),
             // Calendar Start
-            Container(
+            Card(
+              margin: const EdgeInsets.all(10),
+              elevation: 10,
+              color: Colors.green,
               child: TableCalendar(
-                headerStyle: HeaderStyle(
+                headerStyle: const HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
+                  titleTextStyle: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)
+                ),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+                  weekendStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
                 ),
                 focusedDay: _focusedDay,
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -454,11 +506,26 @@ class _TrackingPageState extends State<TrackingPage> {
                 firstDay: DateTime.utc(2020, 1, 1),
                 lastDay: DateTime.utc(2025),
                 eventLoader: _getEventsForDay,
+                calendarStyle: const CalendarStyle(
+                  todayDecoration: BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
+                  selectedDecoration: BoxDecoration(color: Colors.blueGrey, shape: BoxShape.circle),
+                  defaultTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  weekendTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  outsideTextStyle: TextStyle(color: Color(0xFFBBBBBB), fontWeight: FontWeight.bold),
+                ),
               ),
             ),
 
             // Calendar End
-            Text('Bills', style: TextStyle(fontSize: 32)),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Container(
+                width: 1750,
+                height: 2,
+                color: Colors.green,
+              ),
+            ),
+            const Text('Bills', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
             RefreshIndicator(
               onRefresh: () async {
                 return await _fetchBills();
@@ -469,31 +536,41 @@ class _TrackingPageState extends State<TrackingPage> {
                   if (snapshot.hasData) {
                     results = snapshot.data;
                     if (snapshot.data.length != 0) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: DataTable(
-                          headingRowColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.green,
+                      return Column(children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
                           ),
-                          columnSpacing: 30,
-                          columns: [
-                            DataColumn(label: Text('Title')),
-                            DataColumn(label: Text('Note')),
-                            DataColumn(label: Text('Due Date')),
-                            DataColumn(label: Text('Delete')),
-                          ],
-                          rows: List.generate(
-                            results.length,
-                            (index) => _getDataRow(
-                              index,
-                              results[index],
+                          child: DataTable(
+                            headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.green,
                             ),
+                            columnSpacing: 50,
+                            columns: [
+                              DataColumn(label: Text('Title')),
+                              DataColumn(label: Text('Amount')),
+                              DataColumn(label: Text('Notes')),
+                              DataColumn(label: Text('Due Date')),
+                              DataColumn(label: Text('Delete')),
+                            ],
+                            rows: List.generate(
+                              results.length,
+                              (index) => _getDataRow(
+                                index,
+                                results[index],
+                              ),
+                            ),
+                            showBottomBorder: true,
                           ),
-                          showBottomBorder: true,
                         ),
-                      );
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Text(
+                            'Total Owed: \$' + billTotal.toStringAsFixed(2),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          )
+                        ),
+                      ],);
                     } else {
                       return const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -524,7 +601,7 @@ class _TrackingPageState extends State<TrackingPage> {
             ElevatedButton(
               onPressed: _openAddBillDialog,
               child: const Text('Add Bill'),
-            )
+            ),
           ],
         ),
       ),
