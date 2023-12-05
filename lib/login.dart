@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_state.dart';
+import 'splash_screen.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -188,7 +189,15 @@ class Login extends StatelessWidget {
       );
       appState.init(); // Initialize the app state to trigger userChanges()
       var wait = await _checkNotifs();
-      Navigator.pushNamed(context, await _getLandingPage());
+
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return SplashScreen(); // Replace with your actual page widget
+          },
+        ),
+      );
     } catch (e) {
       // Handle authentication errors (e.g., invalid credentials)
       print('Authentication error: $e');
