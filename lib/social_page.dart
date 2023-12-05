@@ -112,6 +112,37 @@ Future<void> removeUserAsFriend(String name) async {
   }
 }
 
+Future<void> blockUser(String name) async {
+  if (currentUser != null) {
+    String uid = currentUser!.uid;
+
+    reference
+        .child('users')
+        .child(uid)
+        .child('friends')
+        .child(name)
+        .set('blocked');
+    String? friendUid = await getUidFromName(name);
+
+    String userName = currentUser?.displayName as String;
+
+    reference
+        .child('users')
+        .child(friendUid!)
+        .child('friends')
+        .child(userName)
+        .remove();
+  }
+}
+
+Future<void> unblockUser(String name) async {
+  if (currentUser != null) {
+    String uid = currentUser!.uid;
+
+    reference.child('users').child(uid).child('friends').child(name).set(name);
+  }
+}
+
 Future<List<String>> getGoalsFromName(String name) async {
   if (currentUser != null) {
     DatabaseEvent userDataEvent =
@@ -242,6 +273,8 @@ class _SocialPageState extends State<SocialPage> {
                   friendStatus: friendStatus,
                   onAddFriend: addUserAsFriend,
                   onRemoveFriend: removeUserAsFriend,
+                  onBlock: blockUser,
+                  onUnblock: unblockUser,
                 ),
                 const SizedBox(
                   width: 100,
@@ -463,7 +496,15 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                             if (widget.friendStatus[widget.userNames[index]] ==
                                 2) {
                               widget.onUnblock(widget.userNames[index]);
+                              status = 0;
+                            } else {
+                              widget.onBlock(widget.userNames[index]);
+                              widget.friendList.remove(widget.userNames[index]);
+                              status = 2;
                             }
+                            setState(() {
+                              widget.friendStatus[widget.userNames[index]] = status;
+                            });
                           },
                         ),
                         ElevatedButton(
