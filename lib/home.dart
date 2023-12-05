@@ -28,7 +28,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late User? currentUser;
+  late User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -49,7 +49,18 @@ class _HomePageState extends State<HomePage> {
   // Add this function to fetch and update user-specific data
   Future<void> _fetchUserData() async {
     // Update or refresh data based on the new user's information
-    // ...
+    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
+    DataSnapshot user = await userRef.get();
+
+    final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
+
+    DatabaseEvent event = await budgetsRef.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<String, dynamic> budgetData = snapshot.value as Map<String, dynamic>;
+      List<String> budgetKeys = budgetData.keys.toList();
+    }
   }
 
   String _getInvestmentsPreview() {
@@ -209,153 +220,157 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final String? name = currentUser?.displayName;
-    final String? url = currentUser?.photoURL;
-    return Scaffold(
-        appBar: const FFAppBar(),
-        body: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ProfilePictureUpload(profileUrl: url ?? '', dash: true),
-                    Text(
-                      'Welcome, $name!',
-                      style: const TextStyle(
-                          fontSize: 48, fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 40),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    FutureBuilder(
-                        future: _getBudgetPreview(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
-                            print('error: ${snapshot.error}');
-                          }
-                          return Container(
-                            child: snapshot.data,
-                          );
-                        }),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/investments');
-                          },
-                          child: const Text('Go to Investment Page'),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/dashboard');
-                          },
-                          child: const Text('Go to Budget Dashboard Page'),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/tracking');
-                          },
-                          child: const Text('Go to Bill Tracking Page'),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/credit_card');
-                          },
-                          child: const Text('Go to Credit Card Page'),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/notifications');
-                          },
-                          child: const Text("Go to Notification Page"),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/profile');
-                          },
-                          child: const Text("Go to Profile Page"),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/locations');
-                          },
-                          child: const Text("Go to Locations Page"),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                              fixedSize:
-                                  MaterialStatePropertyAll(Size(300.0, 50.0))),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/social');
-                          },
-                          child: const Text("Go to Social Page"),
-                        ),
-                        const SizedBox(height: 16), //spacing
-                        ElevatedButton(
-                          style: const ButtonStyle(
-                            fixedSize:
-                                MaterialStatePropertyAll(Size(300.0, 50.0)),
-                          ),
-                          onPressed: () async {
-                            try {
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/login', (route) => false);
-                              await FirebaseAuth.instance.signOut();
-                            } catch (e) {
-                              // Handle sign-out errors, if any
-                              print('Error signing out: $e');
+    if (currentUser != null) {
+      final String? name = currentUser?.displayName;
+      final String? url = currentUser?.photoURL;
+      return Scaffold(
+          appBar: const FFAppBar(),
+          body: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ProfilePictureUpload(profileUrl: url ?? '', dash: true),
+                      Text(
+                        'Welcome, $name!',
+                        style: const TextStyle(
+                            fontSize: 48, fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      FutureBuilder(
+                          future: _getBudgetPreview(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              print('error: ${snapshot.error}');
                             }
-                          },
-                          child: const Text("Sign Out"),
-                        ),
+                            return Container(
+                              child: snapshot.data,
+                            );
+                          }),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/investments');
+                            },
+                            child: const Text('Go to Investment Page'),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/dashboard');
+                            },
+                            child: const Text('Go to Budget Dashboard Page'),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/tracking');
+                            },
+                            child: const Text('Go to Bill Tracking Page'),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/credit_card');
+                            },
+                            child: const Text('Go to Credit Card Page'),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/notifications');
+                            },
+                            child: const Text("Go to Notification Page"),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/profile');
+                            },
+                            child: const Text("Go to Profile Page"),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/locations');
+                            },
+                            child: const Text("Go to Locations Page"),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize: MaterialStatePropertyAll(
+                                    Size(300.0, 50.0))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/social');
+                            },
+                            child: const Text("Go to Social Page"),
+                          ),
+                          const SizedBox(height: 16), //spacing
+                          ElevatedButton(
+                            style: const ButtonStyle(
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
+                            onPressed: () async {
+                              try {
+                                Navigator.pushNamedAndRemoveUntil(
+                                    context, '/login', (route) => false);
+                                await FirebaseAuth.instance.signOut();
+                              } catch (e) {
+                                // Handle sign-out errors, if any
+                                print('Error signing out: $e');
+                              }
+                            },
+                            child: const Text("Sign Out"),
+                          ),
 
-                        const SizedBox(height: 16), //spacing
-                      ],
-                    ),
-                  ],
-                )
-              ],
-            )));
+                          const SizedBox(height: 16), //spacing
+                        ],
+                      ),
+                    ],
+                  )
+                ],
+              )));
+    } else {
+      return Scaffold(body: Text("Empty"));
+    }
   }
 }
 
