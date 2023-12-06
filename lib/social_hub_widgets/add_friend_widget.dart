@@ -44,7 +44,7 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
   Widget build(BuildContext context) {
     return Container(
       height: 500,
-      width: 400,
+      width: 440,
       decoration: BoxDecoration(
         border: Border.all(
           color: Colors.black,

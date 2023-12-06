@@ -186,7 +186,7 @@ class _SocialPageState extends State<SocialPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     const SizedBox(
-                      width: 70,
+                      width: 40,
                     ),
                     Column(
                       children: [
@@ -220,7 +220,7 @@ class _SocialPageState extends State<SocialPage> {
                         ),
                         Container(
                           height: 150,
-                          width: 400,
+                          width: 380,
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black, width: 2.0),
                             borderRadius: BorderRadius.circular(15),
@@ -254,7 +254,7 @@ class _SocialPageState extends State<SocialPage> {
                     ),
                     ChallengesBox(),
                     const SizedBox(
-                      width: 70,
+                      width: 40,
                     ),
                   ],
                 ),

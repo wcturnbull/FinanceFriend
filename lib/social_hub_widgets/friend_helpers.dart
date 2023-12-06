@@ -95,8 +95,6 @@ Future<bool> addUserAsFriend(String name) async {
     if (preSnapshot2.value != null) {
       Map<String, dynamic> friendData =
           preSnapshot2.value as Map<String, dynamic>;
-      // print("Friend Data:");
-      // print(friendData);
       if (friendData.containsKey("friends")) {
         DatabaseEvent event2 =
             await reference.child('users/${friendUid}/friends').once();

@@ -54,7 +54,7 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
   Widget build(BuildContext context) {
     return Container(
       height: 341,
-      width: 400,
+      width: 380,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black, width: 2.0),
         borderRadius: BorderRadius.circular(15),
