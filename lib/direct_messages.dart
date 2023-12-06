@@ -1,6 +1,6 @@
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
-import 'package:financefriend/social_page.dart';
+import 'package:financefriend/social_hub_widgets/social_page_widget.dart';
 import 'package:financefriend/messages.dart';
 
 class DirectMessages extends StatefulWidget {

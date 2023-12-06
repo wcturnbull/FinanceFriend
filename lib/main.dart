@@ -5,7 +5,7 @@ import 'package:financefriend/home.dart';
 import 'package:financefriend/location.dart';
 import 'package:financefriend/profile.dart';
 import 'package:financefriend/notifications.dart';
-import 'package:financefriend/social_page.dart';
+import 'package:financefriend/social_hub_widgets/social_page_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
