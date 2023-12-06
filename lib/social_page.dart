@@ -209,7 +209,6 @@ void _sendBudgetRequest(BuildContext context, String friendName) async {
       ),
     );
   } catch (error) {
-    print(error);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -241,7 +240,6 @@ void _sendCalendarRequest(BuildContext context, String friendName) async {
       ),
     );
   } catch (error) {
-    print(error);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -492,6 +490,40 @@ Future<List<String>> getGoalsFromName(String name) async {
   return [];
 }
 
+Future<List<String>> getChallengesFromName(String name) async {
+  if (currentUser != null) {
+    DatabaseEvent userDataEvent =
+        await reference.child('users/${await getUidFromName(name)}').once();
+    DataSnapshot userData = userDataEvent.snapshot;
+
+    Map<String, dynamic>? userDataMap = userData.value as Map<String, dynamic>?;
+
+    if (userDataMap != null && userDataMap.containsKey('challenges')) {
+      Map<String, dynamic> challengesDynamic = userDataMap['challenges'] ?? [];
+      List<String> challenges = [];
+      challengesDynamic.forEach((key, value) {
+        // print('Key: $key, Value: $value');
+        // print("message: ${value['message']}");
+        // print("status: ${value['status']}");
+        if (value['status'] == "joined") {
+          challenges.add(value['message']);
+        }
+      });
+      // Convert each element in the dynamic list to String
+      if (challenges.isEmpty) {
+        challenges.add("$name has not currently joined any challenges.");
+      }
+
+      // print("user: $name\n challenges: $challenges");
+
+      return challenges;
+    } else {
+      return ["$name has not currently joined any challenges."];
+    }
+  }
+  return [];
+}
+
 Future<String> getBioFromName(String name) async {
   if (currentUser != null) {
     DatabaseEvent userDataEvent =
@@ -522,9 +554,11 @@ class _SocialPageState extends State<SocialPage> {
   List<String> userFriends = [];
   Map<String, bool> friendStatus = {};
   Map<String, List<String>> friendGoalsMap = {};
+  Map<String, List<String>> friendChallengeMap = {};
   Map<String, String> friendBioMap = {};
   String? name = "";
   List<String> userGoals = [];
+  List<String> userChallenges = [];
   Map<String, String> profilePicUrls = {};
 
   @override
@@ -551,6 +585,8 @@ class _SocialPageState extends State<SocialPage> {
 
       userGoals = goals;
       name = currentUser?.displayName;
+      userChallenges =
+          await getChallengesFromName(currentUser?.displayName ?? "");
     } else {
       userGoals = [
         "${currentUser?.displayName} does not currently have goals set."
@@ -581,6 +617,12 @@ class _SocialPageState extends State<SocialPage> {
         futures.add(loadFriendGoals(userName));
       }
       await Future.wait(futures);
+
+      List<Future<void>> futureChallenges = [];
+      for (var userName in userNames) {
+        futureChallenges.add(loadFriendChallenges(userName));
+      }
+      await Future.wait(futureChallenges);
 
       for (var userName in userNames) {
         profilePicUrls[userName] = await getProfilePictureUrl(userName);
@@ -633,85 +675,111 @@ class _SocialPageState extends State<SocialPage> {
     friendBioMap[friendName] = bio;
   }
 
+  Future<void> loadFriendChallenges(String friendName) async {
+    List<String> challenges = await getChallengesFromName(friendName);
+    friendChallengeMap[friendName] = challenges;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FFAppBar(),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 50,
-            ),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        "FinanceFriend Users:",
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      AddFriendsWidget(
-                        userNames: userNames,
-                        bios: friendBioMap,
-                        profilePicUrls: profilePicUrls,
-                        friendList: userFriends,
-                        friendStatus: friendStatus,
-                        onAddFriend: addUserAsFriend,
-                        onRemoveFriend: removeUserAsFriend,
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        "Friends:",
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      Container(
-                        height: 110,
-                        width: 400,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2.0),
-                          borderRadius: BorderRadius.circular(15),
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 50,
+              ),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const SizedBox(
+                      width: 70,
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "FinanceFriend Users:",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
                         ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              MyUserTile(
-                                name: ("$name") ?? '',
-                                goals: userGoals,
-                              ),
-                            ],
+                        AddFriendsWidget(
+                          userNames: userNames,
+                          bios: friendBioMap,
+                          profilePicUrls: profilePicUrls,
+                          friendList: userFriends,
+                          friendStatus: friendStatus,
+                          onAddFriend: addUserAsFriend,
+                          onRemoveFriend: removeUserAsFriend,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "Friends:",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        ),
+                        Container(
+                          height: 150,
+                          width: 400,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 2.0),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                MyUserTile(
+                                  challengeMap: friendChallengeMap,
+                                  name: ("$name") ?? '',
+                                  goals: userGoals,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      FriendGoalsWidget(
-                        users: userNames,
-                        friends: userFriends,
-                        friendGoalMap: friendGoalsMap,
-                        friendBioMap: friendBioMap,
-                      ),
-                    ],
-                  ),
-                  ChallengesBox(),
-                ],
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        FriendGoalsWidget(
+                          users: userNames,
+                          friends: userFriends,
+                          friendChallengesMap: friendChallengeMap,
+                          friendGoalMap: friendGoalsMap,
+                          friendBioMap: friendBioMap,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    ChallengesBox(),
+                    const SizedBox(
+                      width: 70,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 50),
-            DirectMessages(
-              userName: currentUser?.displayName ?? "",
-              friendsList: userFriends,
-              friendsProfilePics: profilePicUrls,
-            ),
-          ],
+              const SizedBox(height: 50),
+              DirectMessages(
+                userName: name ?? "",
+                friendsList: userFriends,
+                friendsProfilePics: profilePicUrls,
+              ),
+              const SizedBox(
+                height: 50,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -862,85 +930,92 @@ class _ChallengesBoxState extends State<ChallengesBox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 500,
-      width: 400,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.black,
-          width: 2.0,
-        ),
-        borderRadius: BorderRadius.circular(15),
+    return Column(children: [
+      const Text(
+        "Challenges:",
+        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
       ),
-      child: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            const Text("Challenges:", style: TextStyle(fontSize: 20)),
-            const Divider(),
-            ElevatedButton(
-              child: Text("Custom Challenge"),
-              onPressed: () {
-                // Display the custom challenge message
-                getOverBudgetCategory();
-                fetchChallenges();
-              },
-            ),
-            const SizedBox(height: 10),
-            if (challenges.isNotEmpty)
-              ...challenges.map((challenge) {
-                return Column(
-                  children: [
-                    Text(
-                      challenge['message'],
-                      style: TextStyle(fontSize: 16, color: Colors.green),
-                    ),
-                    if (challenge['status'] == 'not joined') ...[
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        child: Text("Join"),
-                        onPressed: () {
-                          // Update the UI to show the "Leave" button
-                          joinChallenge(challenge['key']);
-                          setState(() {
-                            isJoined = true;
-                          });
-                        },
-                      ),
-                    ],
-                    if (challenge['status'] == 'joined') ...[
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        child: Text("Leave"),
-                        onPressed: () {
-                          leaveChallenge(challenge['key']);
-                          // Update the UI to show the "Join" button
-                          setState(() {
-                            isJoined = false;
-                          });
-                        },
-                      ),
-                    ],
-                  ],
-                );
-              }),
-            // Add other challenge-related content here if needed
-          ],
+      Container(
+        height: 500,
+        width: 400,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.black,
+            width: 2.0,
+          ),
+          borderRadius: BorderRadius.circular(15),
         ),
-      ),
-    );
+        child: Center(
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              ElevatedButton(
+                child: const Text("Custom Challenge"),
+                onPressed: () {
+                  // Display the custom challenge message
+                  getOverBudgetCategory();
+                  fetchChallenges();
+                },
+              ),
+              const SizedBox(height: 10),
+              if (challenges.isNotEmpty)
+                ...challenges.map((challenge) {
+                  return Column(
+                    children: [
+                      Text(
+                        challenge['message'],
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.green),
+                      ),
+                      if (challenge['status'] == 'not joined') ...[
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          child: const Text("Join"),
+                          onPressed: () {
+                            // Update the UI to show the "Leave" button
+                            joinChallenge(challenge['key']);
+                            setState(() {
+                              isJoined = true;
+                            });
+                          },
+                        ),
+                      ],
+                      if (challenge['status'] == 'joined') ...[
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          child: const Text("Leave"),
+                          onPressed: () {
+                            leaveChallenge(challenge['key']);
+                            // Update the UI to show the "Join" button
+                            setState(() {
+                              isJoined = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                }),
+              // Add other challenge-related content here if needed
+            ],
+          ),
+        ),
+      )
+    ]);
   }
 }
 
 class FriendTile extends StatefulWidget {
   final String name;
   final List<String> goals;
+  final List<String> challenges;
   final String bio;
 
   const FriendTile({
     Key? key,
     required this.name,
     required this.goals,
+    required this.challenges,
     required this.bio,
   }) : super(key: key);
 
@@ -961,7 +1036,7 @@ class _FriendTileState extends State<FriendTile> {
         return GestureDetector(
           onTap: () {
             _showUserProfileDialog(context, widget.name, profilePictureUrl,
-                widget.goals, widget.bio);
+                widget.goals, widget.challenges, widget.bio);
           },
           child: MouseRegion(
             onEnter: (_) {
@@ -1035,8 +1110,13 @@ class _FriendTileState extends State<FriendTile> {
     }
   }
 
-  void _showUserProfileDialog(BuildContext context, String name,
-      String imageUrl, List<String> goals, String bio) {
+  void _showUserProfileDialog(
+      BuildContext context,
+      String name,
+      String imageUrl,
+      List<String> goals,
+      List<String> challenges,
+      String bio) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1081,7 +1161,7 @@ class _FriendTileState extends State<FriendTile> {
                     ],
                   ),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 RichText(
                   text: TextSpan(
                     style: DefaultTextStyle.of(context).style,
@@ -1096,14 +1176,27 @@ class _FriendTileState extends State<FriendTile> {
                     ],
                   ),
                 ),
+                const SizedBox(
+                  height: 15,
+                ),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      const TextSpan(
+                        text: 'Challenges:\n',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: challenges.join('\n'),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {},
-              child: Text("Send DM"),
-            ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -1122,11 +1215,13 @@ class FriendGoalsWidget extends StatefulWidget {
   final List<String> users;
   final Map<String, List<String>> friendGoalMap;
   final Map<String, String> friendBioMap;
+  final Map<String, List<String>> friendChallengesMap;
 
   const FriendGoalsWidget({
     Key? key,
     required this.friends,
     required this.users,
+    required this.friendChallengesMap,
     required this.friendGoalMap,
     required this.friendBioMap,
   }) : super(key: key);
@@ -1146,10 +1241,15 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
     widget.friendBioMap[friendName] = bio;
   }
 
+  Future<void> loadFriendChallenges(String friendName) async {
+    List<String> challenges = await getChallengesFromName(friendName);
+    widget.friendChallengesMap[friendName] = challenges;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 385,
+      height: 341,
       width: 400,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black, width: 2.0),
@@ -1177,8 +1277,12 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
                         String friendBio =
                             widget.friendBioMap[friendName] ?? "";
 
+                        List<String> friendChallenges =
+                            widget.friendChallengesMap[friendName] ?? [];
+
                         return FriendTile(
                           name: friendName,
+                          challenges: friendChallenges,
                           goals: friendGoals,
                           bio: friendBio,
                         );
@@ -1199,6 +1303,10 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
 
     await Future.forEach(widget.users, (friendName) async {
       await loadFriendBios(friendName);
+    });
+
+    await Future.forEach(widget.friends, (friendName) async {
+      await loadFriendChallenges(friendName);
     });
   }
 }
@@ -1265,11 +1373,11 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
-                                      return CircularProgressIndicator();
+                                      return const CircularProgressIndicator();
                                     } else {
                                       if (snapshot.hasError) {
                                         // Handle error if necessary
-                                        return Icon(Icons.error);
+                                        return const Icon(Icons.error);
                                       } else {
                                         String imageUrl = snapshot.data ??
                                             ""; // Use an empty string as a fallback
@@ -1361,7 +1469,7 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                     ),
                   ), // Add more
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 15,
                 ),
                 RichText(
@@ -1395,64 +1503,105 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
   }
 }
 
-class MyUserTile extends StatelessWidget {
+class MyUserTile extends StatefulWidget {
   final String name;
   final List<String> goals;
+  final Map<String, List<String>> challengeMap;
 
-  const MyUserTile({
+  MyUserTile({
     Key? key,
+    required this.challengeMap,
     required this.name,
     required this.goals,
   }) : super(key: key);
 
   @override
+  _MyUserTileState createState() => _MyUserTileState();
+}
+
+class _MyUserTileState extends State<MyUserTile> {
+  late String profilePictureUrl;
+  late List<String> userChallenges;
+
+  Future<String> fetchChallengesAndProfilePic() async {
+    userChallenges = await getChallengesFromName(widget.name);
+    print(userChallenges.toString());
+    profilePictureUrl = await getProfilePictureUrl(widget.name);
+    print(profilePictureUrl);
+
+    return profilePictureUrl; // Return the profile picture URL
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: getProfilePictureUrl(name),
+      // Specify the type parameter for FutureBuilder
+      future: fetchChallengesAndProfilePic(),
       builder: (context, snapshot) {
-        String profilePictureUrl =
-            snapshot.data ?? ''; // Use an empty string as a fallback
-
-        return ListTile(
-          title: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(profilePictureUrl),
-                      radius: 20,
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Text("$name (you)",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      const TextSpan(
-                        text: 'Goals: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          String profilePictureUrl = snapshot.data as String? ?? '';
+          return ListTile(
+            title: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(profilePictureUrl),
+                        radius: 20,
                       ),
-                      TextSpan(
-                        text: goals.join(', '),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "${widget.name} (you)",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        const TextSpan(
+                          text: 'Goals: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: widget.goals.join(', '),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        const TextSpan(
+                          text: 'Challenges Joined: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: userChallenges.join(', '),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

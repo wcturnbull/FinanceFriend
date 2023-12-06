@@ -30,7 +30,6 @@ Stream<List<Message>> getMessages(String user1, String user2) {
       .onValue
       .map((DatabaseEvent event) {
     if (event.snapshot.value == null) {
-      print("no messages yet");
       return [];
     } else if (event.snapshot.value is Map<dynamic, dynamic>) {
       Map<String, dynamic> data = Map<String, dynamic>.from(

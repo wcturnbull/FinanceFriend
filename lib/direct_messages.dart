@@ -20,19 +20,16 @@ class DirectMessages extends StatefulWidget {
 }
 
 class _DirectMessagesState extends State<DirectMessages> {
-  late TextEditingController _messageController;
-
   @override
   void initState() {
     super.initState();
-    _messageController = TextEditingController();
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
+        const Text(
           "Direct Messages:",
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
@@ -103,7 +100,7 @@ class DirectMessageTile extends StatelessWidget {
       title: Text(friend),
       trailing: ElevatedButton(
         onPressed: onOpenDirectMessage,
-        child: Text("Open DM"),
+        child: const Text("Open DM"),
       ),
     );
   }
@@ -144,12 +141,12 @@ class _DirectMessageDialogState extends State<DirectMessageDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 400,
+            height: 435,
             width: 450,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.black, width: 2.0),
-              borderRadius: BorderRadius.circular(15),
-            ),
+                border: Border.all(color: Colors.black, width: 2.0),
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.white),
             // Display messages here using a StreamBuilder or ListView
             child: StreamBuilder<List<Message>>(
               stream: getMessages(widget.userName, widget.friend),
@@ -170,37 +167,140 @@ class _DirectMessageDialogState extends State<DirectMessageDialog> {
                       final isCurrentUser =
                           snapshot.data![index].sender == widget.userName;
 
-                      return ListTile(
-                          titleAlignment: ListTileTitleAlignment.center,
-                          leading: !isCurrentUser
-                              ? Text(getFormattedTime(
-                                  snapshot.data![index].timestamp))
-                              : getProfileHeader(snapshot.data![index].sender),
-                          title: isCurrentUser
-                              ? Text("${snapshot.data![index].sender} (you)")
-                              : Text(snapshot.data![index].sender),
-                          subtitle: Text(snapshot.data![index].message),
-                          trailing: !isCurrentUser
-                              ? getProfileHeader(snapshot.data![index].sender)
-                              : Text(getFormattedTime(
-                                  snapshot.data![index].timestamp)));
+                      if (isCurrentUser) {
+                        return Column(children: [
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Row(children: [
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                      getFormattedTime(
+                                          snapshot.data![index].timestamp),
+                                      style: const TextStyle(
+                                          color: Colors.grey, fontSize: 10)),
+                                ),
+                                getProfileHeader(snapshot.data![index].sender),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            // border: Border.all(
+                                            //     color: Colors.black, width: 1),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors.green,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey
+                                                    .withOpacity(0.5),
+                                                spreadRadius: 2,
+                                                blurRadius: 4,
+                                                offset: const Offset(4, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                              title: Text(
+                                                  snapshot.data![index].message,
+                                                  style: const TextStyle(
+                                                      color: Colors.white))),
+                                        ),
+                                      ]),
+                                ),
+                                const SizedBox(width: 10),
+                              ]),
+                              const SizedBox(height: 5),
+                              Text("${snapshot.data![index].sender}   "),
+                            ],
+                          )
+                        ]);
+                      } else {
+                        return Column(children: [
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors.grey,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey
+                                                    .withOpacity(0.5),
+                                                spreadRadius: 2,
+                                                blurRadius: 4,
+                                                offset: const Offset(-4, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                              title: Text(
+                                                  snapshot.data![index].message,
+                                                  style: const TextStyle(
+                                                      color: Colors.white))),
+                                        ),
+                                      ]),
+                                ),
+                                const SizedBox(width: 10),
+                                getProfileHeader(snapshot.data![index].sender),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                      getFormattedTime(
+                                          snapshot.data![index].timestamp),
+                                      style: const TextStyle(
+                                          color: Colors.grey, fontSize: 10)),
+                                ),
+                              ]),
+                              const SizedBox(height: 5),
+                              Text("   ${snapshot.data![index].sender}"),
+                            ],
+                          )
+                        ]);
+                      }
                     },
                   );
                 } else {
                   // Loading indicator
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
               },
             ),
           ),
-          SizedBox(height: 15),
+          const SizedBox(height: 15),
           // Text input and send button
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _messageController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Type a message...',
                   ),
                 ),
@@ -212,7 +312,7 @@ class _DirectMessageDialogState extends State<DirectMessageDialog> {
                   // Clear the input field
                   _messageController.clear();
                 },
-                child: Text('Send'),
+                child: const Text('Send'),
               ),
             ],
           ),
@@ -223,21 +323,24 @@ class _DirectMessageDialogState extends State<DirectMessageDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Close'),
+          child: const Text('Close'),
         ),
       ],
     );
   }
 
   Container getProfileHeader(String name) {
+    String imageUrl = widget.profilePics[name] ?? "";
     return Container(
-      child: Column(children: [
-        CircleAvatar(
-          radius: 15,
-          backgroundImage: NetworkImage(widget.profilePics[name] ?? ""),
-        ),
-        //Text(name),
-      ]),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 12,
+            backgroundImage: NetworkImage(imageUrl),
+          ),
+          //Text(name),
+        ],
+      ),
     );
   }
 
