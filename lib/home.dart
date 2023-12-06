@@ -8,6 +8,7 @@ import 'package:financefriend/location.dart';
 import 'package:financefriend/notifications.dart';
 import 'package:financefriend/profile.dart';
 import 'package:financefriend/profile_picture_widget.dart';
+import 'package:financefriend/social_hub_widgets/social_page_widget.dart';
 import 'package:financefriend/tracking.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -635,12 +636,48 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize: MaterialStatePropertyAll(
-                                    Size(300.0, 50.0))),
+                              fixedSize:
+                                  MaterialStatePropertyAll(Size(300.0, 50.0)),
+                            ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/social');
+                              if (seeTransitions) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                        secondaryAnimation) {
+                                      return SocialPage(); // Replace with your actual page widget
+                                    },
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeInOut;
+                                      const duration = Duration(
+                                          milliseconds:
+                                              2000); // Adjust the duration here
+
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+
+                                      var opacityAnimation =
+                                          animation.drive(tween);
+
+                                      return FadeTransition(
+                                        opacity: opacityAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                        milliseconds:
+                                            2000), // Adjust the duration here
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushNamed(context, '/social');
+                              }
                             },
-                            child: const Text("Go to Social Page"),
+                            child: const Text('Go to Social Page'),
                           ),
                           const SizedBox(height: 16), //spacing
                           ElevatedButton(
