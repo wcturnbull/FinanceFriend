@@ -74,6 +74,12 @@
       "languageVersion": "2.19"
     },
     {
+      "name": "csv",
+      "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/csv-5.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "cupertino_icons",
       "rootUri": "file:///C:/Users/hwell/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.6",
       "packageUri": "lib/",
@@ -644,7 +650,7 @@
       "languageVersion": "3.1"
     }
   ],
-  "generated": "2023-12-03T15:44:50.370617Z",
+  "generated": "2023-12-06T18:41:22.237376Z",
   "generator": "pub",
   "generatorVersion": "3.1.1"
 }
