@@ -140,7 +140,7 @@ class _BudgetUsageTableState extends State<BudgetUsageTable> {
         ],
         rows: categoryUsageMap.entries.map((entry) {
           String percentage_str = "${entry.value.toStringAsFixed(2)}%";
-          if (entry.value >= 100) {
+          if (entry.value > 100) {
             percentage_str = "\u26A0\uFE0F Over Budget!";
           }
           return DataRow(cells: [

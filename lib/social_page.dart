@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:financefriend/direct_messages.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
@@ -229,6 +230,9 @@ class _SocialPageState extends State<SocialPage> {
         profilePicUrls[userName] = await getProfilePictureUrl(userName);
       }
 
+      profilePicUrls[currentUser.displayName ?? ""] =
+          currentUser.photoURL ?? "";
+
       setState(() {
         for (var userName in userNames) {
           friendStatus[userName] = userFriends.contains(userName);
@@ -283,61 +287,73 @@ class _SocialPageState extends State<SocialPage> {
             const SizedBox(
               height: 50,
             ),
-            Row(
-              children: [
-                const SizedBox(width: 100),
-                Column(children: [
-                  Text("FinanceFriend Users:",
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-                  AddFriendsWidget(
-                    userNames: userNames,
-                    bios: friendBioMap,
-                    profilePicUrls: profilePicUrls,
-                    friendList: userFriends,
-                    friendStatus: friendStatus,
-                    onAddFriend: addUserAsFriend,
-                    onRemoveFriend: removeUserAsFriend,
-                  ),
-                ]),
-                const SizedBox(
-                  width: 100,
-                ),
-                Column(
-                  children: [
-                    Text("Friend Goals Dashboard:",
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        "FinanceFriend Users:",
                         style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold)),
-                    Container(
-                      height: 110,
-                      width: 400,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 2.0),
-                        borderRadius: BorderRadius.circular(15),
+                            fontSize: 25, fontWeight: FontWeight.bold),
                       ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            MyUserTile(
-                              name: ("$name") ?? '',
-                              goals: userGoals,
-                            ),
-                          ],
+                      AddFriendsWidget(
+                        userNames: userNames,
+                        bios: friendBioMap,
+                        profilePicUrls: profilePicUrls,
+                        friendList: userFriends,
+                        friendStatus: friendStatus,
+                        onAddFriend: addUserAsFriend,
+                        onRemoveFriend: removeUserAsFriend,
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                        "Friends:",
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold),
+                      ),
+                      Container(
+                        height: 110,
+                        width: 400,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2.0),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              MyUserTile(
+                                name: ("$name") ?? '',
+                                goals: userGoals,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    FriendGoalsWidget(
-                      users: userNames,
-                      friends: userFriends,
-                      friendGoalMap: friendGoalsMap,
-                      friendBioMap: friendBioMap,
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      FriendGoalsWidget(
+                        users: userNames,
+                        friends: userFriends,
+                        friendGoalMap: friendGoalsMap,
+                        friendBioMap: friendBioMap,
+                      ),
+                    ],
+                  ),
+                  ChallengesBox(),
+                ],
+              ),
+            ),
+            SizedBox(height: 50),
+            DirectMessages(
+              userName: currentUser?.displayName ?? "",
+              friendsList: userFriends,
+              friendsProfilePics: profilePicUrls,
             ),
           ],
         ),
