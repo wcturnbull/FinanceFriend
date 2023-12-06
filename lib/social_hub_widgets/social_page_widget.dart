@@ -35,9 +35,11 @@ class _SocialPageState extends State<SocialPage> {
   Map<String, int> friendStatus = {};
   //0: not friends  1: friends  2: blocked
   Map<String, List<String>> friendGoalsMap = {};
+  Map<String, List<String>> friendChallengeMap = {};
   Map<String, String> friendBioMap = {};
   String? name = "";
   List<String> userGoals = [];
+  List<String> userChallenges = [];
   Map<String, String> profilePicUrls = {};
 
   @override
@@ -64,6 +66,8 @@ class _SocialPageState extends State<SocialPage> {
 
       userGoals = goals;
       name = currentUser?.displayName;
+      userChallenges =
+          await getChallengesFromName(currentUser?.displayName ?? "");
     } else {
       userGoals = [
         "${currentUser?.displayName} does not currently have goals set."
@@ -94,6 +98,12 @@ class _SocialPageState extends State<SocialPage> {
         futures.add(loadFriendGoals(userName));
       }
       await Future.wait(futures);
+
+      List<Future<void>> futureChallenges = [];
+      for (var userName in userNames) {
+        futureChallenges.add(loadFriendChallenges(userName));
+      }
+      await Future.wait(futureChallenges);
 
       for (var userName in userNames) {
         profilePicUrls[userName] = await getProfilePictureUrl(userName);
@@ -152,87 +162,111 @@ class _SocialPageState extends State<SocialPage> {
     friendBioMap[friendName] = bio;
   }
 
+  Future<void> loadFriendChallenges(String friendName) async {
+    List<String> challenges = await getChallengesFromName(friendName);
+    friendChallengeMap[friendName] = challenges;
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FFAppBar(),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 50,
-            ),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        "FinanceFriend Users:",
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      AddFriendsWidget(
-                        userNames: userNames,
-                        bios: friendBioMap,
-                        profilePicUrls: profilePicUrls,
-                        friendList: userFriends,
-                        friendStatus: friendStatus,
-                        onAddFriend: addUserAsFriend,
-                        onRemoveFriend: removeUserAsFriend,
-                        onBlock: blockUser,
-                        onUnblock: unblockUser,
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        "Friends:",
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      Container(
-                        height: 110,
-                        width: 400,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2.0),
-                          borderRadius: BorderRadius.circular(15),
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 50,
+              ),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const SizedBox(
+                      width: 70,
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "FinanceFriend Users:",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
                         ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              MyUserTile(
-                                name: ("$name") ?? '',
-                                goals: userGoals,
-                              ),
-                            ],
+                        AddFriendsWidget(
+                          userNames: userNames,
+                          bios: friendBioMap,
+                          profilePicUrls: profilePicUrls,
+                          friendList: userFriends,
+                          friendStatus: friendStatus,
+                          onAddFriend: addUserAsFriend,
+                          onRemoveFriend: removeUserAsFriend,
+                          onBlock: blockUser,
+                          onUnblock: unblockUser,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "Friends:",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        ),
+                        Container(
+                          height: 150,
+                          width: 400,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 2.0),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                MyUserTile(
+                                  challengeMap: friendChallengeMap,
+                                  name: ("$name") ?? '',
+                                  goals: userGoals,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      FriendGoalsWidget(
-                        users: userNames,
-                        friends: userFriends,
-                        friendGoalMap: friendGoalsMap,
-                        friendBioMap: friendBioMap,
-                      ),
-                    ],
-                  ),
-                  ChallengesBox(),
-                ],
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        FriendGoalsWidget(
+                          users: userNames,
+                          friends: userFriends,
+                          friendChallengesMap: friendChallengeMap,
+                          friendGoalMap: friendGoalsMap,
+                          friendBioMap: friendBioMap,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    ChallengesBox(),
+                    const SizedBox(
+                      width: 70,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 50),
-            DirectMessages(
-              userName: currentUser?.displayName ?? "",
-              friendsList: userFriends,
-              friendsProfilePics: profilePicUrls,
-            ),
-          ],
+              SizedBox(height: 50),
+              DirectMessages(
+                userName: currentUser?.displayName ?? "",
+                friendsList: userFriends,
+                friendsProfilePics: profilePicUrls,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:financefriend/social_hub_widgets/friend_helpers.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -13,64 +14,105 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-class MyUserTile extends StatelessWidget {
+class MyUserTile extends StatefulWidget {
   final String name;
   final List<String> goals;
+  final Map<String, List<String>> challengeMap;
 
-  const MyUserTile({
+  MyUserTile({
     Key? key,
+    required this.challengeMap,
     required this.name,
     required this.goals,
   }) : super(key: key);
 
   @override
+  _MyUserTileState createState() => _MyUserTileState();
+}
+
+class _MyUserTileState extends State<MyUserTile> {
+  late String profilePictureUrl;
+  late List<String> userChallenges;
+
+  Future<String> fetchChallengesAndProfilePic() async {
+    userChallenges = await getChallengesFromName(widget.name);
+    print(userChallenges.toString());
+    profilePictureUrl = await getProfilePictureUrl(widget.name);
+    print(profilePictureUrl);
+
+    return profilePictureUrl; // Return the profile picture URL
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: getProfilePictureUrl(name),
+      // Specify the type parameter for FutureBuilder
+      future: fetchChallengesAndProfilePic(),
       builder: (context, snapshot) {
-        String profilePictureUrl =
-            snapshot.data ?? ''; // Use an empty string as a fallback
-
-        return ListTile(
-          title: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(profilePictureUrl),
-                      radius: 20,
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Text("$name (you)",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      const TextSpan(
-                        text: 'Goals: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          String profilePictureUrl = snapshot.data as String? ?? '';
+          return ListTile(
+            title: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(profilePictureUrl),
+                        radius: 20,
                       ),
-                      TextSpan(
-                        text: goals.join(', '),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "${widget.name} (you)",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        const TextSpan(
+                          text: 'Goals: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: widget.goals.join(', '),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        const TextSpan(
+                          text: 'Challenges Joined: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: userChallenges.join(', '),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

@@ -17,7 +17,6 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-
 class ChallengesBox extends StatefulWidget {
   @override
   _ChallengesBoxState createState() => _ChallengesBoxState();

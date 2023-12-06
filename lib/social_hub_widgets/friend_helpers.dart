@@ -52,6 +52,40 @@ Future<String> getBioFromName(String name) async {
   return "$name does not have a bio";
 }
 
+Future<List<String>> getChallengesFromName(String name) async {
+  if (currentUser != null) {
+    DatabaseEvent userDataEvent =
+        await reference.child('users/${await getUidFromName(name)}').once();
+    DataSnapshot userData = userDataEvent.snapshot;
+
+    Map<String, dynamic>? userDataMap = userData.value as Map<String, dynamic>?;
+
+    if (userDataMap != null && userDataMap.containsKey('challenges')) {
+      Map<String, dynamic> challengesDynamic = userDataMap['challenges'] ?? [];
+      List<String> challenges = [];
+      challengesDynamic.forEach((key, value) {
+        // print('Key: $key, Value: $value');
+        // print("message: ${value['message']}");
+        // print("status: ${value['status']}");
+        if (value['status'] == "joined") {
+          challenges.add(value['message']);
+        }
+      });
+      // Convert each element in the dynamic list to String
+      if (challenges.isEmpty) {
+        challenges.add("$name has not currently joined any challenges.");
+      }
+
+      // print("user: $name\n challenges: $challenges");
+
+      return challenges;
+    } else {
+      return ["$name has not currently joined any challenges."];
+    }
+  }
+  return [];
+}
+
 Future<bool> addUserAsFriend(String name) async {
   if (currentUser != null) {
     String? friendUid = await getUidFromName(name);

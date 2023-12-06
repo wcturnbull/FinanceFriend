@@ -14,11 +14,11 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-
 class FriendGoalsWidget extends StatefulWidget {
   final List<String> friends;
   final List<String> users;
   final Map<String, List<String>> friendGoalMap;
+  final Map<String, List<String>> friendChallengesMap;
   final Map<String, String> friendBioMap;
 
   const FriendGoalsWidget({
@@ -26,6 +26,7 @@ class FriendGoalsWidget extends StatefulWidget {
     required this.friends,
     required this.users,
     required this.friendGoalMap,
+    required this.friendChallengesMap,
     required this.friendBioMap,
   }) : super(key: key);
 
@@ -44,10 +45,15 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
     widget.friendBioMap[friendName] = bio;
   }
 
+  Future<void> loadFriendChallenges(String friendName) async {
+    List<String> challenges = await getChallengesFromName(friendName);
+    widget.friendChallengesMap[friendName] = challenges;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 385,
+      height: 341,
       width: 400,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black, width: 2.0),
@@ -75,8 +81,12 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
                         String friendBio =
                             widget.friendBioMap[friendName] ?? "";
 
+                        List<String> friendChallenges =
+                            widget.friendChallengesMap[friendName] ?? [];
+
                         return FriendTile(
                           name: friendName,
+                          challenges: friendChallenges,
                           goals: friendGoals,
                           bio: friendBio,
                         );
@@ -97,6 +107,10 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
 
     await Future.forEach(widget.users, (friendName) async {
       await loadFriendBios(friendName);
+    });
+
+    await Future.forEach(widget.friends, (friendName) async {
+      await loadFriendChallenges(friendName);
     });
   }
 }

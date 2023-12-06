@@ -16,12 +16,14 @@ final currentUser = FirebaseAuth.instance.currentUser;
 class FriendTile extends StatefulWidget {
   final String name;
   final List<String> goals;
+  final List<String> challenges;
   final String bio;
 
   const FriendTile({
     Key? key,
     required this.name,
     required this.goals,
+    required this.challenges,
     required this.bio,
   }) : super(key: key);
 
@@ -42,7 +44,7 @@ class _FriendTileState extends State<FriendTile> {
         return GestureDetector(
           onTap: () {
             _showUserProfileDialog(context, widget.name, profilePictureUrl,
-                widget.goals, widget.bio);
+                widget.goals, widget.challenges, widget.bio);
           },
           child: MouseRegion(
             onEnter: (_) {
@@ -116,8 +118,13 @@ class _FriendTileState extends State<FriendTile> {
     }
   }
 
-  void _showUserProfileDialog(BuildContext context, String name,
-      String imageUrl, List<String> goals, String bio) {
+  void _showUserProfileDialog(
+      BuildContext context,
+      String name,
+      String imageUrl,
+      List<String> goals,
+      List<String> challenges,
+      String bio) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -177,14 +184,27 @@ class _FriendTileState extends State<FriendTile> {
                     ],
                   ),
                 ),
+                const SizedBox(
+                  height: 15,
+                ),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      const TextSpan(
+                        text: 'Challenges:\n',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: challenges.join('\n'),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {},
-              child: Text("Send DM"),
-            ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
