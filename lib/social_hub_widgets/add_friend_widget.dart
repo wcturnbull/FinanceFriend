@@ -61,94 +61,110 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            // Open a dialog to display user details
-                            _showUserProfileDialog(widget.userNames[index]);
-                          },
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                child: FutureBuilder<String>(
-                                  future: getProfilePictureUrl(
-                                      widget.userNames[index]),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return CircularProgressIndicator();
-                                    } else {
-                                      if (snapshot.hasError) {
-                                        // Handle error if necessary
-                                        return Icon(Icons.error);
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Open a dialog to display user details
+                              _showUserProfileDialog(widget.userNames[index]);
+                            },
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  child: FutureBuilder<String>(
+                                    future: getProfilePictureUrl(
+                                        widget.userNames[index]),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
                                       } else {
-                                        String imageUrl = snapshot.data ??
-                                            ""; // Use an empty string as a fallback
-                                        return CircleAvatar(
-                                          backgroundImage:
-                                              NetworkImage(imageUrl),
-                                          radius: 20,
-                                        );
+                                        if (snapshot.hasError) {
+                                          // Handle error if necessary
+                                          return Icon(Icons.error);
+                                        } else {
+                                          String imageUrl = snapshot.data ??
+                                              ""; // Use an empty string as a fallback
+                                          return CircleAvatar(
+                                            backgroundImage:
+                                                NetworkImage(imageUrl),
+                                            radius: 20,
+                                          );
+                                        }
                                       }
-                                    }
-                                  },
+                                    },
+                                  ),
                                 ),
+                                const SizedBox(width: 10),
+                                Text(widget.userNames[index]),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton(
+                              child: Text(
+                                widget.friendStatus[widget.userNames[index]] ==
+                                        2
+                                    ? "Unblock"
+                                    : "Block",
                               ),
-                              const SizedBox(width: 10),
-                              Text(widget.userNames[index]),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          child: Text(
-                            widget.friendStatus[widget.userNames[index]] == 2
-                                ? "Unblock"
-                                : "Block",
-                          ),
-                          onPressed: () {
-                            int status;
-                            if (widget.friendStatus[widget.userNames[index]] ==
-                                2) {
-                              widget.onUnblock(widget.userNames[index]);
-                              status = 0;
-                            } else {
-                              widget.onBlock(widget.userNames[index]);
-                              widget.friendList.remove(widget.userNames[index]);
-                              status = 2;
-                            }
-                            setState(() {
-                              widget.friendStatus[widget.userNames[index]] =
-                                  status;
-                            });
-                          },
-                        ),
-                        ElevatedButton(
-                          child: Text(
-                            widget.friendStatus[widget.userNames[index]] == 1
-                                ? "Remove Friend"
-                                : "Add Friend",
-                          ),
-                          onPressed: () async {
-                            int? status =
-                                widget.friendStatus[widget.userNames[index]];
-                            if (widget.friendStatus[widget.userNames[index]] ==
-                                1) {
-                              widget.onRemoveFriend(widget.userNames[index]);
-                              widget.friendList.remove(widget.userNames[index]);
-                              status = 0;
-                            } else {
-                              if (await widget
-                                  .onAddFriend(widget.userNames[index])) {
-                                widget.friendList.add(widget.userNames[index]);
-                                status = 1;
-                              }
-                            }
-                            setState(() {
-                              widget.friendStatus[widget.userNames[index]] =
-                                  status!;
-                            });
-                          },
+                              onPressed: () {
+                                int status;
+                                if (widget.friendStatus[
+                                        widget.userNames[index]] ==
+                                    2) {
+                                  widget.onUnblock(widget.userNames[index]);
+                                  status = 0;
+                                } else {
+                                  widget.onBlock(widget.userNames[index]);
+                                  widget.friendList
+                                      .remove(widget.userNames[index]);
+                                  status = 2;
+                                }
+                                setState(() {
+                                  widget.friendStatus[widget.userNames[index]] =
+                                      status;
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              child: Text(
+                                widget.friendStatus[widget.userNames[index]] ==
+                                        1
+                                    ? "Remove Friend"
+                                    : "Add Friend",
+                              ),
+                              onPressed: () async {
+                                int? status = widget
+                                    .friendStatus[widget.userNames[index]];
+                                if (widget.friendStatus[
+                                        widget.userNames[index]] ==
+                                    1) {
+                                  widget
+                                      .onRemoveFriend(widget.userNames[index]);
+                                  widget.friendList
+                                      .remove(widget.userNames[index]);
+                                  status = 0;
+                                } else {
+                                  if (await widget
+                                      .onAddFriend(widget.userNames[index])) {
+                                    widget.friendList
+                                        .add(widget.userNames[index]);
+                                    status = 1;
+                                  }
+                                }
+                                setState(() {
+                                  widget.friendStatus[widget.userNames[index]] =
+                                      status!;
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),

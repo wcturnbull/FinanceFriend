@@ -179,7 +179,9 @@ class _FriendTileState extends State<FriendTile> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       TextSpan(
-                        text: goals.join('\n'),
+                        text: (goals.length > 1)
+                            ? goals.join(',\n')
+                            : goals.join('\n'),
                       ),
                     ],
                   ),
