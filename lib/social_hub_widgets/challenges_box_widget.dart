@@ -126,11 +126,11 @@ class _ChallengesBoxState extends State<ChallengesBox> {
 
         if (overBudgetCategory == "") {
           challengeMessage = "Add some expenses to your budgets!";
+        } else {
+          // Save the custom challenge message to the Firebase database
+          challengeMessage =
+              "Try to spend less in the \"$overBudgetCategory\" category!";
         }
-
-        // Save the custom challenge message to the Firebase database
-        challengeMessage =
-            "Try to spend less in the \"$overBudgetCategory\" category!";
         await reference.child('users/$uid/challenges').push().set({
           'message': challengeMessage,
           'status': "not joined",
@@ -144,7 +144,6 @@ class _ChallengesBoxState extends State<ChallengesBox> {
 
         fetchChallenges();
       } else {
-        print("in this case!");
         await reference.child('users/$uid/challenges').push().set({
           'message': "Create a budget and add Expenses!",
           'status': "not joined",
@@ -192,6 +191,87 @@ class _ChallengesBoxState extends State<ChallengesBox> {
     }
   }
 
+  Future<void> _createChallenge(BuildContext context) async {
+    TextEditingController customChallengeController = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  _createCustomBudgetChallenge();
+                },
+                child: Text("Custom Budget Challenge"),
+              ),
+              // Add other challenge options here...
+
+              SizedBox(height: 16),
+              TextField(
+                controller: customChallengeController,
+                decoration: InputDecoration(
+                  labelText: "Type Your Own Challenge",
+                ),
+              ),
+
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  String customChallenge = customChallengeController.text;
+                  if (customChallenge.isNotEmpty) {
+                    // Process the custom challenge, e.g., save it or use it
+                    // You can replace the next line with your custom logic
+                    _createCustomChallenge(customChallenge);
+                    // print("Custom Challenge: $customChallenge");
+                  }
+                },
+                child: Text("Add Custom Challenge"),
+              ),
+
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                },
+                child: Text("Cancel"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _createCustomChallenge(String challengeMessage) async {
+    String? uid = currentUser?.uid;
+    await reference.child('users/$uid/challenges').push().set({
+      'message': challengeMessage,
+      'status': "not joined",
+    });
+
+    // Display the over-budget category in the custom challenge message
+    setState(() {
+      customChallengeMessage = challengeMessage;
+      isJoined = false; // Reset the join status
+    });
+
+    fetchChallenges();
+  }
+
+  Future<void> _createCustomBudgetChallenge() async {
+    // Display the custom challenge message
+    await getOverBudgetCategory();
+    fetchChallenges();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(children: [
@@ -215,12 +295,9 @@ class _ChallengesBoxState extends State<ChallengesBox> {
               children: [
                 const SizedBox(height: 10),
                 ElevatedButton(
-                  child: Text("Custom Challenge"),
+                  child: Text("Create New Challenge"),
                   onPressed: () {
-                    // Display the custom challenge message
-                    getOverBudgetCategory();
-                    fetchChallenges();
-                    setState(() {});
+                    _createChallenge(context);
                   },
                 ),
                 const SizedBox(height: 10),
@@ -285,7 +362,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                 else
                   Container(
                     alignment: Alignment.center,
-                    child: Text("Click above to add a Custom Challenge!"),
+                    child: Text("Click above to add a Challenge!"),
                   ),
 
                 // Add other challenge-related content here if needed
