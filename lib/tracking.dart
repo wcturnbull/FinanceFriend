@@ -110,7 +110,8 @@ class _TrackingPageState extends State<TrackingPage> {
       String amount = billAmountController.text.trim();
       String note = billNoteController.text.trim();
       String duedate = billDateController.text.trim();
-      DatabaseReference newBill = reference.child('users/${currentUser?.uid}/bills').push();
+      DatabaseReference newBill =
+          reference.child('users/${currentUser?.uid}/bills').push();
       newBill.set({
         'title': title,
         'amount': amount,
@@ -300,7 +301,8 @@ class _TrackingPageState extends State<TrackingPage> {
                         Expanded(
                           child: TextFormField(
                             decoration: const InputDecoration(
-                              hintText: "OPTIONAL: Enter any notes relating to the bill",
+                              hintText:
+                                  "OPTIONAL: Enter any notes relating to the bill",
                             ),
                             controller: billNoteController,
                           ),
@@ -312,7 +314,8 @@ class _TrackingPageState extends State<TrackingPage> {
                     padding: const EdgeInsets.all(8),
                     child: Row(
                       children: [
-                        const Text('Due Date: ', style: TextStyle(fontSize: 14)),
+                        const Text('Due Date: ',
+                            style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: TextFormField(
                             decoration: const InputDecoration(
@@ -423,7 +426,8 @@ class _TrackingPageState extends State<TrackingPage> {
                             padding: const EdgeInsets.all(8),
                             child: Row(
                               children: [
-                                Text('Amount: ', style: TextStyle(fontSize: 14)),
+                                Text('Amount: ',
+                                    style: TextStyle(fontSize: 14)),
                                 Text(bill['amount']!,
                                     style: TextStyle(fontSize: 14)),
                               ],
@@ -481,128 +485,156 @@ class _TrackingPageState extends State<TrackingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FFAppBar(),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-            // Calendar Start
-            Card(
-              margin: const EdgeInsets.all(10),
-              elevation: 10,
-              color: Colors.green,
-              child: TableCalendar(
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextStyle: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)
-                ),
-                daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
-                  weekendStyle: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
-                ),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: _onDaySelected,
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2025),
-                eventLoader: _getEventsForDay,
-                calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-                  selectedDecoration: BoxDecoration(color: Colors.blueGrey, shape: BoxShape.circle),
-                  defaultTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  weekendTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  outsideTextStyle: TextStyle(color: Color(0xFFBBBBBB), fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Container(
+            width: 600,
+            height: 900,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  // Calendar Start
+                  Card(
+                    margin: const EdgeInsets.all(10),
+                    elevation: 10,
+                    color: Colors.green,
+                    child: TableCalendar(
+                      headerStyle: const HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          titleTextStyle: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold)),
+                      daysOfWeekStyle: const DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontWeight: FontWeight.bold),
+                        weekendStyle: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontWeight: FontWeight.bold),
+                      ),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      onDaySelected: _onDaySelected,
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2025),
+                      eventLoader: _getEventsForDay,
+                      calendarStyle: const CalendarStyle(
+                        todayDecoration: BoxDecoration(
+                            color: Colors.grey, shape: BoxShape.circle),
+                        selectedDecoration: BoxDecoration(
+                            color: Colors.blueGrey, shape: BoxShape.circle),
+                        defaultTextStyle: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                        weekendTextStyle: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                        outsideTextStyle: TextStyle(
+                            color: Color(0xFFBBBBBB),
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
 
-            // Calendar End
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Container(
-                width: 1750,
-                height: 2,
-                color: Colors.green,
-              ),
-            ),
-            const Text('Bills', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            RefreshIndicator(
-              onRefresh: () async {
-                return await _fetchBills();
-              },
-              child: FutureBuilder(
-                future: _fetchBills(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    results = snapshot.data;
-                    if (snapshot.data.length != 0) {
-                      return Column(children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: DataTable(
-                            headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.green,
-                            ),
-                            columnSpacing: 50,
-                            columns: [
-                              DataColumn(label: Text('Title')),
-                              DataColumn(label: Text('Amount')),
-                              DataColumn(label: Text('Notes')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(label: Text('Delete')),
-                            ],
-                            rows: List.generate(
-                              results.length,
-                              (index) => _getDataRow(
-                                index,
-                                results[index],
+                  // Calendar End
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Container(
+                      width: 1750,
+                      height: 2,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const Text('Bills',
+                      style:
+                          TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      return await _fetchBills();
+                    },
+                    child: FutureBuilder(
+                      future: _fetchBills(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          results = snapshot.data;
+                          if (snapshot.data.length != 0) {
+                            return Column(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                  ),
+                                  child: DataTable(
+                                    headingRowColor:
+                                        MaterialStateColor.resolveWith(
+                                      (states) => Colors.green,
+                                    ),
+                                    columnSpacing: 50,
+                                    columns: [
+                                      DataColumn(label: Text('Title')),
+                                      DataColumn(label: Text('Amount')),
+                                      DataColumn(label: Text('Notes')),
+                                      DataColumn(label: Text('Due Date')),
+                                      DataColumn(label: Text('Delete')),
+                                    ],
+                                    rows: List.generate(
+                                      results.length,
+                                      (index) => _getDataRow(
+                                        index,
+                                        results[index],
+                                      ),
+                                    ),
+                                    showBottomBorder: true,
+                                  ),
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Text(
+                                      'Total Owed: \$' +
+                                          billTotal.toStringAsFixed(2),
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    )),
+                              ],
+                            );
+                          } else {
+                            return const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.all(40),
+                                  child: Text(
+                                      'You have no saved bills. Try adding one!'),
+                                ),
+                              ],
+                            );
+                          }
+                        } else {
+                          return const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.all(40),
+                                child: Text(
+                                    'You have no saved bills. Try adding one!'),
                               ),
-                            ),
-                            showBottomBorder: true,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Text(
-                            'Total Owed: \$' + billTotal.toStringAsFixed(2),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          )
-                        ),
-                      ],);
-                    } else {
-                      return const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text(
-                                'You have no saved bills. Try adding one!'),
-                          ),
-                        ],
-                      );
-                    }
-                  } else {
-                    return const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.all(40),
-                          child:
-                              Text('You have no saved bills. Try adding one!'),
-                        ),
-                      ],
-                    );
-                  }
-                },
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _openAddBillDialog,
+                    child: const Text('Add Bill'),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: _openAddBillDialog,
-              child: const Text('Add Bill'),
-            ),
-          ],
+          ),
         ),
       ),
     );
