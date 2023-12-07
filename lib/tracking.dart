@@ -124,12 +124,13 @@ class _TrackingPageState extends State<TrackingPage> {
             parsedDueDate.difference(DateTime.now()).inDays <= 7) {
           _writeNotif(title, duedate);
         }
+        setState(() {});
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bill added successfully! Refresh to update page.'),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('Bill added successfully! Refresh to update page.'),
+      //   ),
+      // );
     } catch (error) {
       print('Error adding bill: $error');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,11 +150,12 @@ class _TrackingPageState extends State<TrackingPage> {
       DatabaseReference billsRef =
           reference.child('users/${currentUser?.uid}/bills');
       billsRef.child(id).remove();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bill deleted successfully! Refresh to update page.'),
-        ),
-      );
+      setState(() {});
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('Bill deleted successfully! Refresh to update page.'),
+      //   ),
+      // );
     } catch (error) {
       print(error);
       ScaffoldMessenger.of(context).showSnackBar(
