@@ -45,16 +45,17 @@ class _ChallengesBoxState extends State<ChallengesBox> {
 
       if (challengesSnapshot.value == null) {
         // If the challenges section is null, create an initial challenge
-        String initialMessage = "Default Challenge Message";
-        String initialStatus = "not joined";
+        // String initialMessage = "Default Challenge Message";
+        // String initialStatus = "not joined";
 
-        await reference.child('users/$uid/challenges').push().set({
-          'message': initialMessage,
-          'status': initialStatus,
-        });
+        // await reference.child('users/$uid/challenges').push().set({
+        //   'message': initialMessage,
+        //   'status': initialStatus,
+        // });
 
-        // Fetch the challenges again after adding the initial challenge
-        await fetchChallenges();
+        // // Fetch the challenges again after adding the initial challenge
+        // await fetchChallenges();
+        challenges = [];
       } else {
         // The challenges section exists, fetch and display challenges
         Map<String, dynamic> challengesData =
@@ -71,6 +72,19 @@ class _ChallengesBoxState extends State<ChallengesBox> {
         // Update the UI to display challenges
         setState(() {});
       }
+    }
+  }
+
+  Future<void> deleteChallenge(String challengeKey) async {
+    if (currentUser != null) {
+      String uid = currentUser!.uid;
+
+      await reference.child('users/$uid/challenges/$challengeKey').remove();
+      setState(() {});
+
+      //print(challenges[challengeKey]);
+
+      fetchChallenges();
     }
   }
 
@@ -108,8 +122,14 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           }
         });
 
+        String challengeMessage = "";
+
+        if (overBudgetCategory == "") {
+          challengeMessage = "Add some expenses to your budgets!";
+        }
+
         // Save the custom challenge message to the Firebase database
-        String challengeMessage =
+        challengeMessage =
             "Try to spend less in the \"$overBudgetCategory\" category!";
         await reference.child('users/$uid/challenges').push().set({
           'message': challengeMessage,
@@ -121,6 +141,19 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           customChallengeMessage = challengeMessage;
           isJoined = false; // Reset the join status
         });
+
+        fetchChallenges();
+      } else {
+        print("in this case!");
+        await reference.child('users/$uid/challenges').push().set({
+          'message': "Create a budget and add Expenses!",
+          'status': "not joined",
+        });
+        setState(() {
+          customChallengeMessage = "Create a budget and add Expenses!";
+          isJoined = false;
+        });
+        fetchChallenges();
       }
     }
   }
@@ -176,58 +209,88 @@ class _ChallengesBoxState extends State<ChallengesBox> {
           ),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              ElevatedButton(
-                child: Text("Custom Challenge"),
-                onPressed: () {
-                  // Display the custom challenge message
-                  getOverBudgetCategory();
-                  fetchChallenges();
-                },
-              ),
-              const SizedBox(height: 10),
-              if (challenges.isNotEmpty)
-                ...challenges.map((challenge) {
-                  return Column(
-                    children: [
-                      Text(
-                        challenge['message'],
-                        style: TextStyle(fontSize: 16, color: Colors.green),
-                      ),
-                      if (challenge['status'] == 'not joined') ...[
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          child: Text("Join"),
-                          onPressed: () {
-                            // Update the UI to show the "Leave" button
-                            joinChallenge(challenge['key']);
-                            setState(() {
-                              isJoined = true;
-                            });
-                          },
-                        ),
-                      ],
-                      if (challenge['status'] == 'joined') ...[
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          child: Text("Leave"),
-                          onPressed: () {
-                            leaveChallenge(challenge['key']);
-                            // Update the UI to show the "Join" button
-                            setState(() {
-                              isJoined = false;
-                            });
-                          },
-                        ),
-                      ],
-                    ],
-                  );
-                }),
-              // Add other challenge-related content here if needed
-            ],
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  child: Text("Custom Challenge"),
+                  onPressed: () {
+                    // Display the custom challenge message
+                    getOverBudgetCategory();
+                    fetchChallenges();
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 10),
+                if (challenges.isNotEmpty)
+                  ...challenges.map((challenge) {
+                    return Container(
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              challenge['message'],
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.green),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              alignment: Alignment.center,
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ElevatedButton(
+                                      child: Text(
+                                          challenge['status'] == 'not joined'
+                                              ? "Join"
+                                              : "Leave"),
+                                      onPressed: () {
+                                        if (challenge['status'] ==
+                                            'not joined') {
+                                          joinChallenge(challenge['key']);
+                                          setState(() {
+                                            isJoined = true;
+                                          });
+                                        } else {
+                                          leaveChallenge(challenge['key']);
+                                          setState(() {
+                                            isJoined = false;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        deleteChallenge(challenge['key']);
+                                        setState(() {});
+                                      },
+                                      child: Text("Delete"),
+                                    ),
+                                  ]),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                          ],
+                        ));
+                  })
+                else
+                  Container(
+                    alignment: Alignment.center,
+                    child: Text("Click above to add a Custom Challenge!"),
+                  ),
+
+                // Add other challenge-related content here if needed
+              ],
+            ),
           ),
         ),
       )
