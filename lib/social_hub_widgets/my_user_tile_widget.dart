@@ -36,9 +36,7 @@ class _MyUserTileState extends State<MyUserTile> {
 
   Future<String> fetchChallengesAndProfilePic() async {
     userChallenges = await getChallengesFromName(widget.name);
-    print(userChallenges.toString());
     profilePictureUrl = await getProfilePictureUrl(widget.name);
-    print(profilePictureUrl);
 
     return profilePictureUrl; // Return the profile picture URL
   }
