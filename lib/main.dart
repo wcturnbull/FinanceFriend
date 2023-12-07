@@ -53,6 +53,7 @@ class MyApp extends StatelessWidget {
     WidgetsFlutterBinding.ensureInitialized();
 
     return MaterialApp(
+        title: "FinanceFriend",
         navigatorKey: navigatorKey,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(

@@ -56,6 +56,7 @@ class _HomePageState extends State<HomePage> {
 
   // Add this function to fetch and update user-specific data
   Future<void> _fetchUserData() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
     // Update or refresh data based on the new user's information
     DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
     DataSnapshot user = await userRef.get();
