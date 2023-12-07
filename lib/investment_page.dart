@@ -69,12 +69,12 @@ class _InvestmentPageState extends State<InvestmentPage> {
     } else {
       setState(() {
         investments = [
-          {
-            'Stock Name': 'HIasdfl',
-            'Date Purchased': '2023-10-01',
-            'Amount': '10',
-            'Price': '1500.00',
-          },
+          // {
+          //   'Stock Name': 'HIasdfl',
+          //   'Date Purchased': '2023-10-01',
+          //   'Amount': '10',
+          //   'Price': '1500.00',
+          // },
         ];
       });
     }
