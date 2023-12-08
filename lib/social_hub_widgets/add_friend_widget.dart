@@ -209,9 +209,11 @@ class _AddFriendsWidgetState extends State<AddFriendsWidget> {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         TextSpan(
-                          text: widget.friendStatus[userName] == true
+                          text: widget.friendStatus[userName] == 1
                               ? "Friend"
-                              : "Not a friend",
+                              : widget.friendStatus[userName] == 2
+                                  ? "Blocked"
+                                  : "Not a friend",
                         ),
                       ],
                     ),
