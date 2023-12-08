@@ -118,6 +118,7 @@ class _FriendTileState extends State<FriendTile> {
     }
   }
 
+
   void _showUserProfileDialog(
       BuildContext context,
       String name,
@@ -128,6 +129,7 @@ class _FriendTileState extends State<FriendTile> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        TextEditingController controller = TextEditingController();
         return AlertDialog(
           title: Text(name),
           content: Container(
@@ -169,7 +171,7 @@ class _FriendTileState extends State<FriendTile> {
                     ],
                   ),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 RichText(
                   text: TextSpan(
                     style: DefaultTextStyle.of(context).style,
@@ -184,6 +186,27 @@ class _FriendTileState extends State<FriendTile> {
                             : goals.join('\n'),
                       ),
                     ],
+                  ),
+                ),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () async {
+                        String? uid = await getUidFromName(name);
+                        final typedComment = controller.text.trim();
+                        if (typedComment.isNotEmpty) {
+                          await reference
+                            .child(
+                                'users/$uid/goalsComments/${currentUser?.displayName}')
+                            .set(typedComment);
+                        }
+                      },
+                      alignment: Alignment.center,
+                    ),
                   ),
                 ),
                 const SizedBox(

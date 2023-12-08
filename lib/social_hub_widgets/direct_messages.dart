@@ -44,23 +44,26 @@ class _DirectMessagesState extends State<DirectMessages> {
             ),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Container(
-            child: widget.friendsList.isNotEmpty
-                ? Column(
-                    children: widget.friendsList
-                        .map(
-                          (friend) => DirectMessageTile(
-                            friend: friend,
-                            profilePicUrl:
-                                widget.friendsProfilePics[friend] ?? defaultUrl,
-                            onOpenDirectMessage: () {
-                              _openDirectMessageDialog(context, friend);
-                            },
-                          ),
-                        )
-                        .toList(),
-                  )
-                : const Center(child: Text("No Friends Added Yet!")),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              child: widget.friendsList.isNotEmpty
+                  ? Column(
+                      children: widget.friendsList
+                          .map(
+                            (friend) => DirectMessageTile(
+                              friend: friend,
+                              profilePicUrl:
+                                  widget.friendsProfilePics[friend] ?? defaultUrl,
+                              onOpenDirectMessage: () {
+                                _openDirectMessageDialog(context, friend);
+                              },
+                            ),
+                          )
+                          .toList(),
+                    )
+                  : const Center(child: Text("No Friends Added Yet!")),
+            ),
           ),
         ),
       ],

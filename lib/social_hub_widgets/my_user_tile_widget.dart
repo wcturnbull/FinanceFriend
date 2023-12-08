@@ -14,6 +14,9 @@ final database = FirebaseDatabase.instanceFor(
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
+final userCommentsReference =
+    reference.child('users/${currentUser?.uid}/goalsComments');
+Map<String, dynamic> comments = {};
 
 class MyUserTile extends StatefulWidget {
   final String name;
@@ -40,6 +43,29 @@ class _MyUserTileState extends State<MyUserTile> {
     profilePictureUrl = await getProfilePictureUrl(widget.name);
 
     return profilePictureUrl; // Return the profile picture URL
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initializeComments();
+    userCommentsReference.onValue.listen((event) {
+      setState(() {
+        initializeComments();
+      });
+    });
+  }
+
+  void initializeComments() async {
+    final DataSnapshot commentsSnapshot = await userCommentsReference.get();
+
+    if (commentsSnapshot.exists) {
+      Map<String, dynamic>? commentList =
+          commentsSnapshot.value as Map<String, dynamic>?;
+      setState(() {
+        comments = commentList!;
+      });
+    }
   }
 
   @override
@@ -83,11 +109,10 @@ class _MyUserTileState extends State<MyUserTile> {
                       ElevatedButton(
                         onPressed: () {
                           showDialog(
-                            context: context, 
-                            builder: (BuildContext context) {
-                              return CreatePost();
-                            }
-                          );
+                              context: context,
+                              builder: (BuildContext context) {
+                                return CreatePost();
+                              });
                         },
                         child: const Text("Create Post"),
                       ),
@@ -105,6 +130,11 @@ class _MyUserTileState extends State<MyUserTile> {
                         TextSpan(
                           text: widget.goals.join(', '),
                         ),
+                        const TextSpan(
+                          text: '\n',
+                        ),
+                        ...comments.entries.map(
+                            (e) => TextSpan(text: '${e.key}: ${e.value}\n')),
                       ],
                     ),
                   ),

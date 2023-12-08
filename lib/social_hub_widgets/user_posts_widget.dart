@@ -89,26 +89,29 @@ class _UserPostsState extends State<UserPosts> {
                 ),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: ListView(
-                children: snapshot.data!.map((entry) {
-                  return Column(
-                    children: [
-                      if (entry['image'] != '') Image.network(entry['image']!),
-                      if (entry['text'] != '')
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('${user}: ',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            Text(entry['text']),
-                          ],
-                        ),
-                      const SizedBox(height: 20)
-                    ],
-                  );
-                }).toList(),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView(
+                  children: snapshot.data!.map((entry) {
+                    return Column(
+                      children: [
+                        if (entry['image'] != '') Image.network(entry['image']!),
+                        if (entry['text'] != '')
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('${user}: ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  )),
+                              Text(entry['text']),
+                            ],
+                          ),
+                        const SizedBox(height: 20)
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ]);

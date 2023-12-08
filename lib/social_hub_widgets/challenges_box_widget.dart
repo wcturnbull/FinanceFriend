@@ -208,7 +208,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                   Navigator.pop(context); // Close the bottom sheet
                   _createCustomBudgetChallenge();
                 },
-                child: Text("Custom Budget Challenge"),
+                child: Text("Custom Challenge"),
               ),
               // Add other challenge options here...
 
@@ -232,7 +232,7 @@ class _ChallengesBoxState extends State<ChallengesBox> {
                     // print("Custom Challenge: $customChallenge");
                   }
                 },
-                child: Text("Add Custom Challenge"),
+                child: Text("Add Challenge"),
               ),
 
               SizedBox(height: 16),
