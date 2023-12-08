@@ -27,6 +27,9 @@ class _DirectMessagesState extends State<DirectMessages> {
 
   @override
   Widget build(BuildContext context) {
+  String defaultUrl =
+      'https://firebasestorage.googleapis.com/v0/b/financefriend-41da9.appspot.com/o/profile_pictures%2Fdefault.png?alt=media&token=a0d5c338-c123-4373-9ece-d0b0ba40194a';
+
     return Column(
       children: [
         const Text(
@@ -50,7 +53,7 @@ class _DirectMessagesState extends State<DirectMessages> {
                         .map(
                           (friend) => DirectMessageTile(
                             friend: friend,
-                            profilePicUrl: widget.friendsProfilePics[friend]!,
+                            profilePicUrl: widget.friendsProfilePics[friend] ?? defaultUrl,
                             onOpenDirectMessage: () {
                               _openDirectMessageDialog(context, friend);
                             },
@@ -58,7 +61,7 @@ class _DirectMessagesState extends State<DirectMessages> {
                         )
                         .toList(),
                   )
-                : Center(child: Text("No Friends Added Yet!")),
+                : const Center(child: Text("No Friends Added Yet!")),
           ),
         ),
       ],

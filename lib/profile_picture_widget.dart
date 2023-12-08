@@ -55,7 +55,6 @@ class _ProfilePictureUploadState extends State<ProfilePictureUpload> {
           .getDownloadURL();
 
       await currentUser?.updatePhotoURL(url);
-
       await reference.child('users/${currentUser!.uid}/profilePic').set(url);
 
       setState(() {

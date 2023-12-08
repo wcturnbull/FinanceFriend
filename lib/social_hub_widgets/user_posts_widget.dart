@@ -15,13 +15,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-final firebaseApp = Firebase.app();
-final database = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
-final DatabaseReference reference = database.ref();
-final currentUser = FirebaseAuth.instance.currentUser;
-
 class UserPosts extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _UserPostsState();
