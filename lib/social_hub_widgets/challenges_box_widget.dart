@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:financefriend/social_hub_widgets/friend_helpers.dart';
 import 'package:financefriend/social_hub_widgets/request_helpers.dart';
-import 'package:financefriend/direct_messages.dart';
+import 'package:financefriend/social_hub_widgets/direct_messages.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';

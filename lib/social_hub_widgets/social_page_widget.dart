@@ -7,7 +7,7 @@ import 'package:financefriend/social_hub_widgets/friend_tile_widget.dart';
 import 'package:financefriend/social_hub_widgets/my_user_tile_widget.dart';
 import 'package:financefriend/social_hub_widgets/friend_goals_widget.dart';
 import 'package:financefriend/social_hub_widgets/add_friend_widget.dart';
-import 'package:financefriend/direct_messages.dart';
+import 'package:financefriend/social_hub_widgets/direct_messages.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
@@ -259,12 +259,17 @@ class _SocialPageState extends State<SocialPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 50),
-              DirectMessages(
-                userName: currentUser?.displayName ?? "",
-                friendsList: userFriends,
-                friendsProfilePics: profilePicUrls,
-              ),
+              const SizedBox(height: 50),
+              Row(
+                children: [
+                  // UserPosts(),
+                  DirectMessages(
+                    userName: currentUser?.displayName ?? "",
+                    friendsList: userFriends,
+                    friendsProfilePics: profilePicUrls,
+                  ),
+                ],
+              )
             ],
           ),
         ),

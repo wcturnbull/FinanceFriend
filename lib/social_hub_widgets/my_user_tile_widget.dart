@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:financefriend/social_hub_widgets/friend_helpers.dart';
+import 'package:financefriend/social_hub_widgets/user_posts_widget.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -41,6 +45,71 @@ class _MyUserTileState extends State<MyUserTile> {
     return profilePictureUrl; // Return the profile picture URL
   }
 
+  void createPost() {
+    TextEditingController controller = TextEditingController();
+    String pic = '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            children: <Widget>[
+              Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50),
+                  image: pic.isEmpty
+                  ? const DecorationImage(
+                    image: AssetImage('images/add-image.png'),
+                    fit: BoxFit.cover,
+                  ) : DecorationImage(
+                    image: FileImage(File(pic)),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: pic == ''
+                    ? InkWell(
+                        onTap: () => pickImage(pic),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Enter your text here',
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                // Handle the post submission logic here
+                print('Submitted: ${controller.text}');
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Future<void> pickImage(String pic) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? photo = await picker.pickImage(source: ImageSource.gallery);
+
+    if (photo != null) {
+      setState(() {
+        pic = photo.path;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
@@ -62,17 +131,26 @@ class _MyUserTileState extends State<MyUserTile> {
                     height: 10,
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(profilePictureUrl),
-                        radius: 20,
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(profilePictureUrl),
+                            radius: 20,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "${widget.name} (you)",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "${widget.name} (you)",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ElevatedButton(
+                        onPressed: () => createPost(),
+                        child: const Text("Create Post"),
                       ),
                     ],
                   ),
