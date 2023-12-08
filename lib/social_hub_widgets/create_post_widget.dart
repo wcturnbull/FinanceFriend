@@ -73,11 +73,11 @@ class _CreatePostState extends State<CreatePost> {
           child: const Text('Submit'),
           onPressed: () async {
 
-            FirebaseStorage.instance
+            await FirebaseStorage.instance
                 .ref('posts/${widget.fileName}')
                 .putData(widget.bytes!);
 
-            final url = await FirebaseStorage.instance
+            var url = await FirebaseStorage.instance
                 .ref('posts/${widget.fileName}')
                 .getDownloadURL();
 

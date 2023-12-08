@@ -10,6 +10,7 @@ import 'package:financefriend/social_hub_widgets/add_friend_widget.dart';
 import 'package:financefriend/social_hub_widgets/direct_messages.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/home.dart';
+import 'package:financefriend/social_hub_widgets/user_posts_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -41,6 +42,7 @@ class _SocialPageState extends State<SocialPage> {
   List<String> userGoals = [];
   List<String> userChallenges = [];
   Map<String, String> profilePicUrls = {};
+  String userPosts = currentUser!.displayName.toString();
 
   @override
   void initState() {
@@ -261,15 +263,19 @@ class _SocialPageState extends State<SocialPage> {
               ),
               const SizedBox(height: 50),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // UserPosts(),
+                  UserPosts(user: userPosts),
+                  const SizedBox(width: 50),
                   DirectMessages(
                     userName: currentUser?.displayName ?? "",
                     friendsList: userFriends,
                     friendsProfilePics: profilePicUrls,
+                    userPosts: userPosts,
                   ),
                 ],
-              )
+              ),
+              const SizedBox(height: 100),
             ],
           ),
         ),

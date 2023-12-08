@@ -7,12 +7,14 @@ class DirectMessages extends StatefulWidget {
   final Map<String, String> friendsProfilePics;
   final List<String> friendsList;
   final String userName;
+  final String userPosts;
 
   const DirectMessages({
     Key? key,
     required this.userName,
     required this.friendsProfilePics,
     required this.friendsList,
+    required this.userPosts,
   }) : super(key: key);
 
   @override
@@ -27,13 +29,13 @@ class _DirectMessagesState extends State<DirectMessages> {
 
   @override
   Widget build(BuildContext context) {
-  String defaultUrl =
-      'https://firebasestorage.googleapis.com/v0/b/financefriend-41da9.appspot.com/o/profile_pictures%2Fdefault.png?alt=media&token=a0d5c338-c123-4373-9ece-d0b0ba40194a';
+    String defaultUrl =
+        'https://firebasestorage.googleapis.com/v0/b/financefriend-41da9.appspot.com/o/profile_pictures%2Fdefault.png?alt=media&token=a0d5c338-c123-4373-9ece-d0b0ba40194a';
 
     return Column(
       children: [
         const Text(
-          "Direct Messages:",
+          "DMs and Posts:",
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
         Container(
@@ -52,12 +54,14 @@ class _DirectMessagesState extends State<DirectMessages> {
                     children: widget.friendsList
                         .map(
                           (friend) => DirectMessageTile(
-                            friend: friend,
-                            profilePicUrl: widget.friendsProfilePics[friend] ?? defaultUrl,
-                            onOpenDirectMessage: () {
-                              _openDirectMessageDialog(context, friend);
-                            },
-                          ),
+                              friend: friend,
+                              profilePicUrl:
+                                  widget.friendsProfilePics[friend] ??
+                                      defaultUrl,
+                              onOpenDirectMessage: () {
+                                _openDirectMessageDialog(context, friend);
+                              },
+                              userPosts: widget.userPosts),
                         )
                         .toList(),
                   )
@@ -86,29 +90,50 @@ class _DirectMessagesState extends State<DirectMessages> {
   }
 }
 
-class DirectMessageTile extends StatelessWidget {
+class DirectMessageTile extends StatefulWidget {
   final String friend;
   final String profilePicUrl;
   final VoidCallback onOpenDirectMessage;
+  String userPosts;
 
-  const DirectMessageTile({
-    Key? key,
-    required this.friend,
-    required this.profilePicUrl,
-    required this.onOpenDirectMessage,
-  }) : super(key: key);
+  DirectMessageTile(
+      {Key? key,
+      required this.friend,
+      required this.profilePicUrl,
+      required this.onOpenDirectMessage,
+      required this.userPosts})
+      : super(key: key);
 
   @override
+  State<DirectMessageTile> createState() => _DirectMessageTileState();
+}
+
+class _DirectMessageTileState extends State<DirectMessageTile> {
+  @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(profilePicUrl),
-      ),
-      title: Text(friend),
-      trailing: ElevatedButton(
-        onPressed: onOpenDirectMessage,
-        child: const Text("Open DM"),
-      ),
+    return Column(
+      children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(widget.profilePicUrl),
+          ),
+          Text(widget.friend),
+          ElevatedButton(
+            onPressed: widget.onOpenDirectMessage,
+            child: const Text("Open DM"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                widget.userPosts = widget.friend;
+                print('user: ${widget.userPosts}');
+              });
+            },
+            child: const Text("Open Posts"),
+          ),
+        ]),
+        const SizedBox(height: 10)
+      ],
     );
   }
 }
