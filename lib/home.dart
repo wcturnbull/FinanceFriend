@@ -633,6 +633,9 @@ class _HomePageState extends State<HomePage> {
                                   print('Error signing out: $e');
                                 }
                               }),
+                          SizedBox(
+                            height: 40,
+                          ),
                         ],
                       )
                     ],
