@@ -14,7 +14,7 @@ final database = FirebaseDatabase.instanceFor(
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
-void _openRequestDialog(BuildContext context, String friendName) async {
+void openRequestDialog(BuildContext context, String friendName) async {
   //Opens popup window allowing user to request or view a friend's financials
   bool budgetAccess = false;
   bool calendarAccess = false;

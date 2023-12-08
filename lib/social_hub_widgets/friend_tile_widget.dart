@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:financefriend/social_hub_widgets/request_helpers.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -78,6 +79,13 @@ class _FriendTileState extends State<FriendTile> {
                               ? TextDecoration.underline
                               : TextDecoration.none,
                         ),
+                      ),
+                      const SizedBox(width: 30),
+                      ElevatedButton(
+                        child: const Text("View"),
+                        onPressed: () {
+                          openRequestDialog(context, widget.name);
+                        },
                       ),
                     ],
                   ),
