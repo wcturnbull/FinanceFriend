@@ -24,7 +24,8 @@ final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
 class SocialPage extends StatefulWidget {
-  const SocialPage({Key? key}) : super(key: key);
+  String userPosts = currentUser!.displayName.toString();
+  SocialPage({Key? key}) : super(key: key);
 
   @override
   _SocialPageState createState() => _SocialPageState();
@@ -42,7 +43,6 @@ class _SocialPageState extends State<SocialPage> {
   List<String> userGoals = [];
   List<String> userChallenges = [];
   Map<String, String> profilePicUrls = {};
-  String userPosts = currentUser!.displayName.toString();
 
   @override
   void initState() {
@@ -265,13 +265,12 @@ class _SocialPageState extends State<SocialPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  UserPosts(user: userPosts),
+                  UserPosts(),
                   const SizedBox(width: 50),
                   DirectMessages(
                     userName: currentUser?.displayName ?? "",
                     friendsList: userFriends,
                     friendsProfilePics: profilePicUrls,
-                    userPosts: userPosts,
                   ),
                 ],
               ),

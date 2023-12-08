@@ -1,20 +1,16 @@
-import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
-import 'package:financefriend/social_hub_widgets/social_page_widget.dart';
 import 'package:financefriend/messages.dart';
 
 class DirectMessages extends StatefulWidget {
   final Map<String, String> friendsProfilePics;
   final List<String> friendsList;
   final String userName;
-  final String userPosts;
 
   const DirectMessages({
     Key? key,
     required this.userName,
     required this.friendsProfilePics,
     required this.friendsList,
-    required this.userPosts,
   }) : super(key: key);
 
   @override
@@ -54,14 +50,13 @@ class _DirectMessagesState extends State<DirectMessages> {
                     children: widget.friendsList
                         .map(
                           (friend) => DirectMessageTile(
-                              friend: friend,
-                              profilePicUrl:
-                                  widget.friendsProfilePics[friend] ??
-                                      defaultUrl,
-                              onOpenDirectMessage: () {
-                                _openDirectMessageDialog(context, friend);
-                              },
-                              userPosts: widget.userPosts),
+                            friend: friend,
+                            profilePicUrl:
+                                widget.friendsProfilePics[friend] ?? defaultUrl,
+                            onOpenDirectMessage: () {
+                              _openDirectMessageDialog(context, friend);
+                            },
+                          ),
                         )
                         .toList(),
                   )
@@ -94,15 +89,13 @@ class DirectMessageTile extends StatefulWidget {
   final String friend;
   final String profilePicUrl;
   final VoidCallback onOpenDirectMessage;
-  String userPosts;
 
-  DirectMessageTile(
-      {Key? key,
-      required this.friend,
-      required this.profilePicUrl,
-      required this.onOpenDirectMessage,
-      required this.userPosts})
-      : super(key: key);
+  DirectMessageTile({
+    Key? key,
+    required this.friend,
+    required this.profilePicUrl,
+    required this.onOpenDirectMessage,
+  }) : super(key: key);
 
   @override
   State<DirectMessageTile> createState() => _DirectMessageTileState();
@@ -124,10 +117,7 @@ class _DirectMessageTileState extends State<DirectMessageTile> {
           ),
           ElevatedButton(
             onPressed: () {
-              setState(() {
-                widget.userPosts = widget.friend;
-                print('user: ${widget.userPosts}');
-              });
+              reference.child('users/${currentUser?.uid}/userPosts').set(widget.friend);
             },
             child: const Text("Open Posts"),
           ),

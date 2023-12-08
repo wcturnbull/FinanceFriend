@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:html';
 import 'dart:js';
 
 import 'package:financefriend/home.dart';
@@ -8,11 +9,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+DatabaseReference userPostsRef =
+    reference.child('users/${currentUser!.uid}/userPosts');
+final currentUser = FirebaseAuth.instance.currentUser;
+String? user = currentUser?.displayName;
+
 class UserPosts extends StatefulWidget {
-  final String user;
   List<Map<String, dynamic>> posts = [];
 
-  UserPosts({super.key, required this.user});
+  UserPosts({super.key});
 
   @override
   _UserPostsState createState() => _UserPostsState();
@@ -21,22 +26,40 @@ class UserPosts extends StatefulWidget {
 class _UserPostsState extends State<UserPosts> {
   Future<List<Map<String, dynamic>>> loadUserPosts() async {
     List<Map<String, dynamic>> posts = [];
-    String? name = await getUidFromName(widget.user);
+    String? name = await getUidFromName(user as String);
     DatabaseEvent event = await reference.child('users/$name/posts').once();
     DataSnapshot userposts = event.snapshot;
-    Map<String, dynamic>? postList = userposts.value as Map<String, dynamic>?;
+    Map<String, dynamic>? postList;
 
-    for (var uri in postList!.keys) {
-      event = await reference.child('users/$name/posts/$uri').once();
-      DataSnapshot post = event.snapshot;
-      Map<String, dynamic>? postMap = post.value as Map<String, dynamic>?;
-      Map<String, dynamic> toAdd = {
-        'image': postMap?['image'],
-        'text': postMap?['text'],
-      };
-      posts.add(toAdd);
-    }
+      if (userposts.exists) {
+        postList = userposts.value as Map<String, dynamic>?;
+
+        for (var uri in postList!.keys) {
+          event = await reference.child('users/$name/posts/$uri').once();
+          DataSnapshot post = event.snapshot;
+          Map<String, dynamic>? postMap = post.value as Map<String, dynamic>?;
+          Map<String, dynamic> toAdd = {
+            'image': postMap?['image'],
+            'text': postMap?['text'],
+          };
+          posts.add(toAdd);
+        }
+      } else {
+        postList = {'image': '', 'text': 'No Posts Yet'};
+        posts.add(postList);
+      }
     return posts;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    userPostsRef.onValue.listen((event) {
+      setState(() {
+        user = event.snapshot.value as String;
+        loadUserPosts();
+      });
+    });
   }
 
   @override
@@ -53,7 +76,7 @@ class _UserPostsState extends State<UserPosts> {
         } else {
           return Column(children: [
             Text(
-              "${widget.user}'s Posts:",
+              "${user}'s Posts:",
               style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
             Container(
@@ -70,20 +93,18 @@ class _UserPostsState extends State<UserPosts> {
                 children: snapshot.data!.map((entry) {
                   return Column(
                     children: [
-                      Image.network(entry['image']!),
+                      if (entry['image'] != '') Image.network(entry['image']!),
                       if (entry['text'] != '')
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${widget.user}: ',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            )
-                          ),
-                          Text(entry['text']),
-                        ],
-                      ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('${user}: ',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                )),
+                            Text(entry['text']),
+                          ],
+                        ),
                       const SizedBox(height: 20)
                     ],
                   );
