@@ -259,7 +259,7 @@ class _SocialPageState extends State<SocialPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 50),
+              SizedBox(height: 50),
               DirectMessages(
                 userName: currentUser?.displayName ?? "",
                 friendsList: userFriends,

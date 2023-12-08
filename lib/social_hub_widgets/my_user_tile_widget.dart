@@ -35,10 +35,8 @@ class _MyUserTileState extends State<MyUserTile> {
   late List<String> userChallenges;
 
   Future<String> fetchChallengesAndProfilePic() async {
-    userChallenges =
-        await getChallengesFromName(currentUser?.displayName ?? "");
-    profilePictureUrl =
-        currentUser?.photoURL ?? ""; //await getProfilePictureUrl(widget.name);
+    userChallenges = await getChallengesFromName(widget.name);
+    profilePictureUrl = await getProfilePictureUrl(widget.name);
 
     return profilePictureUrl; // Return the profile picture URL
   }
@@ -73,7 +71,7 @@ class _MyUserTileState extends State<MyUserTile> {
                         width: 10,
                       ),
                       Text(
-                        "${currentUser?.displayName} (you)",
+                        "${widget.name} (you)",
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
