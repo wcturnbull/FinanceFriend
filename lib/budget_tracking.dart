@@ -1,5 +1,6 @@
 import 'package:financefriend/budget_tracking_widgets/budget.dart';
 import 'package:financefriend/budget_tracking_widgets/wishlist.dart';
+//import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pie_chart/pie_chart.dart';
@@ -230,13 +231,64 @@ class _BudgetTrackingState extends State<BudgetTracking> {
     return Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           leading: IconButton(
             icon: Image.asset('images/FFLogo.png'),
-            onPressed: () => {Navigator.pushNamed(context, '/home')},
+            onPressed: () {
+              // if (seeTransitions) {
+              //   Navigator.push(
+              //     context,
+              //     PageRouteBuilder(
+              //       pageBuilder: (context, animation, secondaryAnimation) {
+              //         return HomePage(); // Replace with your actual page widget
+              //       },
+              //       transitionsBuilder:
+              //           (context, animation, secondaryAnimation, child) {
+              //         const begin = 0.0;
+              //         const end = 1.0;
+              //         const curve = Curves.easeInOut;
+              //         const duration =
+              //             Duration(milliseconds: 2000); // Adjust the duration here
+
+              //         var tween = Tween(begin: begin, end: end)
+              //             .chain(CurveTween(curve: curve));
+
+              //         var opacityAnimation = animation.drive(tween);
+
+              //         return FadeTransition(
+              //           opacity: opacityAnimation,
+              //           child: child,
+              //         );
+              //       },
+              //       transitionDuration: const Duration(
+              //           milliseconds: 2000), // Adjust the duration here
+              //     ),
+              //   );
+              // } else {
+              // If seeTransitions is false, simply navigate to the home page
+              Navigator.pop(
+                context,
+                //MaterialPageRoute(builder: (context) => HomePage()),
+              );
+              //}
+            },
           ),
-          title: const Text('FinanceFriend Dashboard',
-              style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Finance Friend',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 44,
+              color: Colors.white,
+            ),
+          ),
+          centerTitle: true,
+          actions: <Widget>[
+            IconButton(
+              icon: Image.asset('images/Settings.png'),
+              onPressed: () {}, //=> _openSettings(context),
+            ),
+          ],
         ),
         body: Row(
           children: [
