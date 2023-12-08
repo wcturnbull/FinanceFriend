@@ -92,6 +92,8 @@ class CreateAccount extends StatelessWidget {
 
       final user = userCredential.user;
       await user?.updateDisplayName(desiredName);
+      await user?.reload();
+      print(user);
       await user?.updatePhotoURL(profileUrl);
 
       final String uid = user!.uid;

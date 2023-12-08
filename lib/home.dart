@@ -26,7 +26,7 @@ final database = FirebaseDatabase.instanceFor(
     app: firebaseApp,
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final reference = database.ref();
-final currentUser = FirebaseAuth.instance.currentUser;
+var currentUser = FirebaseAuth.instance.currentUser;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,33 +36,38 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  User? user = currentUser;
+  List<String> budgetKeys = [];
 
   @override
   void initState() {
     super.initState();
-    // currentUser = FirebaseAuth.instance.currentUser;
-    // currentUser?.reload();
+    currentUser = FirebaseAuth.instance.currentUser;
+    currentUser?.reload();
     // Set up a listener for authentication state changes
     FirebaseAuth.instance.authStateChanges().listen((User? updatedUser) {
       setState(() {
-        user = updatedUser;
+        currentUser = updatedUser;
+        budgetKeys = [];
       });
 
-      if (user != null) {
+      if (currentUser != null) {
         // Fetch and update user-specific data here
-        _fetchUserData();
       }
     });
+    print(budgetKeys);
+    _fetchUserData();
+    print("budgetKeys after: ${budgetKeys}");
+  }
+
+  @override
+  dispose() {
+    super.dispose();
+    // budgetKeys = [];
   }
 
   // Add this function to fetch and update user-specific data
   Future<void> _fetchUserData() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    // Update or refresh data based on the new user's information
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot user = await userRef.get();
-
+    print("CURRENT USER: ${currentUser?.displayName}");
     final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
 
     DatabaseEvent event = await budgetsRef.once();
@@ -70,75 +75,66 @@ class _HomePageState extends State<HomePage> {
 
     if (snapshot.value != null) {
       Map<String, dynamic> budgetData = snapshot.value as Map<String, dynamic>;
-      List<String> budgetKeys = budgetData.keys.toList();
+      print(budgetData.keys);
+      budgetKeys = budgetData.keys.toList();
+    } else {
+      budgetKeys = [];
     }
   }
 
   Future<Widget> _getBudgetPreview() async {
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot user = await userRef.get();
+    //print("budgetKeys here: $budgetKeys");
+    _fetchUserData();
+    if (budgetKeys.isNotEmpty) {
+      List<Widget> budgetWidgets = [];
+      budgetWidgets.add(SizedBox(height: 10));
+      budgetWidgets.add(Text("Budgets:",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)));
+      budgetWidgets.add(SizedBox(height: 10));
 
-    final budgetsRef = reference.child('users/${currentUser?.uid}/budgets');
+      for (String budgetKey in budgetKeys) {
+        Budget currBudget = await getBudgetFromFirebaseByName(budgetKey);
 
-    DatabaseEvent event = await budgetsRef.once();
-    DataSnapshot snapshot = event.snapshot;
-
-    if (snapshot.value != null) {
-      Map<String, dynamic> budgetData = snapshot.value as Map<String, dynamic>;
-      List<String> budgetKeys = budgetData.keys.toList();
-
-      if (budgetKeys.isNotEmpty) {
-        List<Widget> budgetWidgets = [];
-        budgetWidgets.add(SizedBox(height: 10));
-        budgetWidgets.add(Text("Budgets:",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)));
-        budgetWidgets.add(SizedBox(height: 10));
-
-        for (String budgetKey in budgetKeys) {
-          Budget currBudget = await getBudgetFromFirebaseByName(budgetKey);
-
-          budgetWidgets.add(
-            Column(
-              children: [
-                const SizedBox(height: 20),
-                Row(children: [
-                  const SizedBox(width: 20),
-                  PieChart(
-                    dataMap: currBudget.budgetMap,
-                    colorList: currBudget.colorList,
-                    chartRadius: 100,
-                    chartType: ChartType.ring,
-                    animationDuration: const Duration(milliseconds: 800),
-                    ringStrokeWidth: 30,
-                    chartValuesOptions:
-                        const ChartValuesOptions(showChartValues: false),
-                    centerText: budgetKey,
-                  ),
-                  const SizedBox(width: 20),
-                ]),
-                const SizedBox(
-                    height: 20), // Add spacing between budget previews
-              ],
-            ),
-          );
-        }
-
-        return Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black,
-                width: 2.0, // Adjust the border width as needed
-              ),
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            height: 400,
-            width: 350,
-            margin: const EdgeInsets.all(50),
-            child: SingleChildScrollView(
-                child: Column(
-              children: budgetWidgets,
-            )));
+        budgetWidgets.add(
+          Column(
+            children: [
+              const SizedBox(height: 20),
+              Row(children: [
+                const SizedBox(width: 20),
+                PieChart(
+                  dataMap: currBudget.budgetMap,
+                  colorList: currBudget.colorList,
+                  chartRadius: 100,
+                  chartType: ChartType.ring,
+                  animationDuration: const Duration(milliseconds: 800),
+                  ringStrokeWidth: 30,
+                  chartValuesOptions:
+                      const ChartValuesOptions(showChartValues: false),
+                  centerText: budgetKey,
+                ),
+                const SizedBox(width: 20),
+              ]),
+              const SizedBox(height: 20), // Add spacing between budget previews
+            ],
+          ),
+        );
       }
+
+      return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.black,
+              width: 2.0, // Adjust the border width as needed
+            ),
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          height: 400,
+          width: 350,
+          margin: const EdgeInsets.all(50),
+          child: SingleChildScrollView(
+              child: Column(
+            children: budgetWidgets,
+          )));
     }
 
     // If there are no budgets or any other condition that prevents showing them
