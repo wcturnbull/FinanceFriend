@@ -61,7 +61,7 @@ class _FriendGoalsWidgetState extends State<FriendGoalsWidget> {
       ),
       child: Center(
         child: widget.friends.isEmpty
-            ? const Text("No Friends Yet")
+            ? const Text("No Friends Added Yet!")
             : FutureBuilder(
                 // Use FutureBuilder to wait for all asynchronous tasks
                 future: fetchFriendGoalsBio(),

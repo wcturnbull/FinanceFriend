@@ -41,6 +41,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // currentUser = FirebaseAuth.instance.currentUser;
+    // currentUser?.reload();
     // Set up a listener for authentication state changes
     FirebaseAuth.instance.authStateChanges().listen((User? updatedUser) {
       setState(() {
@@ -69,72 +71,6 @@ class _HomePageState extends State<HomePage> {
     if (snapshot.value != null) {
       Map<String, dynamic> budgetData = snapshot.value as Map<String, dynamic>;
       List<String> budgetKeys = budgetData.keys.toList();
-    }
-  }
-
-  String _getInvestmentsPreview() {
-    return 'Your investments can be found here!';
-  }
-
-  Future<String> _getBudgetsPreview() async {
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot user = await userRef.get();
-
-    if (!user.hasChild('budgetMap')) {
-      return 'Add some budgets to your budgeting page!';
-    }
-
-    DataSnapshot budgets = await userRef.child('budgetMap').get();
-    Map<String, dynamic> budgetsMap = budgets.value as Map<String, dynamic>;
-    String name = '', amount = '';
-    budgetsMap.forEach((key, value) {
-      name = key.toString();
-      amount = value.toString();
-    });
-
-    return '\$' + amount + ' is allocated for ' + name;
-  }
-
-  Future<String> _getTrackingPreview() async {
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot user = await userRef.get();
-
-    if (!user.hasChild('bills')) {
-      return 'Add some bills to your tracking page!';
-    }
-
-    DataSnapshot bills = await userRef.child('bills').get();
-    Map<String, dynamic> billsMap = bills.value as Map<String, dynamic>;
-    String title = '', duedate = '';
-    billsMap.forEach((key, value) {
-      title = value['title'].toString();
-      duedate = value['duedate'].toString();
-    });
-
-    return title + ' is due on ' + duedate;
-  }
-
-  Future<String> _getNotifPreview() async {
-    DataSnapshot notifState = await reference
-        .child('users/${currentUser?.uid}/notifications/state')
-        .get();
-    if (notifState.value == 1) {
-      return 'You have new notifications!';
-    } else {
-      return 'You can view notifications here.';
-    }
-  }
-
-  Future<String> _getProfilePreview() async {
-    DatabaseReference userRef = reference.child('users/${currentUser?.uid}');
-    DataSnapshot user = await userRef.get();
-
-    if (!user.hasChild('name')) {
-      return 'Your Profile';
-    } else {
-      DataSnapshot name = await userRef.child('name').get();
-      String username = name.value as String;
-      return username + "'s Profile";
     }
   }
 
