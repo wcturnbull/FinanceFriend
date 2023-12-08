@@ -7,9 +7,10 @@ import 'package:financefriend/social_hub_widgets/friend_tile_widget.dart';
 import 'package:financefriend/social_hub_widgets/my_user_tile_widget.dart';
 import 'package:financefriend/social_hub_widgets/friend_goals_widget.dart';
 import 'package:financefriend/social_hub_widgets/add_friend_widget.dart';
-import 'package:financefriend/direct_messages.dart';
+import 'package:financefriend/social_hub_widgets/direct_messages.dart';
 import 'package:financefriend/ff_appbar.dart';
 import 'package:financefriend/home.dart';
+import 'package:financefriend/social_hub_widgets/user_posts_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -23,7 +24,8 @@ final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
 
 class SocialPage extends StatefulWidget {
-  const SocialPage({Key? key}) : super(key: key);
+  String userPosts = currentUser!.displayName.toString();
+  SocialPage({Key? key}) : super(key: key);
 
   @override
   _SocialPageState createState() => _SocialPageState();
@@ -259,12 +261,20 @@ class _SocialPageState extends State<SocialPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 50),
-              DirectMessages(
-                userName: currentUser?.displayName ?? "",
-                friendsList: userFriends,
-                friendsProfilePics: profilePicUrls,
+              const SizedBox(height: 50),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  UserPosts(),
+                  const SizedBox(width: 50),
+                  DirectMessages(
+                    userName: currentUser?.displayName ?? "",
+                    friendsList: userFriends,
+                    friendsProfilePics: profilePicUrls,
+                  ),
+                ],
               ),
+              const SizedBox(height: 100),
             ],
           ),
         ),

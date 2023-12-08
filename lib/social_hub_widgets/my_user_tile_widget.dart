@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:financefriend/social_hub_widgets/friend_helpers.dart';
+import 'package:financefriend/social_hub_widgets/create_post_widget.dart';
 
 final firebaseApp = Firebase.app();
 final database = FirebaseDatabase.instanceFor(
@@ -13,6 +14,9 @@ final database = FirebaseDatabase.instanceFor(
     databaseURL: "https://financefriend-41da9-default-rtdb.firebaseio.com/");
 final DatabaseReference reference = database.ref();
 final currentUser = FirebaseAuth.instance.currentUser;
+final userCommentsReference =
+    reference.child('users/${currentUser?.uid}/goalsComments');
+Map<String, dynamic> comments = {};
 
 class MyUserTile extends StatefulWidget {
   final String name;
@@ -43,6 +47,29 @@ class _MyUserTileState extends State<MyUserTile> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    initializeComments();
+    userCommentsReference.onValue.listen((event) {
+      setState(() {
+        initializeComments();
+      });
+    });
+  }
+
+  void initializeComments() async {
+    final DataSnapshot commentsSnapshot = await userCommentsReference.get();
+
+    if (commentsSnapshot.exists) {
+      Map<String, dynamic>? commentList =
+          commentsSnapshot.value as Map<String, dynamic>?;
+      setState(() {
+        comments = commentList!;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
       // Specify the type parameter for FutureBuilder
@@ -63,17 +90,32 @@ class _MyUserTileState extends State<MyUserTile> {
                     height: 10,
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(profilePictureUrl),
-                        radius: 20,
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(profilePictureUrl),
+                            radius: 20,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "${widget.name} (you)",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "${widget.name} (you)",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return CreatePost();
+                              });
+                        },
+                        child: const Text("Create Post"),
                       ),
                     ],
                   ),
@@ -89,6 +131,11 @@ class _MyUserTileState extends State<MyUserTile> {
                         TextSpan(
                           text: widget.goals.join(', '),
                         ),
+                        const TextSpan(
+                          text: '\n',
+                        ),
+                        ...comments.entries.map(
+                            (e) => TextSpan(text: '${e.key}: ${e.value}\n')),
                       ],
                     ),
                   ),

@@ -1,6 +1,4 @@
-import 'package:financefriend/home.dart';
 import 'package:flutter/material.dart';
-import 'package:financefriend/social_hub_widgets/social_page_widget.dart';
 import 'package:financefriend/messages.dart';
 
 class DirectMessages extends StatefulWidget {
@@ -27,10 +25,13 @@ class _DirectMessagesState extends State<DirectMessages> {
 
   @override
   Widget build(BuildContext context) {
+    String defaultUrl =
+        'https://firebasestorage.googleapis.com/v0/b/financefriend-41da9.appspot.com/o/profile_pictures%2Fdefault.png?alt=media&token=a0d5c338-c123-4373-9ece-d0b0ba40194a';
+
     return Column(
       children: [
         const Text(
-          "Direct Messages:",
+          "DMs and Posts:",
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
         Container(
@@ -43,22 +44,26 @@ class _DirectMessagesState extends State<DirectMessages> {
             ),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Container(
-            child: widget.friendsList.isNotEmpty
-                ? Column(
-                    children: widget.friendsList
-                        .map(
-                          (friend) => DirectMessageTile(
-                            friend: friend,
-                            profilePicUrl: widget.friendsProfilePics[friend]!,
-                            onOpenDirectMessage: () {
-                              _openDirectMessageDialog(context, friend);
-                            },
-                          ),
-                        )
-                        .toList(),
-                  )
-                : Center(child: Text("No Friends Added Yet!")),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              child: widget.friendsList.isNotEmpty
+                  ? Column(
+                      children: widget.friendsList
+                          .map(
+                            (friend) => DirectMessageTile(
+                              friend: friend,
+                              profilePicUrl:
+                                  widget.friendsProfilePics[friend] ?? defaultUrl,
+                              onOpenDirectMessage: () {
+                                _openDirectMessageDialog(context, friend);
+                              },
+                            ),
+                          )
+                          .toList(),
+                    )
+                  : const Center(child: Text("No Friends Added Yet!")),
+            ),
           ),
         ),
       ],
@@ -83,12 +88,12 @@ class _DirectMessagesState extends State<DirectMessages> {
   }
 }
 
-class DirectMessageTile extends StatelessWidget {
+class DirectMessageTile extends StatefulWidget {
   final String friend;
   final String profilePicUrl;
   final VoidCallback onOpenDirectMessage;
 
-  const DirectMessageTile({
+  DirectMessageTile({
     Key? key,
     required this.friend,
     required this.profilePicUrl,
@@ -96,16 +101,32 @@ class DirectMessageTile extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<DirectMessageTile> createState() => _DirectMessageTileState();
+}
+
+class _DirectMessageTileState extends State<DirectMessageTile> {
+  @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(profilePicUrl),
-      ),
-      title: Text(friend),
-      trailing: ElevatedButton(
-        onPressed: onOpenDirectMessage,
-        child: const Text("Open DM"),
-      ),
+    return Column(
+      children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(widget.profilePicUrl),
+          ),
+          Text(widget.friend),
+          ElevatedButton(
+            onPressed: widget.onOpenDirectMessage,
+            child: const Text("Open DM"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              reference.child('users/${currentUser?.uid}/userPosts').set(widget.friend);
+            },
+            child: const Text("Open Posts"),
+          ),
+        ]),
+        const SizedBox(height: 10)
+      ],
     );
   }
 }
