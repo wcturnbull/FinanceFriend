@@ -80,13 +80,6 @@ class _FriendTileState extends State<FriendTile> {
                               : TextDecoration.none,
                         ),
                       ),
-                      const SizedBox(width: 30),
-                      ElevatedButton(
-                        child: const Text("View"),
-                        onPressed: () {
-                          openRequestDialog(context, widget.name);
-                        },
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -106,6 +99,13 @@ class _FriendTileState extends State<FriendTile> {
                   ),
                 ],
               ),
+              trailing: 
+                ElevatedButton(
+                  child: const Text("View"),
+                  onPressed: () {
+                    openRequestDialog(context, widget.name);
+                  },
+                ),
             ),
           ),
         );
