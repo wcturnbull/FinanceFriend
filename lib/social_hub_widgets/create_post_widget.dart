@@ -41,7 +41,7 @@ class _CreatePostState extends State<CreatePost> {
         children: <Widget>[
           Container(
             width: 400,
-            height: 400,
+            height: 300,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               image: widget.fileName == null
